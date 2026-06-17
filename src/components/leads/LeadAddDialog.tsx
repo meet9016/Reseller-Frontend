@@ -93,6 +93,8 @@ export default function LeadAddDialog({
       labels: Yup.array().of(Yup.string()),
       priority: Yup.string().oneOf(['high', 'medium', 'low']),
       isActive: Yup.boolean(),
+      amount: Yup.string().required('Amount is required'),
+      product: Yup.string().required('Product is required'),
     };
 
     if (requiredFields.includes('fullName')) shape.fullName = shape.fullName.required('Full Name is required');
@@ -124,6 +126,8 @@ export default function LeadAddDialog({
       labels: [] as string[],
       priority: 'medium' as 'high' | 'medium' | 'low',
       isActive: true,
+      amount: '',
+      product: '',
     },
     validationSchema: leadValidationSchema,
     validateOnChange: true,
@@ -137,6 +141,7 @@ export default function LeadAddDialog({
           companyName: values.companyName.trim(),
           address: values.address.trim(),
           contact: values.contact.trim(),
+          amount: values.amount,
           email: values.email.trim().toLowerCase(),
           leadSource: values.leadSource,
           leadStatus: values.leadStatus,
@@ -376,45 +381,7 @@ export default function LeadAddDialog({
                 placeholder="Full Name"
                 required={requiredFields.includes('fullName')}
               />
-              <FormInput
-                label="Company Name"
-                name="companyName"
-                type="text"
-                value={formik.values.companyName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={getFieldError('companyName')}
-                placeholder="Company"
-                required={requiredFields.includes('companyName')}
-              />
-            </div>
 
-            {/* Address */}
-            <FormInput
-              label="Address"
-              name="address"
-              value={formik.values.address}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={getFieldError('address')}
-              placeholder="Address"
-              required={requiredFields.includes('address')}
-              as="textarea"
-            />
-
-            {/* Contact & Email */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormInput
-                label="Phone"
-                name="contact"
-                type="text"
-                value={formik.values.contact}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={getFieldError('contact')}
-                placeholder="Phone"
-                required={requiredFields.includes('contact')}
-              />
               <FormInput
                 label="Email"
                 name="email"
@@ -426,11 +393,76 @@ export default function LeadAddDialog({
                 placeholder="Email"
                 required={requiredFields.includes('email')}
               />
+
+              {/* <FormInput
+                label="Company Name"
+                name="companyName"
+                type="text"
+                value={formik.values.companyName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={getFieldError('companyName')}
+                placeholder="Company"
+                required={requiredFields.includes('companyName')}
+              /> */}
+            </div>
+
+            {/* Address */}
+            {/* <FormInput
+              label="Address"
+              name="address"
+              value={formik.values.address}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('address')}
+              placeholder="Address"
+              required={requiredFields.includes('address')}
+              as="textarea"
+            /> */}
+
+            {/* Contact & Email */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <FormInput
+                label="Amount"
+                name="amount"
+                type="text"
+                value={formik.values.amount}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={getFieldError('amount')}
+                placeholder="Amount"
+                required={requiredFields.includes('amount')}
+              />
+
+
+
+              <FormInput
+                label="Product"
+                name="product"
+                type="text"
+                value={formik.values.product}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={getFieldError('product')}
+                placeholder="Product"
+                required={requiredFields.includes('product')}
+              />
+              {/* <FormInput
+                label="Email"
+                name="email"
+                type="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={getFieldError('email')}
+                placeholder="Email"
+                required={requiredFields.includes('email')}
+              /> */}
             </div>
 
             {/* Dropdowns */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FormSelect
+              {/* <FormSelect
                 label="Source"
                 name="leadSource"
                 value={formik.values.leadSource}
@@ -440,7 +472,7 @@ export default function LeadAddDialog({
                 error={getFieldError('leadSource')}
                 placeholder="— Select Source —"
                 required={requiredFields.includes('leadSource')}
-              />
+              /> */}
               <FormSelect
                 label="Status"
                 name="leadStatus"
@@ -452,7 +484,7 @@ export default function LeadAddDialog({
                 placeholder="— Select Status —"
                 required={requiredFields.includes('leadStatus')}
               />
-              <FormSelect
+              {/* <FormSelect
                 label="Assigned Staff"
                 name="assignedTo"
                 value={formik.values.assignedTo}
@@ -462,8 +494,8 @@ export default function LeadAddDialog({
                 error={getFieldError('assignedTo')}
                 placeholder="— Select Staff —"
                 required={requiredFields.includes('assignedTo')}
-              />
-              <FormSelect
+              /> */}
+              {/* <FormSelect
                 label="Priority"
                 name="priority"
                 value={formik.values.priority}
@@ -476,11 +508,11 @@ export default function LeadAddDialog({
                 ]}
                 error={getFieldError('priority')}
                 required={requiredFields.includes('priority')}
-              />
+              /> */}
             </div>
 
             {/* Labels — MultiSelect */}
-            <FormMultiSelect
+            {/* <FormMultiSelect
               label="Lead Labels"
               name="labels"
               value={formik.values.labels}
@@ -490,13 +522,13 @@ export default function LeadAddDialog({
               error={getFieldError('labels')}
               placeholder="Select labels..."
               required={requiredFields.includes('labels')}
-            />
+            /> */}
 
             {/* Last Follow-Up */}
 
 
             {/* Attachments */}
-            <div>
+            {/* <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Attachments</label>
               <input
                 type="file"
@@ -505,7 +537,6 @@ export default function LeadAddDialog({
                 className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
               />
 
-              {/* Existing Attachments */}
               {existingAttachments.length > 0 && (
                 <div className="mt-3">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Current Attachments</h4>
@@ -562,7 +593,7 @@ export default function LeadAddDialog({
                 </div>
               )}
 
-              {/* New files queued for upload */}
+              
               {attachmentsFiles.length > 0 && (
                 <div className="mt-3">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">New Attachments</h4>
@@ -587,7 +618,7 @@ export default function LeadAddDialog({
                   </ul>
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Active */}
             <label className="flex items-center gap-2 cursor-pointer">

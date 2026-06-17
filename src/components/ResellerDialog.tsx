@@ -47,7 +47,7 @@ const createValidationSchema = Yup.object({
   password: Yup.string()
     .required('Password is required')
     .min(6, 'Password must be at least 6 characters'),
-  role: Yup.string().required('Role is required'),
+  // role: Yup.string().required('Role is required'),
   address: Yup.string().required('Street address is required'),
   city: Yup.string().required('City is required'),
   state: Yup.string().required('State is required'),
@@ -70,7 +70,7 @@ const updateValidationSchema = Yup.object({
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
   password: Yup.string().notRequired().min(6, 'Password must be at least 6 characters'),
-  role: Yup.string().required('Role is required'),
+  // role: Yup.string().required('Role is required'),
   address: Yup.string().required('Street address is required'),
   city: Yup.string().required('City is required'),
   state: Yup.string().required('State is required'),
@@ -213,7 +213,7 @@ export default function ResellerDialog({
       payload.append('fullName', values.fullName);
       payload.append('email', values.email);
       payload.append('phone', values.phone);
-      payload.append('role', values.role);
+      payload.append('role', '60d5ecb8b392d7001f8e8b21');
       payload.append('address', values.address);
       payload.append('city', values.city);
       payload.append('state', values.state);
@@ -348,11 +348,11 @@ export default function ResellerDialog({
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-[38px] text-xs font-semibold text-blue-600 hover:text-blue-800"
                   >
-                    {showPassword ? 'Hide' : 'Show'}
+                    {/* {showPassword ? 'Hide' : 'Show'} */}
                   </button>
                 </div>
 
-                <div className="md:col-span-2">
+                {/* <div className="md:col-span-2">
                   <FormSelect
                     label="Role"
                     name="role"
@@ -363,7 +363,7 @@ export default function ResellerDialog({
                     required
                     placeholder="Select role"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 

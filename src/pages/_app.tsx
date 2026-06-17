@@ -15,7 +15,7 @@ const poppins = Poppins({
 });
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathName = usePathname()
   const isLoginPage = pathName === "/login";
 

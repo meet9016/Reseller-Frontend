@@ -44,6 +44,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     if (pathName === "/leads/kanban") return "Leads Kanban"
     if (pathName === "/setup") return "Setup"
     if (pathName === "/tasks") return "Tasks"
+    if (pathName === "/resellers") return "Reseller List"
     return ""
   }
 
@@ -296,11 +297,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       await axios.put(`${base}/notification/mark-read/${notifId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Update the notification to mark it as read
-      setNotifications(prev => prev.map(notification => 
-        notification._id === notifId 
-          ? { ...notification, isRead: true } 
+      setNotifications(prev => prev.map(notification =>
+        notification._id === notifId
+          ? { ...notification, isRead: true }
           : notification
       ));
     } catch (error) {
@@ -318,7 +319,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       await axios.put(`${base}/notification/mark-all-read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Mark all notifications as read in the state
       setNotifications(prev => prev.map(notification => ({
         ...notification,
@@ -340,9 +341,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         await axios.put(`${base}/notification/mark-read/${notif._id}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         // Update the state to mark this notification as read
-        setNotifications(prev => prev.map(n => 
+        setNotifications(prev => prev.map(n =>
           n._id === notif._id ? { ...n, isRead: true } : n
         ));
       }

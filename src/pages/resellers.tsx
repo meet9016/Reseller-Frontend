@@ -253,9 +253,9 @@ export function ResellersContent() {
   return (
     <>
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Reseller Management</h1>
-        </div>
+        </div> */}
 
         <DataTable
           data={resellersData}
