@@ -89,9 +89,8 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   ];
 
-  if (canViewLead) {
-    menuItems.push({ icon: UserPlus, label: "Leads", path: "/leads" });
-  }
+  // Always allow viewing Leads
+  menuItems.push({ icon: UserPlus, label: "Leads", path: "/leads" });
 
   // Always allow viewing Resellers for now or if they have permission
   menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
