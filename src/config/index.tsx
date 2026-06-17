@@ -53,6 +53,11 @@ export const baseUrl = {
   updateTaskStatus: `${API}task`,
   updateTaskPriority: `${API}task`,
   todayTasks: `${API}task/today`,
+  addReseller: `${API}reseller/create`,
+  getAllResellers: `${API}reseller`,
+  findResellerById: `${API}reseller`,
+  updateReseller: `${API}reseller`,
+  deleteReseller: `${API}reseller`,
   getBaseUrl: API,
 };
 
