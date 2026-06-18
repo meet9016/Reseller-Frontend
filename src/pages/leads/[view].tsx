@@ -217,15 +217,15 @@ export default function LeadsPage() {
   };
 
   // ── Permission flags ──────────────────────────────────────────────────────
-  const canCreate = !!leadPermissions?.create;
-  const canRead = !!(leadPermissions?.readAll || leadPermissions?.readOwn);
-  const canReadAll = !!leadPermissions?.readAll;
-  const canReadOwn = !!leadPermissions?.readOwn;
-  const canUpdate = !!leadPermissions?.update;
-  const canDelete = !!leadPermissions?.delete;
-  const canAssign = !!leadPermissions?.assign;
-  const canTransfer = !!leadPermissions?.transfer;
-  const canConvert = !!leadPermissions?.convert;
+  const canCreate = leadPermissions?.create !== false;
+  const canRead = (leadPermissions?.readAll || leadPermissions?.readOwn) !== false;
+  const canReadAll = leadPermissions?.readAll !== false;
+  const canReadOwn = leadPermissions?.readOwn !== false;
+  const canUpdate = leadPermissions?.update !== false;
+  const canDelete = leadPermissions?.delete !== false;
+  const canAssign = leadPermissions?.assign !== false;
+  const canTransfer = leadPermissions?.transfer !== false;
+  const canConvert = leadPermissions?.convert !== false;
 
   const clearFilters = () => {
     setStatusFilter([]);
