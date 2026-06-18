@@ -254,7 +254,7 @@ export default function ResellerDialog({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={isUpdate ? 'Edit Reseller' : 'Add Reseller'}
+      title={isUpdate ? 'Edit Reseller' : 'Add Reseller ' }
       size="xl"
       footer={
         <>

@@ -216,7 +216,7 @@ export default function DataTable<T extends Record<string, any>>({
             {addButton && (
               <button
                 onClick={addButton.onClick}
-                className="inline-flex items-center gap-2 rounded-md bg-secondary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-md bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
               >
                 {addButton.icon || <span className="text-lg">+</span>}
                 {addButton.label}
@@ -415,7 +415,7 @@ export default function DataTable<T extends Record<string, any>>({
                       key={`page-${page}`}
                       onClick={() => onPageChange(page as number)}
                       className={`inline-flex min-w-[2.5rem] h-9 items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200 ${currentPage === page
-                        ? 'bg-secondary text-white shadow-md'
+                        ? 'bg-[#3B82F6] text-white shadow-md'
                         : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm'
                         }`}
                     >

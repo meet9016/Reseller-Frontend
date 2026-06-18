@@ -45,6 +45,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [canViewLeadStatus, setCanViewLeadStatus] = useState(false);
   const [canViewLeadSource, setCanViewLeadSource] = useState(false);
   const [canViewLeadLabel, setCanViewLeadLabel] = useState(false);
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     const token = getAuthToken();
@@ -55,6 +56,8 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       })
       .then((res) => {
         const role = res.data?.data?.role || {};
+        setUserRole(role.roleName);
+
         const rawPerms = Array.isArray(role.permissions)
           ? role.permissions[0]
           : role.permissions || {};
@@ -93,16 +96,19 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   menuItems.push({ icon: UserPlus, label: "Leads", path: "/leads" });
 
   // Always allow viewing Resellers for now or if they have permission
-  menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
+  // menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
+  if (userRole !== 'Reseller') {
+    menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
+  }
 
   const hasAnySetupPerm = canViewStaff || canViewRole || canViewLeadStatus || canViewLeadSource || canViewLeadLabel;
 
   // if (hasAnySetupPerm) {
-    menuItems.push({
-      icon: Settings,
-      label: "Setup",
-      path: "/setup",
-    });
+  menuItems.push({
+    icon: Settings,
+    label: "Setup",
+    path: "/setup",
+  });
   // }
 
   const isActive = (path?: string) => {
@@ -151,14 +157,14 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             Swal.showLoading();
           }
         });
-        
+
         // Perform logout
         clearAuthToken();
         if (typeof window !== "undefined") {
           localStorage.removeItem("token");
           localStorage.removeItem("auth");
         }
-        
+
         // Show success message
         Swal.fire({
           title: 'Logged Out!',
@@ -195,22 +201,21 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 h-screen bg-[#05111e] text-white shadow-2xl transition-all duration-300 ease-in-out ${
-          isOpen 
-            ? 'w-64 translate-x-0' 
-            : 'w-64 -translate-x-full md:w-20 md:translate-x-0'
-        }`}
+        className={`fixed top-0 left-0 z-40 h-screen bg-[#3B82F6] text-white shadow-2xl transition-all duration-300 ease-in-out ${isOpen
+          ? 'w-64 translate-x-0'
+          : 'w-64 -translate-x-full md:w-20 md:translate-x-0'
+          }`}
       >
         <div className="flex h-full flex-col">
           {/* Header with Logo */}
           <div className={`flex items-center h-20 px-4 border-b border-white/10 ${isOpen ? 'justify-between' : 'justify-center'}`}>
             <div className={`flex items-center gap-3 ${!isOpen && 'hidden md:flex'}`}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#30cdb2] to-[#23abed] flex items-center justify-center font-bold text-white shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-[#3B82F6] shadow-lg">
                 RP
               </div>
               {isOpen && <span className="text-lg font-semibold text-white tracking-wide">Reseller Panel</span>}
             </div>
-            
+
             <button
               onClick={toggleSidebar}
               className={`p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group ${!isOpen && 'md:block'}`}
@@ -239,15 +244,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                       <div>
                         <button
                           onClick={() => toggleExpand(item.label)}
-                          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 group ${
-                            expanded
-                              ? 'bg-white/10 text-white'
-                              : 'text-white/70 hover:bg-white/5 hover:text-white'
-                          }`}
+                          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 group ${expanded
+                            ? 'bg-white/10 text-white'
+                            : 'text-white/70 hover:bg-white/5 hover:text-white'
+                            }`}
                         >
-                          <Icon className={`h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                            expanded ? 'text-white' : 'text-white/70'
-                          }`} />
+                          <Icon className={`h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110 ${expanded ? 'text-white' : 'text-white/70'
+                            }`} />
                           {isOpen && (
                             <>
                               <span className="flex-1 text-sm font-medium text-left">{item.label}</span>
@@ -262,20 +265,18 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                             {item.children?.map((child) => {
                               const ChildIcon = child.icon;
                               const isChildActive = isActive(child.path);
-                              
+
                               return (
                                 <li key={child.label}>
                                   <button
                                     onClick={() => handleNavigation(child.path)}
-                                    className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all duration-200 group ${
-                                      isChildActive
-                                        ? 'bg-gradient-to-r from-[#0f3c70]/20 to-[#0f2f5a]/20 text-white border border-white/10'
-                                        : 'text-white/60 hover:bg-white/5 hover:text-white'
-                                    }`}
+                                    className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all duration-200 group ${isChildActive
+                                      ? 'bg-gradient-to-r from-[#0f3c70]/20 to-[#0f2f5a]/20 text-white border border-white/10'
+                                      : 'text-white/60 hover:bg-white/5 hover:text-white'
+                                      }`}
                                   >
-                                    <ChildIcon className={`h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                                      isChildActive ? 'text-[#9f7cff]' : 'text-white/60'
-                                    }`} />
+                                    <ChildIcon className={`h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110 ${isChildActive ? 'text-[#9f7cff]' : 'text-white/60'
+                                      }`} />
                                     <span className="text-sm">{child.label}</span>
                                   </button>
                                 </li>
@@ -287,15 +288,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                     ) : (
                       <button
                         onClick={() => handleNavigation(item.path)}
-                        className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 group ${
-                          isItemActive
-                            ? 'bg-gradient-to-r from-[#0f3c70] to-[#0f2f5a] text-white'
-                            : 'text-white/70 hover:bg-white/5 hover:text-white'
-                        }`}
+                        className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 group ${isItemActive
+                          ? 'bg-white text-[#3B82F6]'
+                          : 'text-white hover:bg-white/5 hover:text-white'
+                          }`}
                       >
-                        <Icon className={`h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110 ${
-                          isItemActive ? 'text-white' : 'text-white/70'
-                        }`} />
+                        <Icon className={`h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110 ${isItemActive ? 'text-[#3B82F6]' : 'text-white'
+                          }`} />
                         {isOpen && (
                           <span className="text-sm font-medium">{item.label}</span>
                         )}

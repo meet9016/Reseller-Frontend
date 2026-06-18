@@ -297,7 +297,7 @@ export default function LeadsKanbanView({
                             onClick={() => handleSubViewChange(v)}
                             className={`rounded-lg cursor-pointer px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
                                 subView === v
-                                    ? v === 'lost' ? 'bg-red-600 text-white' : v === 'won' ? 'bg-green-600 text-white' : 'bg-secondary text-white'
+                                    ? v === 'lost' ? 'bg-red-600 text-white' : v === 'won' ? 'bg-green-600 text-white' : 'bg-[#3B82F6] text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >
