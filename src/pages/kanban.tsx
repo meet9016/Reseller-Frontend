@@ -31,11 +31,7 @@ type ApiStatus = {
   name: string;
 };
 
-type LeadLabel = {
-  _id: string;
-  name: string;
-  color?: string;
-};
+
 
 type ApiLead = {
   _id: string;
@@ -45,7 +41,7 @@ type ApiLead = {
   contact: string;
   email: string;
   leadSource?: ApiSource;
-  leadLabel?: LeadLabel[];
+
   leadStatus?: ApiStatus;
   assignedTo?: ApiUser;
   priority?: "High" | "Medium" | "Low";
@@ -61,7 +57,7 @@ type ApiLead = {
   lostReason?: string;
   lostDate?: string;
   wonDate?: string;
-  labels?: string[] | LeadLabel[];
+
 };
 
 type StatusGroup = {
@@ -77,7 +73,7 @@ type AddLeadForm = {
   phone: string;
   email: string;
   source: string;
-  label: string[]; // Added label field
+
   status: string;
   staff: string;
   priority: "High" | "Medium" | "Low";
@@ -95,7 +91,7 @@ export default function LeadsPage() {
   const [sources, setSources] = useState<ApiSource[]>([]);
   const [statuses, setStatuses] = useState<ApiStatus[]>([]);
   const [staffMembers, setStaffMembers] = useState<ApiUser[]>([]);
-  const [leadLabels, setLeadLabels] = useState<LeadLabel[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"list" | "board" | "lost" | "won">("board");
   const [search, setSearch] = useState("");
@@ -122,7 +118,7 @@ export default function LeadsPage() {
     phone: "",
     email: "",
     source: "",
-    label: [],
+
     status: "",
     staff: "",
     priority: "Medium",
@@ -273,18 +269,7 @@ export default function LeadsPage() {
     }
   };
 
-  const fetchLeadLabels = async () => {
-    try {
-      const token = getAuthToken();
-      const res = await axios.get(baseUrl.leadLabels, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data?.data;
-      setLeadLabels(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch lead labels", error);
-    }
-  };
+
 
   const fetchStatuses = async () => {
     try {
@@ -319,7 +304,7 @@ export default function LeadsPage() {
     fetchStaff();
     fetchLostLeads();
     fetchWonLeads();
-    fetchLeadLabels();
+
   }, []);
 
   const handleSaveLead = async () => {
@@ -334,7 +319,7 @@ export default function LeadsPage() {
     if (requiredFields.includes('leadStatus') && !addForm.status && !editingLead) missingFields.push('Status');
     if (requiredFields.includes('assignedTo') && !addForm.staff) missingFields.push('Assigned Staff');
     if (requiredFields.includes('priority') && !addForm.priority) missingFields.push('Priority');
-    if (requiredFields.includes('labels') && (!addForm.label || addForm.label.length === 0)) missingFields.push('Lead Labels');
+
 
     if (missingFields.length > 0) {
       toast.error(`Required fields missing: ${missingFields.join(', ')}`);
@@ -345,11 +330,11 @@ export default function LeadsPage() {
     try {
       const token = getAuthToken();
       const payload = {
-        fullName: addForm.name.trim(),
+        customerName: addForm.name.trim(),
         companyName: addForm.companyName?.trim() || "",
         address: addForm.address?.trim() || "",
-        contact: addForm.phone.trim(),
-        email: addForm.email.trim().toLowerCase(),
+        customerContact: addForm.phone.trim(),
+        customerEmail: addForm.email.trim().toLowerCase(),
         leadSource: addForm.source,
         leadStatus: addForm.status,
         assignedTo: addForm.staff,
@@ -359,7 +344,7 @@ export default function LeadsPage() {
         nextFollowupTime: addForm.nextFollowupTime || null,
         note: addForm.note?.trim() || "",
         isActive: addForm.isActive ?? true,
-        leadLabel: addForm.label || [], // Include labels in payload
+
       };
 
       if (editingLead) {
@@ -401,7 +386,7 @@ export default function LeadsPage() {
       phone: "",
       email: "",
       source: "",
-      label: [],
+
       status: "",
       staff: "",
       priority: "Medium",
@@ -422,13 +407,7 @@ export default function LeadsPage() {
 
     if (!lead) return;
 
-    // Extract label IDs if labels exist
-    let labelIds: string[] = [];
-    if (lead.leadLabel) {
-      labelIds = lead.leadLabel.map((label: any) =>
-        typeof label === 'string' ? label : label._id
-      );
-    }
+
 
     setEditingLead(lead);
     setAddForm({
@@ -438,7 +417,7 @@ export default function LeadsPage() {
       phone: lead.contact || "",
       email: lead.email || "",
       source: lead.leadSource?._id || "",
-      label: labelIds,
+
       status: lead.leadStatus?._id || "",
       staff: lead.assignedTo?._id || "",
       priority: lead.priority || "Medium",
@@ -590,20 +569,20 @@ export default function LeadsPage() {
     (lead) =>
       !lead.isLost &&
       !lead.isWon &&
-      (lead.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      ((lead.customerName || lead.fullName || '').toLowerCase().includes(search.toLowerCase()) ||
         lead.companyName?.toLowerCase().includes(search.toLowerCase()) ||
-        lead.email.toLowerCase().includes(search.toLowerCase())),
+        (lead.customerEmail || lead.email || '').toLowerCase().includes(search.toLowerCase())),
   );
 
   const lostLeads = lostLeadsList.filter(
     (lead) =>
-      lead.fullName.toLowerCase().includes(lostSearch.toLowerCase()) ||
+      (lead.customerName || lead.fullName || '').toLowerCase().includes(lostSearch.toLowerCase()) ||
       lead.companyName?.toLowerCase().includes(lostSearch.toLowerCase())
   );
 
   const wonLeads = wonLeadsList.filter(
     (lead) =>
-      lead.fullName.toLowerCase().includes(wonSearch.toLowerCase()) ||
+      (lead.customerName || lead.fullName || '').toLowerCase().includes(wonSearch.toLowerCase()) ||
       lead.companyName?.toLowerCase().includes(wonSearch.toLowerCase())
   );
 
@@ -835,18 +814,7 @@ export default function LeadsPage() {
                                 </div>
                               </div>
 
-                              {/* Labels */}
-                              <div className="mt-3 flex gap-2 overflow-x-auto whitespace-nowrap">
-                                {lead.leadLabel?.map((label: any) => (
-                                  <span
-                                    key={label._id}
-                                    style={{ backgroundColor: label.color }}
-                                    className="px-2 py-1 text-xs font-medium text-white rounded-md flex-shrink-0"
-                                  >
-                                    {label.name}
-                                  </span>
-                                ))}
-                              </div>
+
                             </div>
                           ))}
                         </div>
@@ -1285,32 +1253,7 @@ export default function LeadsPage() {
                 </select>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Lead Labels {requiredFields.includes('labels') && <span className="text-red-500">*</span>}
-              </label>
 
-              <Select
-                isMulti
-                options={leadLabels.map((label) => ({
-                  value: label._id,
-                  label: label.name,
-                }))}
-                value={leadLabels
-                  .filter((label) => addForm.label.includes(label._id))
-                  .map((label) => ({
-                    value: label._id,
-                    label: label.name,
-                  }))}
-                onChange={(selected) => {
-                  const values = selected ? selected.map((item) => item.value) : [];
-                  setAddForm((p) => ({ ...p, label: values }));
-                }}
-                className="mt-1"
-                classNamePrefix="react-select"
-                placeholder="Select labels..."
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700">
                 Last Follow-Up
@@ -1441,7 +1384,7 @@ export default function LeadsPage() {
         >
           {viewLead && (
             <div className="space-y-4">
-              <div className="font-semibold text-xl">{viewLead.fullName}</div>
+              <div className="font-semibold text-xl">{viewLead.customerName || viewLead.fullName}</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Company</div>
@@ -1449,11 +1392,11 @@ export default function LeadsPage() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Phone</div>
-                  <div>{viewLead.contact || "-"}</div>
+                  <div>{viewLead.customerContact || viewLead.contact || "-"}</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Email</div>
-                  <div>{viewLead.email || "-"}</div>
+                  <div>{viewLead.customerEmail || viewLead.email || "-"}</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Source</div>

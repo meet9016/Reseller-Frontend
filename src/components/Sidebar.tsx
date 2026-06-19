@@ -45,7 +45,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [canViewRole, setCanViewRole] = useState(false);
   const [canViewLeadStatus, setCanViewLeadStatus] = useState(false);
   const [canViewLeadSource, setCanViewLeadSource] = useState(false);
-  const [canViewLeadLabel, setCanViewLeadLabel] = useState(false);
+
   const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         const rolePerms = rawPerms.role || {};
         const leadStatusPerms = rawPerms.leadStatus || {};
         const leadSourcePerms = rawPerms.leadSource || {};
-        const leadLabelPerms = rawPerms.leadLabel || {};
+
 
         setCanViewLead(!!(leadPerms.readOwn || leadPerms.readAll));
         setCanViewTask(!!(taskPerms.readOwn || taskPerms.readAll));
@@ -76,7 +76,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         setCanViewRole(!!rolePerms.readAll);
         setCanViewLeadStatus(!!leadStatusPerms.readAll);
         setCanViewLeadSource(!!leadSourcePerms.readAll);
-        setCanViewLeadLabel(!!leadLabelPerms.readAll);
+
       })
       .catch(() => {
         setCanViewLead(false);
@@ -85,12 +85,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         setCanViewRole(false);
         setCanViewLeadStatus(false);
         setCanViewLeadSource(false);
-        setCanViewLeadLabel(false);
+
       });
   }, []);
 
   const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    // { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   ];
 
   // Always allow viewing Leads
@@ -105,7 +105,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
   }
 
-  const hasAnySetupPerm = canViewStaff || canViewRole || canViewLeadStatus || canViewLeadSource || canViewLeadLabel;
+  const hasAnySetupPerm = canViewStaff || canViewRole || canViewLeadStatus || canViewLeadSource;
 
   // if (hasAnySetupPerm) {
   menuItems.push({

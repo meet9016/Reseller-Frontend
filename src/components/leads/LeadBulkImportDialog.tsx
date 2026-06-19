@@ -343,10 +343,10 @@ export default function LeadBulkImportDialog({ isOpen, onClose, onImported }: Pr
                 </div>
                 <p className="text-sm text-blue-700 leading-relaxed">
                   Download the official import template. It includes <strong>dropdowns</strong> for{' '}
-                  <em>Lead Status</em>, <em>Lead Source</em>, and <em>Priority</em> pre-filled from your master data.
+                  <em>Lead Status</em> and <em>Priority</em> pre-filled from your master data.
                 </p>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  {['Full Name *', 'Contact *', 'Company Name *', 'Lead Status * (dropdown)', 'Lead Source * (dropdown)', 'Email', 'Priority (dropdown)', 'Note'].map((f) => (
+                  {['Full Name *', 'Contact *', 'Company Name *', 'Lead Status * (dropdown)', 'Email', 'Priority (dropdown)', 'Note'].map((f) => (
                     <div key={f} className="flex items-center gap-1 rounded-full bg-white border border-blue-200 px-3 py-1 text-blue-700">
                       <ChevronRight className="h-3 w-3" /> {f}
                     </div>

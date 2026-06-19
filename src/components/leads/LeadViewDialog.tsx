@@ -303,23 +303,7 @@
 //               )}
 //             </div>
 
-//             {/* Labels */}
-//             {lead.leadLabel && lead.leadLabel.length > 0 && (
-//               <div className="rounded-lg bg-gray-50 p-4">
-//                 <div className="mb-2 text-sm font-medium text-gray-600">Labels</div>
-//                 <div className="flex flex-wrap gap-2">
-//                   {lead.leadLabel.map((l) => (
-//                     <span
-//                       key={l._id}
-//                       style={{ backgroundColor: l.color }}
-//                       className="rounded-md px-2 py-1 text-xs font-medium text-white"
-//                     >
-//                       {l.name}
-//                     </span>
-//                   ))}
-//                 </div>
-//               </div>
-//             )}
+
 
 //             {/* Note */}
 //             {lead.note && (
@@ -701,7 +685,6 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
               <InfoCard label="Phone" value={(lead as any).CustomerContact || lead.contact} />
               <InfoCard label="Email" value={(lead as any).customerEmail || lead.email} />
               <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? `₹${(lead as any).paymentAmount.toLocaleString()}` : undefined} />
-              <InfoCard label="Source" value={lead.leadSource?.name} />
               <InfoCard label="Assigned Staff" value={lead.assignedTo?.fullName} />
               <InfoCard
                 label="Priority"
@@ -883,23 +866,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
               )}
             </div>
 
-            {/* Labels */}
-            {lead.leadLabel && lead.leadLabel.length > 0 && (
-              <div className="rounded-lg bg-gray-50 p-4">
-                <div className="mb-2 text-sm font-medium text-gray-600">Labels</div>
-                <div className="flex flex-wrap gap-2">
-                  {lead.leadLabel.map((l) => (
-                    <span
-                      key={l._id}
-                      style={{ backgroundColor: l.color }}
-                      className="rounded-md px-2 py-1 text-xs font-medium text-white"
-                    >
-                      {l.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
 
             {/* Note */}
             {lead.note && (

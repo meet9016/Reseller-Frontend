@@ -53,7 +53,6 @@ export default function LeadsPage() {
   // ── Search & Filters ─────────────────────────────────────────────────────
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [staffFilter, setStaffFilter] = useState<string[]>([]);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -113,12 +112,11 @@ export default function LeadsPage() {
     () => ({
       search: debouncedSearch,
       status: statusFilter.length > 0 ? statusFilter.join(',') : '',
-      source: sourceFilter.length > 0 ? sourceFilter.join(',') : '',
       staff: staffFilter.length > 0 ? staffFilter.join(',') : '',
       from: fromDate,
       to: toDate,
     }),
-    [debouncedSearch, statusFilter, sourceFilter, staffFilter, fromDate, toDate]
+    [debouncedSearch, statusFilter, staffFilter, fromDate, toDate]
   );
 
   // ── Data — pass kanbanSubView so hook fetches only what's needed ──────────
@@ -127,7 +125,6 @@ export default function LeadsPage() {
     leadsList,
     lostLeads,
     wonLeads,
-    sources,
     statuses,
     staffMembers,
     counts,
@@ -188,7 +185,6 @@ export default function LeadsPage() {
       const params: Record<string, string> = {};
       if (filters.search) params.search = filters.search;
       if (filters.status) params.status = filters.status;
-      if (filters.source) params.source = filters.source;
       if (filters.staff) params.staff = filters.staff;
       if (filters.from) params.from = filters.from;
       if (filters.to) params.to = filters.to;
@@ -229,7 +225,6 @@ export default function LeadsPage() {
 
   const clearFilters = () => {
     setStatusFilter([]);
-    setSourceFilter([]);
     setStaffFilter([]);
     setFromDate('');
     setToDate('');
@@ -238,7 +233,6 @@ export default function LeadsPage() {
 
   const hasActiveFilters = !!(
     statusFilter.length > 0 ||
-    sourceFilter.length > 0 ||
     staffFilter.length > 0 ||
     fromDate ||
     toDate ||
@@ -440,14 +434,6 @@ export default function LeadsPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <FormMultiSelect
-                  label="Lead Source"
-                  value={sourceFilter}
-                  onChange={(e) => setSourceFilter(e)}
-                  options={sources.map((s) => ({ value: s._id, label: s.name }))}
-                />
-              </div>
 
               <div className="space-y-2">
                 <FormMultiSelect
@@ -505,7 +491,6 @@ export default function LeadsPage() {
         {viewMode === 'list' ? (
           <LeadsListView
             statuses={statuses}
-            sources={sources}
             staffMembers={staffMembers}
             onEdit={canUpdate ? handleEdit : undefined}
             onView={handleView}

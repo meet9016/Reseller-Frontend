@@ -14,11 +14,7 @@ interface DropdownItem {
   fullName?: string;
 }
 
-interface LeadLabel {
-  _id: string;
-  name: string;
-  color?: string;
-}
+
 
 interface Lead {
   id: string;
@@ -36,7 +32,7 @@ interface Lead {
   note?: string;
   isActive?: boolean;
   attachments?: { name: string; url?: string }[];
-  labels?: string[]; // Added labels field
+
   // ... other fields if needed in form
 }
 
@@ -61,7 +57,7 @@ export default function LeadAddDialog({
   const [leadSources, setLeadSources] = useState<DropdownItem[]>([]);
   const [leadStatuses, setLeadStatuses] = useState<DropdownItem[]>([]);
   const [staffList, setStaffList] = useState<DropdownItem[]>([]);
-  const [leadLabels, setLeadLabels] = useState<LeadLabel[]>([]); // Added state for labels
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -77,7 +73,7 @@ export default function LeadAddDialog({
     leadSource: '',
     leadStatus: '',
     assignedTo: '',
-    labels: [] as string[], // Added labels array
+
     priority: 'medium' as 'high' | 'medium' | 'low',
     nextFollowupDate: '',
     nextFollowupTime: '',
@@ -96,17 +92,16 @@ export default function LeadAddDialog({
         setLoading(true);
         setFormError(null);
 
-        const [sourcesRes, statusRes, staffRes, labelsRes] = await Promise.all([
+        const [sourcesRes, statusRes, staffRes] = await Promise.all([
           axios.get(baseUrl.leadSources, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(baseUrl.leadStatuses, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(baseUrl.getAllStaff, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(baseUrl.leadLabels, { headers: { Authorization: `Bearer ${token}` } }), // Fetch labels
         ]);
 
         setLeadSources(sourcesRes.data?.data || []);
         setLeadStatuses(statusRes.data?.data || []);
         setStaffList(staffRes.data?.data || []);
-        setLeadLabels(labelsRes.data?.data || []);
+
       } catch (err) {
         console.error(err);
         setFormError('Failed to load dropdown options');
@@ -119,13 +114,7 @@ export default function LeadAddDialog({
 
     // Populate form data
     if (mode === 'edit' && initialData) {
-      // Extract label IDs if they exist
-      let labelIds: string[] = [];
-      if (initialData.labels) {
-        labelIds = initialData.labels.map(label => 
-          typeof label === 'string' ? label : (label as any)._id
-        );
-      }
+
 
       setFormData({
         fullName: initialData.name || '',
@@ -136,7 +125,7 @@ export default function LeadAddDialog({
         leadSource: initialData.source || '',
         leadStatus: initialData.status || '',
         assignedTo: initialData.staff || '',
-        labels: labelIds,
+
         priority: (initialData.priority || 'medium').toLowerCase() as 'high' | 'medium' | 'low',
         nextFollowupDate: initialData.nextFollowupDate || '',
         nextFollowupTime: initialData.nextFollowupTime || '',
@@ -157,7 +146,7 @@ export default function LeadAddDialog({
         leadSource: '',
         leadStatus: '',
         assignedTo: '',
-        labels: [],
+
         priority: 'medium',
         nextFollowupDate: '',
         nextFollowupTime: '',
@@ -182,10 +171,7 @@ export default function LeadAddDialog({
     setFormError(null);
   };
 
-  const handleLabelsChange = (selectedOptions: any) => {
-    const values = selectedOptions ? selectedOptions.map((option: any) => option.value) : [];
-    setFormData((prev) => ({ ...prev, labels: values }));
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,15 +192,15 @@ export default function LeadAddDialog({
 
       const hasFiles = attachmentsFiles.length > 0;
       const payload: any = {
-        fullName: formData.fullName.trim(),
+        customerName: formData.fullName.trim(),
         companyName: formData.companyName.trim(),
         address: formData.address.trim(),
-        contact: formData.contact.trim(),
-        email: formData.email.trim().toLowerCase(),
+        customerContact: formData.contact.trim(),
+        customerEmail: formData.email.trim().toLowerCase(),
         leadSource: formData.leadSource,
         leadStatus: formData.leadStatus,
         assignedTo: formData.assignedTo,
-        labels: formData.labels, // Include labels in payload
+
         priority: formData.priority,
         nextFollowupDate: formData.nextFollowupDate || null,
         nextFollowupTime: formData.nextFollowupTime || null,
@@ -227,12 +213,7 @@ export default function LeadAddDialog({
       const fd = new FormData();
       Object.entries(payload).forEach(([k, v]) => {
         if (v !== undefined && v !== null) {
-          if (k === 'labels' && Array.isArray(v)) {
-            // Handle array fields by appending each value
-            v.forEach((labelId) => {
-              fd.append(`${k}[]`, String(labelId));
-            });
-          } else {
+          if (true) {
             fd.append(k, String(v));
           }
         }
@@ -275,16 +256,7 @@ export default function LeadAddDialog({
 
   const title = mode === 'edit' ? 'Edit Lead' : 'Add New Lead';
 
-  // Prepare options for react-select
-  const labelOptions = leadLabels.map((label) => ({
-    value: label._id,
-    label: label.name,
-    color: label.color,
-  }));
 
-  const selectedLabelOptions = labelOptions.filter((option) =>
-    formData.labels.includes(option.value)
-  );
 
   return (
     <Dialog
@@ -455,41 +427,7 @@ export default function LeadAddDialog({
             </div>
           </div>
 
-          {/* Lead Labels Multi-Select */}
-          <div>
-            <Label>Lead Labels</Label>
-            <Select
-              isMulti
-              options={labelOptions}
-              value={selectedLabelOptions}
-              onChange={handleLabelsChange}
-              className="mt-1"
-              classNamePrefix="react-select"
-              placeholder="Select labels..."
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  borderColor: '#94a3b8',
-                  borderRadius: '0.375rem',
-                  padding: '0.125rem',
-                }),
-                option: (base, { data }) => ({
-                  ...base,
-                  color: data.color || '#000',
-                }),
-                multiValue: (base, { data }) => ({
-                  ...base,
-                  backgroundColor: data.color ? `${data.color}20` : '#e2e8f0',
-                  borderRadius: '0.25rem',
-                }),
-                multiValueLabel: (base, { data }) => ({
-                  ...base,
-                  color: data.color || '#000',
-                  fontWeight: 500,
-                }),
-              }}
-            />
-          </div>
+
 
           {mode === 'edit' && (
             <>

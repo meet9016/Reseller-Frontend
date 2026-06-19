@@ -106,20 +106,7 @@ export default function KanbanCard({
                 </div>
             </div>
 
-            {/* Labels */}
-            {lead.leadLabel && lead.leadLabel.length > 0 && (
-                <div className="mt-2 flex gap-1.5 overflow-x-auto">
-                    {lead.leadLabel.map((label) => (
-                        <span
-                            key={label._id}
-                            style={{ backgroundColor: label.color }}
-                            className="flex-shrink-0 rounded px-2 py-0.5 text-[11px] font-medium text-white"
-                        >
-                            {label.name}
-                        </span>
-                    ))}
-                </div>
-            )}
+
         </div>
     );
 }

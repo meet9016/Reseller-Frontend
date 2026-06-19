@@ -8,21 +8,12 @@ export type ApiUser = {
   avatar?: string;
 };
 
-export type ApiSource = {
-  _id: string;
-  name: string;
-};
 
 export type ApiStatus = {
   _id: string;
   name: string;
 };
 
-export type LeadLabel = {
-  _id: string;
-  name: string;
-  color?: string;
-};
 
 export type ApiFollowUp = {
   _id?: string;
@@ -36,12 +27,13 @@ export type ApiFollowUp = {
 export type ApiLead = {
   _id: string;
   fullName: string;
+  customerName?: string;
   companyName?: string;
   address?: string;
   contact: string;
+  customerContact?: string;
   email: string;
-  leadSource?: ApiSource;
-  leadLabel?: LeadLabel[];
+  customerEmail?: string;
   leadStatus?: ApiStatus;
   assignedTo?: ApiUser;
   priority?: 'High' | 'Medium' | 'Low' | 'high' | 'medium' | 'low';
@@ -74,8 +66,6 @@ export type AddLeadForm = {
   address?: string;
   phone: string;
   email: string;
-  source: string;
-  labels: string[];
   status: string;
   staff: string;
   priority: 'High' | 'Medium' | 'Low';

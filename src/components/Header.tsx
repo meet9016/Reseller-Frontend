@@ -60,28 +60,28 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   }, []);
 
   // Request notification permission with user interaction
-  const requestNotificationPermission = async () => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        setNotificationPermission(permission);
+  // const requestNotificationPermission = async () => {
+  //   if (typeof window !== 'undefined' && 'Notification' in window) {
+  //     try {
+  //       const permission = await Notification.requestPermission();
+  //       setNotificationPermission(permission);
 
-        if (permission === 'granted') {
-          console.log('Notification permission granted');
-          // Show a test notification to confirm it's working
-          new Notification('Notifications Enabled', {
-            body: 'You will now receive notifications for new tasks and leads.',
-            icon: '/favicon.ico'
-          });
-        } else if (permission === 'denied') {
-          console.log('Notification permission denied');
-          // You can show a toast or tooltip here to inform the user
-        }
-      } catch (error) {
-        console.error('Error requesting notification permission:', error);
-      }
-    }
-  };
+  //       if (permission === 'granted') {
+  //         console.log('Notification permission granted');
+  //         // Show a test notification to confirm it's working
+  //         new Notification('Notifications Enabled', {
+  //           body: 'You will now receive notifications for new tasks and leads.',
+  //           icon: '/favicon.ico'
+  //         });
+  //       } else if (permission === 'denied') {
+  //         console.log('Notification permission denied');
+  //         // You can show a toast or tooltip here to inform the user
+  //       }
+  //     } catch (error) {
+  //       console.error('Error requesting notification permission:', error);
+  //     }
+  //   }
+  // };
 
   // Check notification permission status on mount
   useEffect(() => {
@@ -114,23 +114,23 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      const token = getAuthToken();
-      if (!token) return;
-      const base = baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl;
-      const res = await axios.get(`${base}/notification/my-notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotifications(res.data?.data || []);
-    } catch (error) {
-      console.error('Failed to fetch notifications', error);
-    }
-  };
+  // const fetchNotifications = async () => {
+  //   try {
+  //     const token = getAuthToken();
+  //     if (!token) return;
+  //     const base = baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl;
+  //     const res = await axios.get(`${base}/notification/my-notifications`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     setNotifications(res.data?.data || []);
+  //   } catch (error) {
+  //     console.error('Failed to fetch notifications', error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  // useEffect(() => {
+  //   fetchNotifications();
+  // }, []);
 
   useEffect(() => {
     const token = getAuthToken();
@@ -217,7 +217,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         socket.on('new_task_assigned', (notif: Notification) => {
           console.log('[Socket] 📩 new_task_assigned:', notif);
 
-          setNotifications((prev) => [notif, ...prev]);
+          // setNotifications((prev) => [notif, ...prev]);
 
           if (typeof window !== 'undefined' && 'Notification' in window) {
             if (Notification.permission === 'granted') {
@@ -255,12 +255,12 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
         socket.on('new_lead_assigned', (notif: Notification) => {
           console.log('[Socket] 📩 new_lead_assigned:', notif);
-          setNotifications((prev) => [notif, ...prev]);
+          // setNotifications((prev) => [notif, ...prev]);
         });
 
         socket.on('task_updated', (notif: Notification) => {
           console.log('[Socket] 📩 task_updated:', notif);
-          setNotifications((prev) => [notif, ...prev]);
+          // setNotifications((prev) => [notif, ...prev]);
         });
       })
       .catch((err) => {
@@ -299,11 +299,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       });
 
       // Update the notification to mark it as read
-      setNotifications(prev => prev.map(notification =>
-        notification._id === notifId
-          ? { ...notification, isRead: true }
-          : notification
-      ));
+      // setNotifications(prev => prev.map(notification =>
+      //   notification._id === notifId
+      //     ? { ...notification, isRead: true }
+      //     : notification
+      // ));
     } catch (error) {
       console.error('Failed to mark read', error);
     }
@@ -321,10 +321,10 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       });
 
       // Mark all notifications as read in the state
-      setNotifications(prev => prev.map(notification => ({
-        ...notification,
-        isRead: true
-      })));
+      // setNotifications(prev => prev.map(notification => ({
+      //   ...notification,
+      //   isRead: true
+      // })));
     } catch (error) {
       console.error('Failed to mark all as read', error);
     } finally {
@@ -343,9 +343,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         });
 
         // Update the state to mark this notification as read
-        setNotifications(prev => prev.map(n =>
-          n._id === notif._id ? { ...n, isRead: true } : n
-        ));
+        // setNotifications(prev => prev.map(n =>
+        //   n._id === notif._id ? { ...n, isRead: true } : n
+        // ));
       }
 
       setShowNotifications(false);
@@ -410,7 +410,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   // Calculate unread notifications count
   const unreadNotifications = notifications.filter(n => !n.isRead);
   const unreadCount = unreadNotifications.length;
-  const totalCount = notifications.length;
+  // const totalCount = notifications.length;
 
   return (
     <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-white border-b border-gray-200 px-4 md:px-6 backdrop-blur-sm">

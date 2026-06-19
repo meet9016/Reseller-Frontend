@@ -51,7 +51,7 @@ const normalizeCaps = (caps?: CapabilityPartial) => ({
 
 // FIXED: Added all 9 features here
 const normalizeRole = (r: BackendRole): Role => {
-  const features = ['lead', 'task', 'taskStatus', 'staff', 'role', 'leadStatus', 'leadSource', 'leadLabel', 'teams', 'organizations'];
+  const features = ['lead', 'task', 'taskStatus', 'staff', 'role', 'leadStatus', 'leadSource', 'teams', 'organizations'];
   const rawPerms = r?.permissions;
   const srcPerms = Array.isArray(rawPerms) ? rawPerms[0] : rawPerms || {};
 
@@ -90,7 +90,7 @@ const toBackendRole = (r: Role): BackendRole => {
   const role = serializeCaps(r.permissions?.role);
   const leadStatus = serializeCaps(r.permissions?.leadStatus);
   const leadSource = serializeCaps(r.permissions?.leadSource);
-  const leadLabel = serializeCaps(r.permissions?.leadLabel);
+
   const teams = serializeCaps(r.permissions?.teams);
   const organizations = serializeCaps(r.permissions?.organizations);
   
@@ -103,8 +103,7 @@ const toBackendRole = (r: Role): BackendRole => {
       staff, 
       role, 
       leadStatus, 
-      leadSource, 
-      leadLabel, 
+      leadSource,
       teams, 
       organizations 
     }],

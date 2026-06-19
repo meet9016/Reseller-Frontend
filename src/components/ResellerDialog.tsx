@@ -213,7 +213,9 @@ export default function ResellerDialog({
       payload.append('fullName', values.fullName);
       payload.append('email', values.email);
       payload.append('phone', values.phone);
-      payload.append('role', '60d5ecb8b392d7001f8e8b21');
+      if (values.role) {
+        payload.append('role', values.role);
+      }
       payload.append('address', values.address);
       payload.append('city', values.city);
       payload.append('state', values.state);

@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
-import { ApiLead, ApiSource, ApiStatus, ApiUser, LeadLabel, LeadCountSummary } from './types';
+import { ApiLead, ApiStatus, ApiUser, LeadCountSummary } from './types';
 
 type Filters = {
   search?: string;
   status?: string;
-  source?: string;
   staff?: string;
   from?: string;
   to?: string;
@@ -25,10 +24,9 @@ export function useLeadsData(
   const [lostLeads, setLostLeads] = useState<ApiLead[]>([]);
   const [wonLeads, setWonLeads] = useState<ApiLead[]>([]);
 
-  const [sources, setSources] = useState<ApiSource[]>([]);
   const [statuses, setStatuses] = useState<ApiStatus[]>([]);
   const [staffMembers, setStaffMembers] = useState<ApiUser[]>([]);
-  const [leadLabels, setLeadLabels] = useState<LeadLabel[]>([]);
+
   const [counts, setCounts] = useState<LeadCountSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState({
@@ -54,29 +52,35 @@ export function useLeadsData(
 
   const getHeaders = () => ({ Authorization: `Bearer ${getAuthToken()}` });
 
-  const isResellerRole = useCallback((): boolean => {
-    if (typeof window === 'undefined') return false;
+  const getUserRole = useCallback((): string => {
+    if (typeof window === 'undefined') return '';
     const token = getAuthToken();
-    if (!token) return false;
+    if (!token) return '';
     try {
       const parts = token.split('.');
       if (parts.length === 3) {
         const payload = JSON.parse(window.atob(parts[1]));
-        return (payload.role || '').toLowerCase() === 'reseller';
+        return payload?.role?.roleName?.toLowerCase() || '';
       }
     } catch (e) {
       console.error('Failed to parse token payload:', e);
     }
-    return false;
+    return '';
   }, []);
 
   const getLeadsUrl = useCallback((tab: string) => {
-    return (tab === 'my' || isResellerRole()) ? baseUrl.myLeads : baseUrl.getAllLeads;
-  }, [isResellerRole]);
+    const role = getUserRole();
+    if (role === 'reseller') return baseUrl.myLeads;
+    if (role === 'admin') return baseUrl.getAllLeads;
+    return tab === 'my' ? baseUrl.myLeads : baseUrl.getAllLeads;
+  }, [getUserRole]);
 
   const getLeadsCountUrl = useCallback((tab: string) => {
-    return (tab === 'my' || isResellerRole()) ? baseUrl.myLeadCountSummary : baseUrl.leadCountSummary;
-  }, [isResellerRole]);
+    const role = getUserRole();
+    if (role === 'reseller') return baseUrl.myLeadCountSummary;
+    if (role === 'admin') return baseUrl.leadCountSummary;
+    return tab === 'my' ? baseUrl.myLeadCountSummary : baseUrl.leadCountSummary;
+  }, [getUserRole]);
 
   // Keep latest values in a ref so callbacks always read fresh values
   const stateRef = useRef({
@@ -105,10 +109,9 @@ export function useLeadsData(
         const res = await axios.get(baseUrl.getKanbanData, {
           headers: getHeaders(),
           params: {
-            my: (tab === 'my' || isResellerRole()) ? true : undefined,
+            my: (tab === 'my' || getUserRole() === 'reseller') ? true : undefined,
             search: f.search || undefined,
             status: f.status || undefined,
-            source: f.source || undefined,
             staff: f.staff || undefined,
             from: f.from || undefined,
             to: f.to || undefined,
@@ -134,7 +137,6 @@ export function useLeadsData(
           params: {
             search: f.search || undefined,
             status: f.status || undefined,
-            source: f.source || undefined,
             staff: f.staff || undefined,
             from: f.from || undefined,
             to: f.to || undefined,
@@ -147,7 +149,7 @@ export function useLeadsData(
       console.error('fetchKanbanLeads error:', e);
       setLeads([]);
     }
-  }, [getLeadsUrl, isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getLeadsUrl, getUserRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLeadsList = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -161,7 +163,6 @@ export function useLeadsData(
         params: {
           search: f.search || undefined,
           status: f.status || undefined,
-          source: f.source || undefined,
           staff: f.staff || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
@@ -189,10 +190,9 @@ export function useLeadsData(
       const res = await axios.get(baseUrl.getLostLeads, {
         headers: getHeaders(),
         params: {
-          my: (tab === 'my' || isResellerRole()) ? true : undefined,
+          my: (tab === 'my' || getUserRole() === 'reseller') ? true : undefined,
           search: f.search || undefined,
           status: f.status || undefined,
-          source: f.source || undefined,
           staff: f.staff || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
@@ -210,7 +210,7 @@ export function useLeadsData(
       console.error('fetchLostLeads error:', e);
       setLostLeads([]);
     }
-  }, [isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getUserRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchWonLeads = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -221,10 +221,9 @@ export function useLeadsData(
       const res = await axios.get(baseUrl.getWonLeads, {
         headers: getHeaders(),
         params: {
-          my: (tab === 'my' || isResellerRole()) ? true : undefined,
+          my: (tab === 'my' || getUserRole() === 'reseller') ? true : undefined,
           search: f.search || undefined,
           status: f.status || undefined,
-          source: f.source || undefined,
           staff: f.staff || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
@@ -242,7 +241,7 @@ export function useLeadsData(
       console.error('fetchWonLeads error:', e);
       setWonLeads([]);
     }
-  }, [isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getUserRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCounts = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -255,7 +254,6 @@ export function useLeadsData(
         params: {
           search: f.search || undefined,
           status: f.status || undefined,
-          source: f.source || undefined,
           staff: f.staff || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
@@ -269,17 +267,13 @@ export function useLeadsData(
 
   const fetchMeta = useCallback(async () => {
     try {
-      const [srcRes, stRes, staffRes, labelsRes, meRes] = await Promise.all([
-        axios.get(baseUrl.leadSources, { headers: getHeaders() }),
+      const [stRes, staffRes, meRes] = await Promise.all([
         axios.get(baseUrl.leadStatuses, { headers: getHeaders() }),
         axios.get(baseUrl.getAllStaff, { headers: getHeaders() }),
-        axios.get(baseUrl.leadLabels, { headers: getHeaders() }),
         axios.get(baseUrl.currentStaff, { headers: getHeaders() }),
       ]);
-      setSources(srcRes.data?.data ?? srcRes.data ?? []);
       setStatuses(stRes.data?.data ?? stRes.data ?? []);
       setStaffMembers(staffRes.data?.data ?? staffRes.data ?? []);
-      setLeadLabels(labelsRes.data?.data ?? []);
       const role = meRes.data?.data?.role || {};
       const rawPerms = Array.isArray(role.permissions) ? role.permissions[0] : role.permissions || {};
       const lp = rawPerms.lead || {};
@@ -297,7 +291,7 @@ export function useLeadsData(
   // ─────────────────────────────────────────────────────────────────────────
   const refetchAll = useCallback(async () => {
     const { activeTab: tab, filters: f, viewMode: vm, kanbanSubView: ksv,
-            listPage: lp, lostPage: lsp, wonPage: wp } = stateRef.current;
+      listPage: lp, lostPage: lsp, wonPage: wp } = stateRef.current;
 
     if (vm === 'list') {
       await Promise.all([fetchLeadsList(tab, f, lp), fetchCounts(tab, f)]);
@@ -413,7 +407,7 @@ export function useLeadsData(
     leads, setLeads,
     leadsList, setLeadsList,
     lostLeads, wonLeads,
-    sources, statuses, staffMembers, leadLabels,
+    statuses, staffMembers,
     counts, loading, permissions,
     refetchAll,
     fetchLeadsList,

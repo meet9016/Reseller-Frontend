@@ -4,7 +4,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Phone, Mail } from 'lucide-react';
 import { baseUrl, getAuthToken } from '@/config';
-import { ApiSource, ApiStatus, ApiUser, ApiLead } from './types';
+import { ApiStatus, ApiUser, ApiLead } from './types';
 import DataTable, { Column } from '@/components/DataTable';
 import DeleteDialog from '@/components/DeleteDialog';
 import Swal from 'sweetalert2';
@@ -27,7 +27,6 @@ type TableLead = {
   address?: string;
   phone: string;
   email: string;
-  source: string;
   status: string;
   staff: string;
   priority: string;
@@ -37,14 +36,13 @@ type TableLead = {
   note?: string;
   isActive?: boolean;
   attachments?: { name: string; url?: string }[];
-  leadLabel?: Array<{ _id: string; name: string; color: string }>;
+
   paymentAmount?: number;
   _raw?: any;
 };
 
 interface Props {
   statuses: ApiStatus[];
-  sources: ApiSource[];
   staffMembers: ApiUser[];
   onEdit?: (lead: ApiLead) => void;
   onView?: (lead: ApiLead) => void;
@@ -63,7 +61,6 @@ interface Props {
   filters: {
     search?: string;
     status?: string;
-    source?: string;
     staff?: string;
     date?: string;
   };
@@ -86,9 +83,8 @@ function mapLead(item: any): TableLead {
     name: item.customerName || item.fullName || '-',
     companyName: item.product || item.companyName || '-',
     address: item.address || '-',
-    phone: item.CustomerContact || item.contact || item.phone || '-',
+    phone: item.customerContact || item.CustomerContact || item.contact || item.phone || '-',
     email: item.customerEmail || item.email || '-',
-    source: item.leadSource?.name || item.source?.name || '-',
     status: item.leadStatus?.name || item.status?.name || '-',
     staff: item.assignedTo?.fullName || '-',
     priority: item.priority?.toUpperCase() || 'MEDIUM',
@@ -96,7 +92,7 @@ function mapLead(item: any): TableLead {
       ? new Date(item.updatedAt).toLocaleDateString()
       : '-',
     isActive: item.isActive,
-    leadLabel: item.leadLabel || [],
+
     paymentAmount: item.paymentAmount || item.amount,
     _raw: item,
   };
@@ -104,7 +100,6 @@ function mapLead(item: any): TableLead {
 
 export default function LeadsListView({
   statuses,
-  sources,
   staffMembers,
   onEdit,
   onView,
@@ -204,31 +199,8 @@ export default function LeadsListView({
         </div>
       ),
     },
-    { key: 'source', label: 'SOURCE' },
     { key: 'status', label: 'STATUS' },
-    {
-      key: 'leadLabel',
-      label: 'LABEL',
-      render: (_: any, row: TableLead) => {
-        if (!row.leadLabel || row.leadLabel.length === 0) {
-          return <span className="text-gray-400">-</span>;
-        }
 
-        return (
-          <div className="flex flex-wrap gap-1 whitespace-nowrap">
-            {row.leadLabel.map((label) => (
-              <span
-                key={label._id}
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                style={{ backgroundColor: label.color }}
-              >
-                {label.name}
-              </span>
-            ))}
-          </div>
-        );
-      },
-    },
     { key: 'staff', label: 'ASSIGNED STAFF' },
     { key: 'priority', label: 'PRIORITY' },
     { key: 'lastFollowUp', label: 'LAST FOLLOW-UP' },
@@ -277,8 +249,7 @@ export default function LeadsListView({
         address: d.address,
         contact: d.contact,
         email: d.email,
-        leadSource: d.leadSource,
-        leadLabel: d.leadLabel,
+
         leadStatus: d.leadStatus,
         assignedTo: d.assignedTo,
         priority: d.priority,
@@ -301,8 +272,7 @@ export default function LeadsListView({
           address: d.address,
           contact: d.contact,
           email: d.email,
-          leadSource: d.leadSource,
-          leadLabel: d.leadLabel,
+
           leadStatus: d.leadStatus,
           assignedTo: d.assignedTo,
           priority: d.priority,
