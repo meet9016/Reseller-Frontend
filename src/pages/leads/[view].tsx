@@ -164,13 +164,13 @@ export default function LeadsPage() {
   };
 
   const handleEdit = (lead: ApiLead) => {
-    if (!leadPermissions?.update) return;
+    if (leadPermissions?.update === false) return;
     setEditingLead(lead);
     setShowAddDialog(true);
   };
 
   const handleView = (lead: ApiLead) => {
-    if (!canRead) return;
+    if (leadPermissions?.readAll === false && leadPermissions?.readOwn === false) return;
     setViewingLead(lead);
   };
 

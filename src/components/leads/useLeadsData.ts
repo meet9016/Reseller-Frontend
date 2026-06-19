@@ -54,6 +54,30 @@ export function useLeadsData(
 
   const getHeaders = () => ({ Authorization: `Bearer ${getAuthToken()}` });
 
+  const isResellerRole = useCallback((): boolean => {
+    if (typeof window === 'undefined') return false;
+    const token = getAuthToken();
+    if (!token) return false;
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(window.atob(parts[1]));
+        return (payload.role || '').toLowerCase() === 'reseller';
+      }
+    } catch (e) {
+      console.error('Failed to parse token payload:', e);
+    }
+    return false;
+  }, []);
+
+  const getLeadsUrl = useCallback((tab: string) => {
+    return (tab === 'my' || isResellerRole()) ? baseUrl.myLeads : baseUrl.getAllLeads;
+  }, [isResellerRole]);
+
+  const getLeadsCountUrl = useCallback((tab: string) => {
+    return (tab === 'my' || isResellerRole()) ? baseUrl.myLeadCountSummary : baseUrl.leadCountSummary;
+  }, [isResellerRole]);
+
   // Keep latest values in a ref so callbacks always read fresh values
   const stateRef = useRef({
     activeTab, filters, viewMode, kanbanSubView,
@@ -81,7 +105,7 @@ export function useLeadsData(
         const res = await axios.get(baseUrl.getKanbanData, {
           headers: getHeaders(),
           params: {
-            my: tab === 'my' || undefined,
+            my: (tab === 'my' || isResellerRole()) ? true : undefined,
             search: f.search || undefined,
             status: f.status || undefined,
             source: f.source || undefined,
@@ -104,7 +128,7 @@ export function useLeadsData(
         }
       } else {
         // Fallback: no dedicated kanban endpoint
-        const url = tab === 'my' ? baseUrl.myLeads : baseUrl.getAllLeads;
+        const url = getLeadsUrl(tab);
         const res = await axios.get(url, {
           headers: getHeaders(),
           params: {
@@ -123,7 +147,7 @@ export function useLeadsData(
       console.error('fetchKanbanLeads error:', e);
       setLeads([]);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getLeadsUrl, isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLeadsList = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -131,7 +155,7 @@ export function useLeadsData(
     page = stateRef.current.listPage
   ) => {
     try {
-      const url = tab === 'my' ? baseUrl.myLeads : baseUrl.getAllLeads;
+      const url = getLeadsUrl(tab);
       const res = await axios.get(url, {
         headers: getHeaders(),
         params: {
@@ -154,7 +178,7 @@ export function useLeadsData(
       console.error('fetchLeadsList error:', e);
       setLeadsList([]);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getLeadsUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchLostLeads = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -165,7 +189,7 @@ export function useLeadsData(
       const res = await axios.get(baseUrl.getLostLeads, {
         headers: getHeaders(),
         params: {
-          my: tab === 'my' || undefined,
+          my: (tab === 'my' || isResellerRole()) ? true : undefined,
           search: f.search || undefined,
           status: f.status || undefined,
           source: f.source || undefined,
@@ -186,7 +210,7 @@ export function useLeadsData(
       console.error('fetchLostLeads error:', e);
       setLostLeads([]);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchWonLeads = useCallback(async (
     tab = stateRef.current.activeTab,
@@ -197,7 +221,7 @@ export function useLeadsData(
       const res = await axios.get(baseUrl.getWonLeads, {
         headers: getHeaders(),
         params: {
-          my: tab === 'my' || undefined,
+          my: (tab === 'my' || isResellerRole()) ? true : undefined,
           search: f.search || undefined,
           status: f.status || undefined,
           source: f.source || undefined,
@@ -218,14 +242,14 @@ export function useLeadsData(
       console.error('fetchWonLeads error:', e);
       setWonLeads([]);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isResellerRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchCounts = useCallback(async (
     tab = stateRef.current.activeTab,
     f: Filters = stateRef.current.filters
   ) => {
     try {
-      const url = tab === 'my' ? baseUrl.myLeadCountSummary : baseUrl.leadCountSummary;
+      const url = getLeadsCountUrl(tab);
       const res = await axios.get(url, {
         headers: getHeaders(),
         params: {
@@ -241,7 +265,7 @@ export function useLeadsData(
     } catch (e) {
       console.error('fetchCounts error:', e);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [getLeadsCountUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchMeta = useCallback(async () => {
     try {

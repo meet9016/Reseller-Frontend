@@ -38,6 +38,7 @@ type TableLead = {
   isActive?: boolean;
   attachments?: { name: string; url?: string }[];
   leadLabel?: Array<{ _id: string; name: string; color: string }>;
+  paymentAmount?: number;
   _raw?: any;
 };
 
@@ -82,11 +83,11 @@ interface Props {
 function mapLead(item: any): TableLead {
   return {
     id: item._id,
-    name: item.fullName,
-    companyName: item.companyName,
-    address: item.address,
-    phone: item.contact || item.phone,
-    email: item.email,
+    name: item.customerName || item.fullName || '-',
+    companyName: item.product || item.companyName || '-',
+    address: item.address || '-',
+    phone: item.CustomerContact || item.contact || item.phone || '-',
+    email: item.customerEmail || item.email || '-',
     source: item.leadSource?.name || item.source?.name || '-',
     status: item.leadStatus?.name || item.status?.name || '-',
     staff: item.assignedTo?.fullName || '-',
@@ -96,6 +97,7 @@ function mapLead(item: any): TableLead {
       : '-',
     isActive: item.isActive,
     leadLabel: item.leadLabel || [],
+    paymentAmount: item.paymentAmount || item.amount,
     _raw: item,
   };
 }
@@ -247,13 +249,17 @@ export default function LeadsListView({
       onView?.(d);
     } catch {
       // fallback
-      const apiLead: ApiLead = {
-        _id: row.id,
-        fullName: row.name,
-        contact: row.phone,
-        email: row.email,
-      };
-      onView?.(apiLead);
+      if (row._raw) {
+        onView?.(row._raw);
+      } else {
+        const apiLead: ApiLead = {
+          _id: row.id,
+          fullName: row.name,
+          contact: row.phone,
+          email: row.email,
+        };
+        onView?.(apiLead);
+      }
     }
   };
 
@@ -284,7 +290,30 @@ export default function LeadsListView({
       };
       onEdit?.(apiLead);
     } catch {
-      console.error('Failed to fetch lead for edit');
+      console.error('Failed to fetch lead for edit, using local raw data fallback');
+      if (row._raw) {
+        const d = row._raw;
+        const apiLead: ApiLead = {
+          ...d,
+          _id: d._id,
+          fullName: d.fullName,
+          companyName: d.companyName,
+          address: d.address,
+          contact: d.contact,
+          email: d.email,
+          leadSource: d.leadSource,
+          leadLabel: d.leadLabel,
+          leadStatus: d.leadStatus,
+          assignedTo: d.assignedTo,
+          priority: d.priority,
+          lastFollowUp: d.lastFollowUp,
+          nextFollowupDate: d.nextFollowupDate,
+          nextFollowupTime: d.nextFollowupTime,
+          note: d.note,
+          isActive: d.isActive,
+        };
+        onEdit?.(apiLead);
+      }
     }
   };
 

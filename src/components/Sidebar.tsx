@@ -16,6 +16,7 @@ import {
   Menu,
   CheckSquare,
   Handshake,
+  Flag,
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -94,6 +95,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
   // Always allow viewing Leads
   menuItems.push({ icon: UserPlus, label: "Leads", path: "/leads" });
+
+  // Lead Status menu item
+  menuItems.push({ icon: Flag, label: "Lead Status", path: "/setup?tab=Lead+Status" });
 
   // Always allow viewing Resellers for now or if they have permission
   // menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });

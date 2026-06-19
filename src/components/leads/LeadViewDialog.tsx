@@ -693,13 +693,14 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
       >
         {lead && (
           <div className="space-y-4 text-sm max-h-[70vh] overflow-y-auto pr-1">
-            <h2 className="text-xl font-bold text-gray-900">{lead.fullName}</h2>
+            <h2 className="text-xl font-bold text-gray-900">{(lead as any).customerName || lead.fullName}</h2>
 
             {/* Info grid */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <InfoCard label="Company" value={lead.companyName} />
-              <InfoCard label="Phone" value={lead.contact} />
-              <InfoCard label="Email" value={lead.email} />
+              <InfoCard label="Product" value={(lead as any).product} />
+              <InfoCard label="Phone" value={(lead as any).CustomerContact || lead.contact} />
+              <InfoCard label="Email" value={(lead as any).customerEmail || lead.email} />
+              <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? `₹${(lead as any).paymentAmount.toLocaleString()}` : undefined} />
               <InfoCard label="Source" value={lead.leadSource?.name} />
               <InfoCard label="Assigned Staff" value={lead.assignedTo?.fullName} />
               <InfoCard
@@ -722,7 +723,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
             </div>
 
             {/* Address */}
-            {lead.address && <InfoCard label="Address" value={lead.address} />}
+            {((lead as any).address || lead.address) && <InfoCard label="Address" value={(lead as any).address || lead.address} />}
 
             <div className="rounded-lg bg-gray-50 p-4">
               <div className="mb-3 text-sm font-medium text-gray-600">Status</div>

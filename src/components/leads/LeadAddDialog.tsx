@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
@@ -7,14 +7,7 @@ import Dialog from '@/components/Dialog';
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiLead } from './types';
 import FormInput from '../ui/Input';
-import {
-  FaRegClock,
-  FaCheckCircle,
-  FaBan,
-  FaTimesCircle,
-} from 'react-icons/fa';
-
-type StatusValue = 'pending' | 'approve' | 'cancel' | 'reject';
+import FormSelect from '../ui/FormSelect';
 
 interface Props {
   isOpen: boolean;
@@ -25,69 +18,25 @@ interface Props {
   onLeadUpdated?: (lead: any) => void;
 }
 
-const STATUS_OPTIONS: {
-  value: StatusValue;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  activeClass: string;
-  inactiveClass: string;
-}[] = [
-    {
-      value: 'pending',
-      label: 'Pending',
-      icon: FaRegClock,
-      activeClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-yellow-500 text-white border-yellow-500 shadow-sm',
-      inactiveClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-white text-yellow-600 border-yellow-300 hover:bg-yellow-50',
-    },
-    {
-      value: 'approve',
-      label: 'Approve',
-      icon: FaCheckCircle,
-      activeClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-green-600 text-white border-green-600 shadow-sm',
-      inactiveClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-white text-green-600 border-green-300 hover:bg-green-50',
-    },
-    {
-      value: 'cancel',
-      label: 'Cancel',
-      icon: FaBan,
-      activeClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-gray-600 text-white border-gray-600 shadow-sm',
-      inactiveClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-    },
-    {
-      value: 'reject',
-      label: 'Reject',
-      icon: FaTimesCircle,
-      activeClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-red-600 text-white border-red-600 shadow-sm',
-      inactiveClass:
-        'flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium bg-white text-red-600 border-red-300 hover:bg-red-50',
-    },
-  ];
-
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string()
+  customerName: Yup.string()
     .trim()
-    .min(2, 'Full Name must be at least 2 characters')
-    .max(100, 'Full Name must not exceed 100 characters')
-    .required('Full Name is required'),
-  email: Yup.string()
+    .required('Customer Name is required'),
+  customerEmail: Yup.string()
     .trim()
     .email('Invalid email format')
-    .max(100, 'Email must not exceed 100 characters')
-    .required('Email is required'),
-  amount: Yup.string()
-    .matches(/^\d+(\.\d+)?$/, 'Amount must be a valid number')
-    .required('Amount is required'),
+    .required('Customer Email is required'),
+  CustomerContact: Yup.string()
+    .trim()
+    .matches(/^[0-9]{10}$/, 'Customer Contact must be exactly 10 digits')
+    .required('Customer Contact is required'),
   product: Yup.string().trim().required('Product is required'),
-  status: Yup.string()
-    .oneOf(['pending', 'approve', 'cancel', 'reject'], 'Please select a valid status')
-    .required('Please select a status'),
+  address: Yup.string().trim().required('Address is required'),
+  paymentAmount: Yup.number()
+    .typeError('Payment Amount must be a number')
+    .required('Payment Amount is required')
+    .min(0, 'Payment Amount cannot be negative'),
+  leadStatus: Yup.string().required('Lead Status is required'),
   isActive: Yup.boolean(),
 });
 
@@ -100,38 +49,48 @@ export default function LeadAddDialog({
   onLeadUpdated,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const [statuses, setStatuses] = useState<{ _id: string; name: string }[]>([]);
   const token = getAuthToken;
 
-  const initialStatus = useMemo<StatusValue>(() => {
-    const raw = (initialData as any)?.status;
-    const val = typeof raw === 'string' ? raw.toLowerCase() : '';
-    return (['pending', 'approve', 'cancel', 'reject'].includes(val)
-      ? val
-      : 'pending') as StatusValue;
-  }, [initialData]);
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchStatuses = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${token()}` };
+        const res = await axios.get(baseUrl.leadStatuses, { headers });
+        setStatuses(res.data?.data || res.data || []);
+      } catch (err) {
+        console.error('Failed to fetch lead statuses:', err);
+      }
+    };
+    fetchStatuses();
+  }, [isOpen]);
 
   const formik = useFormik({
     initialValues: {
-      fullName: '',
-      email: '',
-      amount: '',
+      customerName: '',
+      customerEmail: '',
+      CustomerContact: '',
       product: '',
-      status: 'pending' as StatusValue,
+      address: '',
+      paymentAmount: '',
+      leadStatus: '',
       isActive: true,
     },
     validationSchema,
     validateOnChange: true,
     validateOnBlur: true,
-    enableReinitialize: false,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       setStatus(null);
       try {
         const payload = {
-          fullName: values.fullName.trim(),
-          email: values.email.trim().toLowerCase(),
-          amount: values.amount,
+          customerName: values.customerName.trim(),
+          customerEmail: values.customerEmail.trim().toLowerCase(),
+          CustomerContact: values.CustomerContact.trim(),
           product: values.product.trim(),
-          status: values.status,
+          address: values.address.trim(),
+          paymentAmount: Number(values.paymentAmount),
+          leadStatus: values.leadStatus,
           isActive: values.isActive,
         };
 
@@ -171,14 +130,13 @@ export default function LeadAddDialog({
     try {
       if (mode === 'edit' && initialData) {
         formik.setValues({
-          fullName: initialData.fullName || '',
-          email: initialData.email || '',
-          amount:
-            (initialData as any).amount != null
-              ? String((initialData as any).amount)
-              : '',
+          customerName: (initialData as any).customerName || initialData.fullName || '',
+          customerEmail: (initialData as any).customerEmail || initialData.email || '',
+          CustomerContact: (initialData as any).CustomerContact || initialData.contact || '',
           product: (initialData as any).product || '',
-          status: initialStatus,
+          address: (initialData as any).address || '',
+          paymentAmount: (initialData as any).paymentAmount != null ? String((initialData as any).paymentAmount) : '',
+          leadStatus: typeof initialData.leadStatus === 'object' ? initialData.leadStatus?._id || '' : (initialData.leadStatus || ''),
           isActive: initialData.isActive ?? true,
         });
       } else {
@@ -188,7 +146,6 @@ export default function LeadAddDialog({
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, mode, initialData]);
 
   const getFieldError = (field: keyof typeof formik.values) => {
@@ -242,75 +199,83 @@ export default function LeadAddDialog({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
-              label="Full Name"
-              name="fullName"
-              value={formik.values.fullName}
+              label="Customer Name"
+              name="customerName"
+              value={formik.values.customerName}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={getFieldError('fullName')}
+              error={getFieldError('customerName')}
               required
             />
             <FormInput
-              label="Email"
-              name="email"
+              label="Customer Email"
+              name="customerEmail"
               type="email"
-              value={formik.values.email}
+              value={formik.values.customerEmail}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={getFieldError('email')}
+              error={getFieldError('customerEmail')}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
-              label="Amount"
-              name="amount"
-              value={formik.values.amount}
+              label="Customer Contact"
+              name="CustomerContact"
+              value={formik.values.CustomerContact}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={getFieldError('amount')}
+              error={getFieldError('CustomerContact')}
+              required
             />
             <FormInput
-              label="Product"
+              label="Product Name"
               name="product"
               value={formik.values.product}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={getFieldError('product')}
+              required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              Status <span className="text-red-500">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {STATUS_OPTIONS.map((opt) => {
-                const isActive = formik.values.status === opt.value;
-                const Icon = opt.icon;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      formik.setFieldValue('status', opt.value);
-                      formik.setFieldTouched('status', true, false);
-                    }}
-                    className={`cursor-pointer transition-colors ${isActive ? opt.activeClass : opt.inactiveClass
-                      }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-            {getFieldError('status') && (
-              <p className="mt-1 text-sm text-red-600">
-                {getFieldError('status')}
-              </p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              label="Address"
+              name="address"
+              value={formik.values.address}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('address')}
+              required
+            />
+            <FormInput
+              label="Payment Amount"
+              name="paymentAmount"
+              value={formik.values.paymentAmount}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('paymentAmount')}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <FormSelect
+              label="Lead Status"
+              name="leadStatus"
+              value={formik.values.leadStatus}
+              onChange={(val) => {
+                formik.setFieldValue('leadStatus', val);
+                formik.setFieldTouched('leadStatus', true, false);
+              }}
+              onBlur={formik.handleBlur}
+              options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+              error={getFieldError('leadStatus')}
+              required
+              placeholder="Select Status"
+            />
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer select-none">
