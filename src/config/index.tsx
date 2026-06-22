@@ -58,6 +58,7 @@ export const baseUrl = {
   updateReseller: `${API}reseller`,
   deleteReseller: `${API}reseller`,
   getBaseUrl: API,
+  getImageUrl: process.env.NEXT_PUBLIC_IMAGE_URL,
 };
 
 const TOKEN_COOKIE_NAME = "crm_token";

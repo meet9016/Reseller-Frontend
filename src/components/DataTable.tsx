@@ -52,10 +52,10 @@ interface DataTableProps<T> {
   onRefresh?: () => void;
   onExport?: () => void;
   extraActions?: {
-    label: string;
+    label?: string | ((row: T) => string);
     onClick: (row: T) => void;
-    icon?: React.ReactNode;
-    color?: 'blue' | 'green' | 'red' | 'orange' | 'purple';
+    icon?: React.ReactNode | ((row: T) => React.ReactNode);
+    color?: 'blue' | 'green' | 'red' | 'orange' | 'purple' | ((row: T) => 'blue' | 'green' | 'red' | 'orange' | 'purple');
   }[];
 }
 
@@ -335,23 +335,27 @@ export default function DataTable<T extends Record<string, any>>({
 
                         {/* EXTRA ACTIONS */}
                         {extraActions?.map((act, idx) => {
+                          const evaluatedLabel = typeof act.label === 'function' ? act.label(row) : act.label;
+                          const evaluatedIcon = typeof act.icon === 'function' ? act.icon(row) : act.icon;
+                          const evaluatedColor = typeof act.color === 'function' ? act.color(row) : act.color;
+
                           const colors: Record<string, string> = {
-                            blue: 'text-blue-600 hover:bg-blue-600 focus:ring-blue-500',
-                            green: 'text-green-600 hover:bg-green-600 focus:ring-green-500',
-                            red: 'text-red-600 hover:bg-red-500 focus:ring-red-500',
-                            orange: 'text-orange-600 hover:bg-orange-500 focus:ring-orange-500',
-                            purple: 'text-purple-600 hover:bg-purple-600 focus:ring-purple-500',
+                            blue: 'text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500',
+                            green: 'text-green-600 hover:bg-green-600 hover:text-white focus:ring-green-500',
+                            red: 'text-red-600 hover:bg-red-500 hover:text-white focus:ring-red-500',
+                            orange: 'text-orange-600 hover:bg-orange-500 hover:text-white focus:ring-orange-500',
+                            purple: 'text-purple-600 hover:bg-purple-600 hover:text-white focus:ring-purple-500',
                           };
-                          const colorClass = colors[act.color || 'blue'];
+                          const colorClass = colors[evaluatedColor || 'blue'];
                           return (
                             <button
                               key={idx}
                               onClick={() => act.onClick(row)}
-                              className={`group h-9 min-w-[36px] flex items-center justify-center rounded-lg bg-gray-100 ${colorClass} hover:text-white px-3 transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
-                              title={act.label}
+                              className={`group h-9 min-w-[36px] flex items-center justify-center rounded-lg bg-gray-100 ${colorClass} px-3 transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95`}
+                              title={evaluatedLabel}
                             >
-                              {act.icon && <span className={act.label ? 'mr-1.5' : ''}>{act.icon}</span>}
-                              {act.label && <span className="text-xs font-semibold">{act.label}</span>}
+                              {evaluatedIcon && <span className={`group-hover:text-white ${evaluatedLabel ? 'mr-1.5' : ''}`}>{evaluatedIcon}</span>}
+                              {evaluatedLabel && <span className="text-xs font-semibold group-hover:text-white">{evaluatedLabel}</span>}
                             </button>
                           );
                         })}

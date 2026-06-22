@@ -8,6 +8,7 @@ import { ApiStatus, ApiUser, ApiLead } from './types';
 import DataTable, { Column } from '@/components/DataTable';
 import DeleteDialog from '@/components/DeleteDialog';
 import Swal from 'sweetalert2';
+import PaymentModal from './PaymentModal';
 
 // ── Debounce helper ──────────────────────────────────────────────────────────
 function useDebounce<T>(value: T, delay = 500): T {
@@ -38,6 +39,11 @@ type TableLead = {
   attachments?: { name: string; url?: string }[];
 
   paymentAmount?: number;
+  paidAmount?: number;
+  paymentDate?: any;
+  paymentMode?: string;
+  paymentProof?: string;
+  paymentStatus?: string;
   _raw?: any;
 };
 
@@ -94,6 +100,11 @@ function mapLead(item: any): TableLead {
     isActive: item.isActive,
 
     paymentAmount: item.paymentAmount || item.amount,
+    paidAmount: item.paidAmount,
+    paymentDate: item.paymentDate,
+    paymentMode: item.paymentMode,
+    paymentProof: item.paymentProof,
+    paymentStatus: item.paymentStatus,
     _raw: item,
   };
 }
@@ -115,6 +126,8 @@ export default function LeadsListView({
   const [leads, setLeads] = useState<TableLead[]>([]);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TableLead | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentTarget, setPaymentTarget] = useState<TableLead | null>(null);
   const [localLoading, setLocalLoading] = useState(false);
 
   // Use loading from prop or local state
@@ -338,34 +351,12 @@ export default function LeadsListView({
         onDelete={permissions?.delete ? (row) => { setDeleteTarget(row); setShowDelete(true); } : undefined}
         extraActions={permissions?.update ? [
           {
-            label: 'Payment',
+            label: (row) => row.paymentStatus === 'Paid' ? 'Payment Details' : 'Payment',
             icon: <span className="text-xs font-bold">₹</span>,
-            color: 'green',
-            onClick: async (row) => {
-              const { value: amount } = await Swal.fire({
-                title: 'Add Payment',
-                input: 'number',
-                inputLabel: 'Enter payment amount',
-                inputPlaceholder: 'e.g. 5000',
-                showCancelButton: true,
-                inputValidator: (value: any) => {
-                  if (!value) return 'You need to write something!';
-                  if (isNaN(value) || value < 0) return 'Please enter a valid amount';
-                }
-              });
-
-              if (amount) {
-                try {
-                  await axios.put(`${baseUrl.updateLead}/${row.id}`,
-                    { paymentAmount: Number(amount) },
-                    { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-                  );
-                  Swal.fire('Success', 'Payment added successfully', 'success');
-                  onRefresh?.();
-                } catch (err) {
-                  Swal.fire('Error', 'Failed to add payment', 'error');
-                }
-              }
+            color: (row) => row.paymentStatus === 'Paid' ? 'blue' : 'green',
+            onClick: (row) => {
+              setPaymentTarget(row);
+              setShowPayment(true);
             }
           }
         ] : undefined}
@@ -399,6 +390,16 @@ export default function LeadsListView({
           This action cannot be undone.
         </p>
       </DeleteDialog>
+
+      {/* Payment Modal */}
+      {showPayment && paymentTarget && (
+        <PaymentModal
+          isOpen={showPayment}
+          onClose={() => { setShowPayment(false); setPaymentTarget(null); }}
+          lead={paymentTarget}
+          onSuccess={() => { onRefresh?.(); }}
+        />
+      )}
     </div>
   );
 }
