@@ -84,8 +84,8 @@ export default function LeadAddDialog({
       isActive: true,
     },
     validationSchema,
-    validateOnChange: true,
-    validateOnBlur: true,
+    validateOnChange: false,
+    validateOnBlur: false,
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       setStatus(null);
       try {
