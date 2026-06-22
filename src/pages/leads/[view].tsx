@@ -3,7 +3,7 @@
 // View is persisted in localStorage AND reflected in the URL
 
 import { useRouter } from 'next/router';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { ListCollapse, Plus, Filter, Kanban, Search, Download, Upload } from 'lucide-react';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
@@ -57,6 +57,7 @@ export default function LeadsPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -136,6 +137,11 @@ export default function LeadsPage() {
     lostPagination,
     wonPagination,
   } = useLeadsData(activeTab, filters, viewMode, kanbanSubView);
+
+  const handleRefresh = useCallback(() => {
+    refetchAll();
+    setRefreshTrigger(prev => prev + 1);
+  }, [refetchAll]);
 
   // ── Sync URL → state ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -348,11 +354,10 @@ export default function LeadsPage() {
             {/* Advanced Filter Button */}
             <button
               onClick={() => setShowFilterDrawer(!showFilterDrawer)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-all cursor-pointer ${
-                showFilterDrawer || hasActiveFilters
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-all cursor-pointer ${showFilterDrawer || hasActiveFilters
                   ? 'bg-primary-50 text-primary-600 border border-primary-200 hover:bg-primary-100'
                   : 'bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200'
-              }`}
+                }`}
             >
               <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
@@ -417,11 +422,10 @@ export default function LeadsPage() {
 
         {/* ── Filter Section (Inline Expandable) ────────────────────────────── */}
         <div
-          className={`grid transition-all duration-300 ease-in-out ${
-            showFilterDrawer
+          className={`grid transition-all duration-300 ease-in-out ${showFilterDrawer
               ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t border-gray-100'
               : 'grid-rows-[0fr] opacity-0 overflow-hidden'
-          }`}
+            }`}
         >
           <div className="overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -461,7 +465,7 @@ export default function LeadsPage() {
                   name="toDate"
                   type="date"
                   value={toDate}
-                  min={fromDate || undefined}
+
                   onChange={(e) => setToDate(e.target.value)}
                   className="bg-white"
                 />
@@ -494,11 +498,10 @@ export default function LeadsPage() {
             staffMembers={staffMembers}
             onEdit={canUpdate ? handleEdit : undefined}
             onView={handleView}
-            onRefresh={refetchAll}
+            onRefresh={handleRefresh}
             scope={activeTab}
             filters={filters}
             externalLeads={leadsList}
-            fetchLeadsList={fetchLeadsList}
             loading={loading}
             permissions={{
               create: canCreate,
@@ -521,9 +524,10 @@ export default function LeadsPage() {
             counts={counts?.statusCounts}
             onEdit={canUpdate ? handleEdit : undefined}
             onView={handleView}
-            onRefresh={refetchAll}
+            onRefresh={handleRefresh}
             scope={activeTab}
             filters={filters}
+            refreshTrigger={refreshTrigger}
             // Pass separate paginations for lost/won
             lostPagination={lostPagination}
             wonPagination={wonPagination}
@@ -550,11 +554,11 @@ export default function LeadsPage() {
         mode={editingLead ? 'edit' : 'add'}
         initialData={editingLead}
         onLeadCreated={() => {
-          refetchAll();
+          handleRefresh();
           handleDialogClose();
         }}
         onLeadUpdated={() => {
-          refetchAll();
+          handleRefresh();
           handleDialogClose();
         }}
       />
@@ -564,7 +568,7 @@ export default function LeadsPage() {
         lead={viewingLead}
         statuses={statuses}
         onClose={() => setViewingLead(null)}
-        onRefresh={refetchAll}
+        onRefresh={handleRefresh}
       />
 
       {/* ── Bulk Import Dialog ─────────────────────────────────────────── */}
@@ -572,7 +576,7 @@ export default function LeadsPage() {
         isOpen={showBulkImport}
         onClose={() => setShowBulkImport(false)}
         onImported={() => {
-          refetchAll();
+          handleRefresh();
           setShowBulkImport(false);
         }}
       />

@@ -267,6 +267,17 @@ export function ResellersContent() {
     setEditingReseller(null);
   };
 
+  if (getUserRole() === 'reseller') {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
+        <p className="mt-2 text-gray-600">
+          You do not have permission to access the Resellers page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

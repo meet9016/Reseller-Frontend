@@ -50,6 +50,7 @@ interface Props {
     lostPagination?: PaginationShape;
     wonPagination?: PaginationShape;
     onSubViewChange?: (subView: 'board' | 'lost' | 'won') => void;
+    refreshTrigger?: number;
 }
 
 type SubView = 'board' | 'lost' | 'won';
@@ -62,6 +63,7 @@ export default function LeadsKanbanView({
     lostPagination,
     wonPagination,
     onSubViewChange,
+    refreshTrigger,
 }: Props) {
     const [subView, setSubView] = useState<SubView>('board');
     const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -155,7 +157,7 @@ export default function LeadsKanbanView({
                 fetchStatusLeads(s._id, 1);
             }
         });
-    }, [subView, statuses, kanbanVisibleStatusNames, scope, filters, fetchStatusLeads]);
+    }, [subView, statuses, kanbanVisibleStatusNames, scope, filters, fetchStatusLeads, refreshTrigger]);
 
     const loadMore = useCallback(
         async (statusId: string) => {
