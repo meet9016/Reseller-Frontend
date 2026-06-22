@@ -147,7 +147,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       })
       .then((res) => {
         const staffData = res.data?.data;
-        console.log(staffData, "staffData")
         if (!staffData) return;
         setUserName(staffData.fullName || 'User');
         setUserRole(staffData.role?.roleName || '');
@@ -163,7 +162,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           ''
         ).replace(/\/api\/?$/, '');
 
-        console.log('[Socket] Connecting to:', socketUrl);
 
         socket = io(socketUrl || 'http://localhost:5000', {
           transports: ['websocket', 'polling'],

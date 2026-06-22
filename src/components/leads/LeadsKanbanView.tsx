@@ -30,6 +30,7 @@ interface Props {
     onView?: (lead: ApiLead) => void;
     onRefresh: () => void;
     counts?: Record<string, number>;
+    summary?: any;
     permissions?: {
         create: boolean;
         update: boolean;
@@ -58,7 +59,7 @@ type SubView = 'board' | 'lost' | 'won';
 export default function LeadsKanbanView({
     lostLeads, wonLeads,
     statuses,
-    onEdit, onView, onRefresh, counts, permissions, scope = 'all',
+    onEdit, onView, onRefresh, counts, summary, permissions, scope = 'all',
     filters,
     lostPagination,
     wonPagination,
@@ -291,18 +292,49 @@ export default function LeadsKanbanView({
         <div className="flex h-full flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-2">
-                    {(['board', 'lost', 'won'] as SubView[]).map((v) => (
-                        <button
-                            key={v}
-                            onClick={() => handleSubViewChange(v)}
-                            className={`rounded-lg cursor-pointer px-4 py-1.5 text-sm font-medium capitalize transition-colors ${subView === v
-                                ? v === 'lost' ? 'bg-red-600 text-white' : v === 'won' ? 'bg-green-600 text-white' : 'bg-[#3B82F6] text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                        >
-                            {v === 'board' ? 'Board View' : v === 'lost' ? 'Lost Leads' : 'Won Leads'}
-                        </button>
-                    ))}
+                    {(['board', 'lost', 'won'] as SubView[]).map((v) => {
+                        let boardCount = 0;
+                        let lostCount = 0;
+                        let wonCount = 0;
+
+                        if (summary?.statusWiseCounts) {
+                            summary.statusWiseCounts.forEach((s: any) => {
+                                if (s.statusName.match(/^won$/i)) {
+                                    wonCount += s.count;
+                                } else if (s.statusName.match(/^lost$/i)) {
+                                    lostCount += s.count;
+                                } else {
+                                    boardCount += s.count;
+                                }
+                            });
+                        } else {
+                            boardCount = Object.values(columnCounts).reduce((a, b) => a + b, 0);
+                            lostCount = lostPagination?.totalItems ?? lostLeads?.length ?? 0;
+                            wonCount = wonPagination?.totalItems ?? wonLeads?.length ?? 0;
+                        }
+
+                        let text = '';
+                        if (v === 'board') {
+                            text = `Board View (${boardCount})`;
+                        } else if (v === 'lost') {
+                            text = `Lost Leads (${lostCount})`;
+                        } else {
+                            text = `Won Leads (${wonCount})`;
+                        }
+
+                        return (
+                            <button
+                                key={v}
+                                onClick={() => handleSubViewChange(v)}
+                                className={`rounded-lg cursor-pointer px-4 py-1.5 text-sm font-medium capitalize transition-colors ${subView === v
+                                    ? v === 'lost' ? 'bg-red-600 text-white' : v === 'won' ? 'bg-green-600 text-white' : 'bg-[#3B82F6] text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                            >
+                                {text}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 

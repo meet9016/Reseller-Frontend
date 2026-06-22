@@ -2,7 +2,7 @@
 
 import React from "react"
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
   Settings,
@@ -37,6 +37,7 @@ interface MenuItem {
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [canViewLead, setCanViewLead] = useState(false);
@@ -97,7 +98,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   menuItems.push({ icon: UserPlus, label: "Leads", path: "/leads" });
 
   // Lead Status menu item
-  menuItems.push({ icon: Flag, label: "Lead Status", path: "/setup?tab=Lead+Status" });
+  // menuItems.push({ icon: Flag, label: "Lead Status", path: "/setup?tab=Lead+Status" });
 
   // Always allow viewing Resellers for now or if they have permission
   // menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
@@ -118,6 +119,21 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const isActive = (path?: string) => {
     if (!path) return false;
     if (path === '/') return pathname === '/';
+
+    if (path.includes('?')) {
+      const [basePath, query] = path.split('?');
+      if (pathname !== basePath) return false;
+      const params = new URLSearchParams(query);
+      for (const [key, value] of params.entries()) {
+        if (searchParams?.get(key) !== value) return false;
+      }
+      return true;
+    }
+
+    if (path === '/setup' && searchParams && searchParams.toString().length > 0) {
+      return false;
+    }
+
     return pathname?.startsWith(path);
   };
 

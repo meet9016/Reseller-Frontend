@@ -522,6 +522,7 @@ export default function LeadsPage() {
             wonLeads={wonLeads}
             statuses={statuses}
             counts={counts?.statusCounts}
+            summary={counts}
             onEdit={canUpdate ? handleEdit : undefined}
             onView={handleView}
             onRefresh={handleRefresh}
