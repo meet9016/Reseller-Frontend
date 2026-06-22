@@ -101,7 +101,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
   // Always allow viewing Resellers for now or if they have permission
   // menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
-  if (userRole !== 'Reseller') {
+  if (userRole && userRole.toLowerCase() !== 'reseller' && userRole.toLowerCase() === 'admin') {
     menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
   }
 
