@@ -31,6 +31,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [userName, setUserName] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userProfileImage, setUserProfileImage] = useState<string>('');
+  const [imageError, setImageError] = useState(false);
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +146,14 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        const currentUserId = res.data?.data?._id;
+        const staffData = res.data?.data;
+        console.log(staffData, "staffData")
+        if (!staffData) return;
+        setUserName(staffData.fullName || 'User');
+        setUserRole(staffData.role?.roleName || '');
+        setUserEmail(staffData.email || '');
+        setUserProfileImage(staffData.profileImage || staffData.avatar || staffData.image || '');
+        const currentUserId = staffData._id;
         if (!currentUserId) return;
 
         // ✅ Correct socket URL (NO /api/v1/api)
@@ -426,6 +438,25 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         </h1>
       </div>
       <div className="flex items-center gap-1 md:gap-3">
+        {/* User Profile */}
+        <div className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200">
+          <div className="flex flex-col items-end">
+            <span className="text-sm font-bold text-gray-800">{userName}</span>
+            {userEmail && <span className="text-xs text-gray-500">{userEmail}</span>}
+          </div>
+          {userProfileImage && !imageError ? (
+            <img
+              src={userProfileImage.startsWith('http') ? userProfileImage : `${process.env.NEXT_PUBLIC_IMAGE_URL || ''}/${userProfileImage}`}
+              alt={userName}
+              className="h-10 w-10 rounded-full object-cover shadow-md border border-gray-200"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#0a2352] to-[#3B82F6] flex items-center justify-center text-white font-bold shadow-md">
+              {userName ? userName.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
+        </div>
 
         {/* Alerts / Notifications */}
         <div className="relative" ref={dropdownRef}>
