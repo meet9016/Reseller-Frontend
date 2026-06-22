@@ -41,7 +41,7 @@ interface LeadAddDialogProps {
   onClose: () => void;
   mode: 'add' | 'edit';
   initialData?: Partial<Lead> | null;
-  
+
   onLeadCreated?: (lead: any) => void;
   onLeadUpdated?: (lead: any) => void;
 }

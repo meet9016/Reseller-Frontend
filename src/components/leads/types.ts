@@ -80,4 +80,4 @@ export type LeadCountSummary = {
   totalLeads: number;
   totalLost: number;
   totalWon: number;
-};
+};

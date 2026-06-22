@@ -149,7 +149,7 @@ export default function LeadAddDialog({
         formik.setValues({
           customerName: (initialData as any).customerName || initialData.fullName || '',
           customerEmail: (initialData as any).customerEmail || initialData.email || '',
-          customerContact: (initialData as any).customerContact || (initialData as any).CustomerContact || initialData.contact || '',
+          customerContact: (initialData as any).customerContact || (initialData as any).customerContact || initialData.contact || '',
           companyName: initialData.companyName || '',
           product: (initialData as any).product || '',
           address: (initialData as any).address || '',
@@ -289,9 +289,6 @@ export default function LeadAddDialog({
               error={getFieldError('paymentAmount')}
               required
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormSelect
               label="Lead Status"
               name="leadStatus"
@@ -306,7 +303,11 @@ export default function LeadAddDialog({
               required
               placeholder="Select Status"
             />
-            <FormSelect
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* <FormSelect
               label="Assigned Staff"
               name="assignedTo"
               value={formik.values.assignedTo}
@@ -318,7 +319,7 @@ export default function LeadAddDialog({
               options={staffMembers.map((s) => ({ value: s._id, label: s.fullName }))}
               error={getFieldError('assignedTo')}
               placeholder="Select Staff (Optional)"
-            />
+            /> */}
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer select-none">
