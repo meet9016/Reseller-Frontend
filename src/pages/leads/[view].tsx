@@ -82,6 +82,20 @@ export default function LeadsPage() {
 
   const token = typeof window !== 'undefined' ? getAuthToken() : null;
 
+  const userRole = useMemo(() => {
+    if (!token) return '';
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(window.atob(parts[1]));
+        return payload?.role?.roleName?.toLowerCase() || '';
+      }
+    } catch (e) {
+      return '';
+    }
+    return '';
+  }, [token]);
+
   // ── Fetch permissions ────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
@@ -143,15 +157,35 @@ export default function LeadsPage() {
     setRefreshTrigger(prev => prev + 1);
   }, [refetchAll]);
 
+  // ── Force 'Won' status for admin ─────────────────────────────────────────
+  useEffect(() => {
+    if (userRole === 'admin' && statuses.length > 0) {
+      const wonStatus = statuses.find((s: any) => s.name.toLowerCase() === 'won');
+      if (wonStatus) {
+        if (statusFilter.length !== 1 || statusFilter[0] !== wonStatus._id) {
+          setStatusFilter([wonStatus._id]);
+        }
+      }
+    }
+  }, [userRole, statuses, statusFilter]);
+
+  // ── Sync URL → state ─────────────────────────────────────────────────────
   // ── Sync URL → state ─────────────────────────────────────────────────────
   useEffect(() => {
+    if (userRole === 'admin') {
+      setViewMode('list');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('leadsView', 'list');
+      }
+      return;
+    }
     if (viewParam === 'kanban' || viewParam === 'list') {
       setViewMode(viewParam as ViewMode);
       if (typeof window !== 'undefined') {
         localStorage.setItem('leadsView', viewParam);
       }
     }
-  }, [viewParam]);
+  }, [viewParam, userRole]);
 
   const switchView = (mode: ViewMode) => {
     if (typeof window !== 'undefined') {
@@ -302,6 +336,7 @@ export default function LeadsPage() {
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Leads</h1>
             
             {/* Mobile View Toggle */}
+            {userRole !== 'admin' && (
             <div className="md:hidden relative flex items-center bg-gray-100 p-1 rounded-md w-fit">
               <button
                 onClick={() => switchView('list')}
@@ -316,6 +351,7 @@ export default function LeadsPage() {
                 <Kanban className="h-4 w-4" />
               </button>
             </div>
+            )}
           </div>
 
           {/* Search Bar */}
@@ -390,6 +426,7 @@ export default function LeadsPage() {
             )}
 
             {/* Desktop View toggle */}
+            {userRole !== 'admin' && (
             <div className="hidden md:flex relative items-center bg-gray-100 p-1 rounded-md w-fit">
               <button
                 onClick={() => switchView('list')}
@@ -406,6 +443,7 @@ export default function LeadsPage() {
                 <Kanban className="h-5 w-5" />
               </button>
             </div>
+            )}
 
             {/* Add Lead button */}
             {canCreate && (
@@ -429,6 +467,7 @@ export default function LeadsPage() {
         >
           <div className="overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {userRole !== 'admin' && (
               <div className="space-y-2">
                 <FormMultiSelect
                   label="Lead Status"
@@ -437,7 +476,7 @@ export default function LeadsPage() {
                   options={statuses.map((s) => ({ value: s._id, label: s.name }))}
                 />
               </div>
-
+              )}
 
               <div className="space-y-2">
                 <FormMultiSelect

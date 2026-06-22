@@ -151,11 +151,14 @@ export function useLeadsData(
     }
   }, [getLeadsUrl, getUserRole]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchLeadsListId = useRef(0);
+
   const fetchLeadsList = useCallback(async (
     tab = stateRef.current.activeTab,
     f: Filters = stateRef.current.filters,
     page = stateRef.current.listPage
   ) => {
+    const currentId = ++fetchLeadsListId.current;
     try {
       const url = getLeadsUrl(tab);
       const res = await axios.get(url, {
@@ -170,12 +173,14 @@ export function useLeadsData(
           limit: LIMIT,
         },
       });
+      if (currentId !== fetchLeadsListId.current) return;
       const arr = res.data?.data || [];
       const p = res.data?.pagination || {};
       setLeadsList(arr);
       setListTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
       setListTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / LIMIT) : 1));
     } catch (e) {
+      if (currentId !== fetchLeadsListId.current) return;
       console.error('fetchLeadsList error:', e);
       setLeadsList([]);
     }
