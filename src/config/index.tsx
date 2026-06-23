@@ -59,6 +59,8 @@ export const baseUrl = {
   findResellerById: `${API}reseller`,
   updateReseller: `${API}reseller`,
   deleteReseller: `${API}reseller`,
+  settlements: `${API}settlement/all`,
+  addSettlement: `${API}settlement/pay`,
   getBaseUrl: API,
   getImageUrl: process.env.NEXT_PUBLIC_IMAGE_URL,
 };

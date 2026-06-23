@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Handshake,
   Flag,
+  IndianRupee,
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -104,6 +105,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   // menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
   if (userRole && userRole.toLowerCase() !== 'reseller' && userRole.toLowerCase() === 'admin') {
     menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
+  }
+  if (userRole) {
+    menuItems.push({ icon: IndianRupee, label: "Settlements", path: "/settlements" });
   }
 
   const hasAnySetupPerm = canViewStaff || canViewRole || canViewLeadStatus || canViewLeadSource;
