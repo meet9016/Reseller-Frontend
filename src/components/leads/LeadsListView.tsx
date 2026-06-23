@@ -44,7 +44,7 @@ type TableLead = {
   paymentMode?: string;
   paymentProof?: string;
   paymentStatus?: string;
-  commissionAmount?: string;
+  commissionAmount?: number;
   _raw?: any;
 };
 
@@ -227,7 +227,7 @@ export default function LeadsListView({
     {
       key: 'commissionAmount',
       label: 'COMMISSION',
-      render: (v) => (v && v !== '0' ? <span className="font-bold text-blue-600">₹{v}</span> : <span className="text-gray-400">-</span>)
+      render: (v) => (v && Number(v) > 0 ? <span className="font-bold text-blue-600">₹{Number(v).toLocaleString('en-IN')}</span> : <span className="text-gray-400">-</span>)
     },
   ];
 
@@ -358,9 +358,11 @@ export default function LeadsListView({
         onDelete={permissions?.delete ? (row) => { setDeleteTarget(row); setShowDelete(true); } : undefined}
         extraActions={permissions?.update ? [
           {
-            label: (row) => row.paymentStatus === 'Paid' ? 'Payment Details' : 'Payment',
-            icon: <span className="text-xs font-bold">₹</span>,
-            color: (row) => row.paymentStatus === 'Paid' ? 'blue' : 'green',
+            label: (row) => row.paymentStatus === 'Paid' ? 'View Payment' : 'Add Payment',
+            icon: (row) => row.paymentStatus === 'Paid'
+              ? <span className="text-xs">✓</span>
+              : <span className="text-xs font-bold">₹</span>,
+            color: (row) => row.paymentStatus === 'Paid' ? 'green' : 'blue',
             onClick: (row) => {
               setPaymentTarget(row);
               setShowPayment(true);
