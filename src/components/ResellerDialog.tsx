@@ -149,7 +149,7 @@ export default function ResellerDialog({
       .then((res) => {
         const fetchedRoles = res.data?.data || res.data?.roles || [];
         setRoles(fetchedRoles);
-        
+
         // Auto-select Reseller role if exists and in add mode
         if (!initialData?._id) {
           const resellerRole = fetchedRoles.find(
@@ -205,7 +205,7 @@ export default function ResellerDialog({
         payload.append('profileImage', selectedFile);
       }
 
-      const headers = { 
+      const headers = {
         Authorization: `Bearer ${token || getAuthToken()}`
       };
 
@@ -229,7 +229,7 @@ export default function ResellerDialog({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={isUpdate ? 'Edit Reseller' : 'Add Reseller ' }
+      title={isUpdate ? 'Edit Reseller' : 'Add Reseller '}
       size="xl"
       footer={
         <>
@@ -244,7 +244,7 @@ export default function ResellerDialog({
             type="submit"
             form="reseller-form"
             className="px-6 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            disabled={loading || !formik.isValid}
+            disabled={loading}
           >
             {loading ? 'Saving...' : isUpdate ? 'Update Reseller' : '+ Add Reseller'}
           </button>
@@ -261,7 +261,7 @@ export default function ResellerDialog({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Personal info and address details */}
           <div className="lg:col-span-8 space-y-6">
-            
+
             {/* PERSONAL INFORMATION CARD */}
             <div className="border border-gray-100 rounded-xl bg-white p-6 shadow-sm space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-50 text-blue-600 font-semibold text-sm uppercase tracking-wider">
@@ -375,7 +375,7 @@ export default function ResellerDialog({
                     <img
                       src={previewImage}
                       alt="Preview"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <div className="flex flex-col items-center text-gray-400">
@@ -421,14 +421,12 @@ export default function ResellerDialog({
                           formik.values.status === 'active' ? 'inactive' : 'active'
                         )
                       }
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        formik.values.status === 'active' ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${formik.values.status === 'active' ? 'bg-blue-600' : 'bg-gray-200'
+                        }`}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          formik.values.status === 'active' ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formik.values.status === 'active' ? 'translate-x-5' : 'translate-x-0'
+                          }`}
                       />
                     </button>
                     <div>

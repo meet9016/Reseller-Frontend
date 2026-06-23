@@ -83,6 +83,11 @@
 //         { headers: { Authorization: `Bearer ${getAuthToken()}` } }
 //       );
 
+//       // Update local state with the actual data from the database
+//       if (response.data?.data?.followUps) {
+//         setLocalFollowUps(response.data.data.followUps);
+//       }
+
 //       toast.success('Follow-up recorded successfully');
 //       setFollowupNote('');
 //       setEditNextDate('');
@@ -335,7 +340,7 @@
 //                               <img
 //                                 src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${att?.path}`}
 //                                 alt={att?.originalName}
-//                                 className="w-full h-full object-cover"
+//                                 className="w-full h-full object-contain"
 //                               />
 //                             </div>
 //                           ) : (
@@ -568,7 +573,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
     };
 
     // Optimistically add to local state
-    setLocalFollowUps(prev => [tempFollowUp, ...prev]);
+    setLocalFollowUps(prev => [...prev, tempFollowUp]);
 
     // Clear form fields
     setFollowupNote('');
@@ -580,9 +585,14 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
         date: editNextDate,
         time: editNextTime,
         note: followupNote,
+        staff: staffInfo ? {
+          _id: staffInfo._id,
+          fullName: staffInfo.fullName || 'Current User'
+        } : undefined,
       };
 
-      const updatedFollowUps = [...(lead.followUps || []), newFollowup];
+      const existingFollowUps = localFollowUps.filter(f => !f._id || !f._id.startsWith('temp_'));
+      const updatedFollowUps = [...existingFollowUps, newFollowup];
 
       const response = await axios.put(
         `${baseUrl.updateLead}/${lead._id}`,
@@ -819,7 +829,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {(followUpSearch ? filteredFollowUps : localFollowUps).map((f, i) => (
+                        {[...(followUpSearch ? filteredFollowUps : localFollowUps)].reverse().map((f, i) => (
                           <tr key={f._id || i} className={`hover:bg-gray-50/50 transition-colors ${f._id?.startsWith('temp_') ? 'animate-pulse bg-blue-50/30' : ''}`}>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="font-medium text-gray-900">
@@ -899,7 +909,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                               <img
                                 src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${att?.path}`}
                                 alt={att?.originalName}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                               />
                             </div>
                           ) : (

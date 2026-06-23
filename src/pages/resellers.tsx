@@ -146,7 +146,7 @@ export function ResellersContent() {
             <img
               src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/images/ResellerProfileImages/${value}`}
               alt={row.fullName}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
             />
           ) : (
             <span className="text-xs font-bold text-gray-500">

@@ -734,7 +734,7 @@ export default function LeadsPage() {
                                         <img
                                           src={lead.assignedTo.avatar}
                                           alt={lead.assignedTo.fullName}
-                                          className="h-6 w-6 rounded-full object-cover"
+                                          className="h-6 w-6 rounded-full object-contain"
                                         />
                                       ) : (
                                         <div className="h-6 w-6 rounded-full bg-gradient-to-r from-[#9160ff] to-[#c387ff] flex items-center justify-center text-xs font-semibold text-white">

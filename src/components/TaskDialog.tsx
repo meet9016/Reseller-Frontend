@@ -585,7 +585,7 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
                           <img
                             src={fileUrl}
                             alt={att.originalName}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200"
+                            className="w-10 h-10 rounded-lg object-contain flex-shrink-0 border border-gray-200"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">

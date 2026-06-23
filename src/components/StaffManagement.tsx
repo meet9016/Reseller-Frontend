@@ -288,7 +288,7 @@ export default function SalesExecutiveForm({
                 <img
                   src={previewImage}
                   alt="Preview"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

@@ -446,7 +446,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
             <img
               src={userProfileImage.startsWith('http') ? userProfileImage : `${process.env.NEXT_PUBLIC_IMAGE_URL || ''}/${userProfileImage}`}
               alt={userName}
-              className="h-10 w-10 rounded-full object-cover shadow-md border border-gray-200"
+              className="h-10 w-10 rounded-full object-contain shadow-md border border-gray-200"
               onError={() => setImageError(true)}
             />
           ) : (

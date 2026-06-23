@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   }, []);
 
   const menuItems: MenuItem[] = [
-    // { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   ];
 
   // Always allow viewing Leads

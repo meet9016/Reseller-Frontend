@@ -148,7 +148,7 @@ export default function TaskViewDialog({ task, taskStatuses, onClose }: TaskView
                         onClick={() => openImageModal(fileUrl, a.originalName)}
                         className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden hover:opacity-80 transition border border-gray-200"
                       >
-                        <img src={fileUrl} alt={a.originalName} className="w-full h-full object-cover" />
+                        <img src={fileUrl} alt={a.originalName} className="w-full h-full object-contain" />
                       </button>
                     ) : (
                       <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
