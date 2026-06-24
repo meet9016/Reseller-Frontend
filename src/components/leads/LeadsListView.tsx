@@ -37,6 +37,7 @@ type TableLead = {
   nextFollowupTime?: string;
   note?: string;
   isActive?: boolean;
+  isWon?: boolean;
   attachments?: { name: string; url?: string }[];
 
   paymentAmount?: number;
@@ -100,6 +101,7 @@ function mapLead(item: any): TableLead {
       ? new Date(item.updatedAt).toLocaleDateString()
       : '-',
     isActive: item.isActive,
+    isWon: item.isWon,
 
     paymentAmount: item.paymentAmount || item.amount,
     paidAmount: item.paidAmount,
@@ -355,6 +357,8 @@ export default function LeadsListView({
         onView={handleView}
         onEdit={permissions?.update ? handleEdit : undefined}
         onDelete={permissions?.delete ? (row) => { setDeleteTarget(row); setShowDelete(true); } : undefined}
+        canEdit={(row) => row.status?.toLowerCase() !== 'won' && !row.isWon}
+        canDelete={(row) => row.status?.toLowerCase() !== 'won' && !row.isWon}
         extraActions={permissions?.update ? [
           {
             label: (row) => row.paymentStatus === 'Paid' ? 'View Payment' : 'Add Payment',

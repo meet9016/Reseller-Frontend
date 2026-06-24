@@ -80,6 +80,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
   }, []);
 
   const isReseller = staffInfo?.role?.roleName?.toLowerCase() === 'reseller';
+  const isWon = lead?.leadStatus?.name?.toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || lead?.isWon;
 
   const handleSave = async () => {
     if (!lead) return;
@@ -225,13 +226,15 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
             >
               Close
             </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            {!isWon && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            )}
           </>
         }
       >
@@ -265,10 +268,13 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                 {statuses.map((s) => (
                   <button
                     key={s._id}
+                    disabled={isWon}
                     onClick={() => setEditStatus(s._id)}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${editStatus === s._id
                       ? 'bg-secondary text-white shadow'
-                      : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                      : isWon
+                        ? 'border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                        : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                   >
                     {s.name}
@@ -288,6 +294,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                 </div>
 
                 {/* Add New Follow-up Section */}
+                {!isWon && (
                 <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl">
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">Add New Follow-up</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -332,6 +339,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                     ) : 'Record Follow-up'}
                   </button>
                 </div>
+                )}
 
                 {/* Follow-up Table */}
                 {localFollowUps && localFollowUps.length > 0 ? (

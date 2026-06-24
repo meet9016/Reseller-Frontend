@@ -669,12 +669,17 @@ export default function LeadsPage() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {status.leads.map((lead: any) => (
+                          {status.leads.map((lead: any) => {
+                            const isWon = status.title.toLowerCase() === 'won' || lead.isWon || lead.leadStatus?.name?.toLowerCase() === 'won';
+                            return (
                             <div
                               key={lead._id}
-                              className="cursor-move rounded-lg bg-[#ffffff] p-3 transition-shadow hover:shadow-md"
-                              draggable
-                              onDragStart={() => handleDragStart(lead._id)}
+                              className={`${isWon ? 'cursor-default' : 'cursor-move'} rounded-lg bg-[#ffffff] p-3 transition-shadow hover:shadow-md`}
+                              draggable={!isWon}
+                              onDragStart={(e) => {
+                                if (!isWon) handleDragStart(lead._id);
+                                else e.preventDefault();
+                              }}
                             >
                               {/* Lead Card Header */}
                               <div className="flex items-start justify-between">
@@ -698,15 +703,17 @@ export default function LeadsPage() {
                                     <FiEye className="h-4 w-4" />
                                   </button>
 
-                                  <button
-                                    onClick={() => handleEdit(lead._id)}
-                                    className="h-8 w-8 rounded-full bg-[#008001] text-[#ffffff] flex items-center justify-center
-             hover:-translate-y-1 hover:shadow-md 
-             transition-transform transition-shadow duration-200 ease-out"
-                                    title="Edit"
-                                  >
-                                    <FiEdit className="h-4 w-4" />
-                                  </button>
+                                  {!isWon && (
+                                    <button
+                                      onClick={() => handleEdit(lead._id)}
+                                      className="h-8 w-8 rounded-full bg-[#008001] text-[#ffffff] flex items-center justify-center
+               hover:-translate-y-1 hover:shadow-md 
+               transition-transform transition-shadow duration-200 ease-out"
+                                      title="Edit"
+                                    >
+                                      <FiEdit className="h-4 w-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
 
@@ -757,7 +764,8 @@ export default function LeadsPage() {
 
 
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                       {loadingMoreMap[status.id] && (
