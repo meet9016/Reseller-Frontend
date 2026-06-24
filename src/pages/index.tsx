@@ -42,8 +42,9 @@ import { baseUrl, getAuthToken } from "@/config";
 import moment from "moment";
 import Link from 'next/link';
 import UpdateLeadStageDrawer from "@/components/leads/UpdateLeadStageDrawer";
+import DatePicker from "@/components/ui/DatePicker";
+import { formatContactNumber } from "@/utills/utill";
 import { ApiLead } from "@/components/leads/types";
-import DatePicker from '@/components/ui/DatePicker';
 
 interface StatusCount {
   statusId: string;
@@ -601,7 +602,7 @@ export default function Dashboard() {
                       <div className="flex items-center gap-3 text-xs">
                         <span className="text-xs text-gray-500 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {lead?.customerContact}
+                          {formatContactNumber(lead?.customerContact)}
                         </span>
                         <span className="text-gray-400 flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />

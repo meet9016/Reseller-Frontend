@@ -6,7 +6,8 @@ import { toast } from 'react-toastify';
 import Dialog, { CenterDialog } from '@/components/Dialog';
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiLead, ApiStatus } from './types';
-import { Eye, Download, FileText, Image, File, FileSpreadsheet, Search } from 'lucide-react';
+import { Eye, Download, FileText, Image, File, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
+import { formatContactNumber } from "@/utills/utill";
 import { getFileIcon } from '@/utills/utill';
 import DatePicker from '@/components/ui/DatePicker';
 import TimePicker from '@/components/ui/TimePicker';
@@ -241,7 +242,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
             {/* Info grid */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <InfoCard label="Product" value={(lead as any).product} />
-              <InfoCard label="Phone" value={(lead as any).customerContact || lead.contact} />
+              <InfoCard label="Phone" value={formatContactNumber((lead as any).customerContact || lead.contact)} />
               <InfoCard label="Email" value={(lead as any).customerEmail || lead.email} />
               <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? `₹${(lead as any).paymentAmount.toLocaleString()}` : undefined} />
               <InfoCard label="Assigned Staff" value={lead.assignedTo?.fullName} />

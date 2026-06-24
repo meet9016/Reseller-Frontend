@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { FiSearch, FiPhone, FiMail, FiEye, FiEdit } from 'react-icons/fi';
+import { formatContactNumber } from "@/utills/utill";
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { baseUrl, getAuthToken } from '@/config';
@@ -76,7 +77,7 @@ export default function KanbanCard({
             <div className="mt-2 space-y-1.5 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                     <FiPhone className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="truncate">{lead.customerContact}</span>
+                    <span className="truncate">{formatContactNumber(lead.customerContact)}</span>
                 </div>
                 <div className="flex items-center gap-2 min-w-0">
                     <FiMail className="h-3.5 w-3.5 flex-shrink-0" />

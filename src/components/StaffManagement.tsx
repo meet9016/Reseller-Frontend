@@ -32,7 +32,7 @@ interface SalesExecutiveFormProps {
 }
 
 // Validation schema
-const validationSchema = Yup.object({
+const getValidationSchema = (isUpdate: boolean) => Yup.object({
   fullName: Yup.string()
     .required('Full name is required')
     .min(2, 'Full name must be at least 2 characters')
@@ -47,12 +47,9 @@ const validationSchema = Yup.object({
     .required('Email is required')
     .email('Invalid email format'),
 
-  password: Yup.string()
-    .when('$isUpdate', {
-      is: false,
-      then: (schema) => schema.required('Password is required').min(6, 'Password must be at least 6 characters'),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+  password: isUpdate
+    ? Yup.string().notRequired()
+    : Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
 
   status: Yup.string()
     .required('Status is required'),
@@ -103,10 +100,9 @@ export default function SalesExecutiveForm({
       id: undefined as string | number | undefined,
       image: undefined as string | undefined,
     },
-    validationSchema,
+    validationSchema: getValidationSchema(isUpdate),
     validateOnChange: true,
     validateOnBlur: true,
-    context: { isUpdate },
     onSubmit: async (values) => {
       await handleSubmit(values);
     },
@@ -334,6 +330,7 @@ export default function SalesExecutiveForm({
             label="Mobile Number"
             name="number"
             type="tel"
+            isPhone={true}
             value={formik.values.number}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -394,7 +391,7 @@ export default function SalesExecutiveForm({
         </div>
 
         {/* Teams + Organizations */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <FormMultiSelect
               label="Teams"
@@ -403,7 +400,7 @@ export default function SalesExecutiveForm({
               onChange={(vals) => { formik.setFieldValue('teams', vals); formik.setFieldTouched('teams', true, false); }}
               onBlur={() => formik.setFieldTouched('teams')}
               options={teams.map((t) => ({ value: t._id, label: t.name }))}
-              error={formik.touched.teams && formik.errors.teams ? formik.errors.teams : undefined}
+              error={formik.touched.teams && formik.errors.teams ? (formik.errors.teams as string) : undefined}
               placeholder="Select teams..."
             />
           </div>
@@ -415,11 +412,11 @@ export default function SalesExecutiveForm({
               onChange={(vals) => { formik.setFieldValue('organizations', vals); formik.setFieldTouched('organizations', true, false); }}
               onBlur={() => formik.setFieldTouched('organizations')}
               options={organizations.map((o) => ({ value: o._id, label: o.name }))}
-              error={formik.touched.organizations && formik.errors.organizations ? formik.errors.organizations : undefined}
+              error={formik.touched.organizations && formik.errors.organizations ? (formik.errors.organizations as string) : undefined}
               placeholder="Select organizations..."
             />
           </div>
-        </div>
+        </div> */}
       </form>
     </Dialog>
   );

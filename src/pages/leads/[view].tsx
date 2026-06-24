@@ -478,15 +478,7 @@ export default function LeadsPage() {
                 />
               </div>
               )}
-
-              <div className="space-y-2">
-                <FormMultiSelect
-                  label="Assigned Staff"
-                  value={staffFilter}
-                  onChange={(e) => setStaffFilter(e)}
-                  options={staffMembers.map((s) => ({ value: s._id, label: s.fullName }))}
-                />
-              </div>
+      
 
               <div className="space-y-2">
                 <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>

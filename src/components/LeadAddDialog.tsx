@@ -9,6 +9,7 @@ import Label from './ui/Label';
 import Select from 'react-select';
 import DatePicker from '@/components/ui/DatePicker';
 import TimePicker from '@/components/ui/TimePicker';
+import FormInput from '@/components/ui/Input';
 
 interface DropdownItem {
   _id: string;
@@ -335,14 +336,15 @@ export default function LeadAddDialog({
           </div>
 
           <div>
-            <Label required>Phone</Label>
-            <input
+            <FormInput
+              label="Phone"
               name="contact"
+              type="tel"
+              isPhone={true}
               value={formData.contact}
               onChange={handleChange}
               required
-              className="w-full border border-slate-400 rounded px-3 py-2 text-black"
-              placeholder="Enter Phone Number"
+              placeholder="00000 00000"
             />
           </div>
 

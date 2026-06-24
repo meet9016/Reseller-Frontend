@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, Trash2 } from 'lucide-react';
+import { formatContactNumber } from "@/utills/utill";
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiStatus, ApiUser, ApiLead } from './types';
 import DataTable, { Column } from '@/components/DataTable';
@@ -169,7 +170,7 @@ export default function LeadsListView({
               >
 
                 <Phone className="h-3 w-3" />
-            <span>{row.phone || '-'}</span>
+            <span>{formatContactNumber(row.phone) || '-'}</span>
                 
               </a>
               {/* WhatsApp */}
@@ -215,7 +216,6 @@ export default function LeadsListView({
     },
     { key: 'status', label: 'STATUS' },
 
-    { key: 'staff', label: 'ASSIGNED STAFF' },
     { key: 'priority', label: 'PRIORITY' },
     { key: 'lastFollowUp', label: 'LAST FOLLOW-UP' },
     {

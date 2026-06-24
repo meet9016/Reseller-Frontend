@@ -2,7 +2,8 @@
 // Kanban board with Board / Lost / Won sub-views + drag-and-drop
 
 import { useState, useCallback, useEffect } from 'react';
-import { FiSearch, FiPhone, FiMail } from 'react-icons/fi';
+import { FiPhone, FiMail, FiCalendar } from 'react-icons/fi';
+import { formatContactNumber } from "@/utills/utill";
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { baseUrl, getAuthToken } from '@/config';
@@ -491,9 +492,10 @@ export default function LeadsKanbanView({
 
 function ContactCell({ phone, email }: { phone: string; email: string }) {
     return (
-        <div className="space-y-0.5 text-sm text-gray-600">
-            <div className="flex items-center gap-1.5"><FiPhone className="h-3.5 w-3.5 text-gray-400" />{phone}</div>
-            <div className="flex items-center gap-1.5"><FiMail className="h-3.5 w-3.5 text-gray-400" />{email}</div>
+        <div className="flex flex-col gap-1 text-sm text-gray-700">
+      {phone && (
+        <div className="flex items-center gap-1.5"><FiPhone className="h-3.5 w-3.5 text-gray-400" />{formatContactNumber(phone)}</div>
+      )}      <div className="flex items-center gap-1.5"><FiMail className="h-3.5 w-3.5 text-gray-400" />{email}</div>
         </div>
     );
 }

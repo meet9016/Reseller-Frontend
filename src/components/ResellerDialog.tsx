@@ -298,6 +298,7 @@ export default function ResellerDialog({
                   label="Phone Number"
                   name="phone"
                   type="tel"
+                  isPhone={true}
                   value={formik.values.phone}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -306,7 +307,7 @@ export default function ResellerDialog({
                   onBlur={formik.handleBlur}
                   error={formik.touched.phone && formik.errors.phone ? formik.errors.phone : undefined}
                   required
-                  placeholder="9876543210"
+                  placeholder="98765 43210"
                 />
 
                 <div className="relative">

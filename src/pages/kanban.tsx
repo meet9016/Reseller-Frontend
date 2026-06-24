@@ -13,6 +13,7 @@ import { baseUrl, getAuthToken } from "@/config";
 import Dialog from "@/components/Dialog";
 import { ListCollapse, Plus } from "lucide-react";
 import Select from "react-select";
+import { formatContactNumber } from "@/utills/utill";
 
 type ApiUser = {
   _id: string;
@@ -719,7 +720,7 @@ export default function LeadsPage() {
 
                                     <div className="flex items-center gap-2">
                                       <FiPhone className="h-4 w-4 text-dark flex-shrink-0" />
-                                      <span className="truncate">{lead.contact}</span>
+                                      <span className="truncate">{formatContactNumber(lead.contact)}</span>
                                     </div>
 
                                     <div className="flex items-center gap-2 min-w-0">
@@ -851,7 +852,7 @@ export default function LeadsPage() {
                               <div className="flex flex-col gap-1 text-sm text-gray-700">
                                 <div className="flex items-center gap-2">
                                   <FiPhone className="h-4 w-4 text-gray-500" />
-                                  {l.contact}
+                                  {formatContactNumber(l.contact)}
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <FiMail className="h-4 w-4 text-gray-500" />
@@ -973,7 +974,7 @@ export default function LeadsPage() {
                               <div className="flex flex-col gap-1 text-sm text-gray-700">
                                 <div className="flex items-center gap-2">
                                   <FiPhone className="h-4 w-4 text-gray-500" />
-                                  {l.contact}
+                                  {formatContactNumber(l.contact)}
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <FiMail className="h-4 w-4 text-gray-500" />
@@ -1228,7 +1229,7 @@ export default function LeadsPage() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Phone</div>
-                  <div>{viewLead.customerContact || viewLead.contact || "-"}</div>
+                  <div>{formatContactNumber(viewLead.customerContact || viewLead.contact)}</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Email</div>

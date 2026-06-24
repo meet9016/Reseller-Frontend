@@ -21,3 +21,15 @@ import { File, FileSpreadsheet, FileText, Image } from "lucide-react";
         return <File className="h-4 w-4 text-gray-500" />;
     }
   };
+
+  export const formatContactNumber = (contact: string | number | undefined | null) => {
+    if (!contact) return "—";
+    let cleaned = String(contact).replace(/\D/g, "");
+    if (cleaned.startsWith("91") && cleaned.length > 10) {
+      cleaned = cleaned.slice(2);
+    }
+    if (cleaned.length === 10) {
+      return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+    }
+    return String(contact);
+  };

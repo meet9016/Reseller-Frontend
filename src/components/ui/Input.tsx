@@ -356,6 +356,7 @@ interface FormInputProps {
   checkboxColor?: string; // Custom color for checkbox
   labelClassName?: string; // Custom class for label container
   compact?: boolean; // Compact mode
+  isPhone?: boolean; // Mobile input mode
 }
 
 const FormInput: React.FC<FormInputProps> = ({
@@ -379,6 +380,7 @@ const FormInput: React.FC<FormInputProps> = ({
   checkboxColor = "#1e40af", // Default dark blue color
   labelClassName,
   compact,
+  isPhone,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -602,7 +604,7 @@ const FormInput: React.FC<FormInputProps> = ({
       <div className="relative">
         {/* Left Icon */}
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10 pointer-events-none">
             {icon}
           </div>
         )}
@@ -633,6 +635,42 @@ const FormInput: React.FC<FormInputProps> = ({
             disabled={disabled}
             className={getFileInputClasses()}
           />
+        ) : isPhone ? (
+          <div className="relative flex items-center w-full">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-700 font-medium z-10 pointer-events-none select-none">
+              +91
+            </span>
+            <input
+              type="tel"
+              name={name}
+              value={value ? (() => {
+                const cleaned = String(value).replace(/\D/g, "");
+                if (cleaned.length <= 5) return cleaned;
+                return `${cleaned.slice(0, 5)} ${cleaned.slice(5, 10)}`;
+              })() : ""}
+              onChange={(e) => {
+                let val = e.target.value.replace(/\D/g, "");
+                if (val.length > 10) val = val.slice(0, 10);
+                const syntheticEvent = {
+                  ...e,
+                  target: {
+                    ...e.target,
+                    name,
+                    value: val
+                  }
+                };
+                onChange(syntheticEvent as any);
+              }}
+              onBlur={(e) => {
+                setIsFocused(false);
+                onBlur?.(e);
+              }}
+              onFocus={() => setIsFocused(true)}
+              placeholder={placeholder || "00000 00000"}
+              disabled={disabled}
+              className={`${getInputClasses()} pl-11`}
+            />
+          </div>
         ) : (
           <input
             type={inputType}

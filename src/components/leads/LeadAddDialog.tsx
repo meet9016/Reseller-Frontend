@@ -31,9 +31,7 @@ const validationSchema = Yup.object().shape({
     .matches(/^[0-9]{10}$/, 'Customer Contact must be exactly 10 digits')
     .required('Customer Contact is required'),
   companyName: Yup.string().trim(),
-  assignedTo: Yup.string().trim(),
-  product: Yup.string().trim().required('Product is required'),
-  address: Yup.string().trim().required('Address is required'),
+
   paymentAmount: Yup.number()
     .typeError('Payment Amount must be a number')
     .required('Payment Amount is required')
@@ -233,9 +231,11 @@ export default function LeadAddDialog({
             <FormInput
               label="Customer Contact"
               name="customerContact"
+              type="tel"
+              isPhone={true}
               value={formik.values.customerContact}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                const val = e.target.value;
                 formik.setFieldValue('customerContact', val);
               }}
               onBlur={formik.handleBlur}
@@ -252,7 +252,7 @@ export default function LeadAddDialog({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
               label="Product Name"
               name="product"
@@ -271,16 +271,20 @@ export default function LeadAddDialog({
               error={getFieldError('address')}
               required
             />
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormInput
               label="Payment Amount"
               name="paymentAmount"
               value={formik.values.paymentAmount}
-              onChange={formik.handleChange}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const val = e.target.value.replace(/\D/g, '');
+                formik.setFieldValue('paymentAmount', val);
+              }}
               onBlur={formik.handleBlur}
               error={getFieldError('paymentAmount')}
+              icon={<span className="text-gray-700 font-medium text-lg">₹</span>}
               required
             />
             <FormSelect
