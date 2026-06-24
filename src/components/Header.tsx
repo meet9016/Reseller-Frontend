@@ -450,7 +450,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#0a2352] to-[#3B82F6] flex items-center justify-center text-white font-bold shadow-md">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#3B82F6] flex items-center justify-center text-white font-bold shadow-md">
               {userName ? userName.charAt(0).toUpperCase() : 'U'}
             </div>
           )}
@@ -477,7 +477,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-lg bg-white shadow-xl overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-gray-100 bg-[#0a2352] flex justify-between items-center">
+              <div className="px-4 py-3 border-b border-gray-100 bg-[#3B82F6] flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-white">Notifications</h3>
                   {/* Counter badge on the right side of the header */}
@@ -551,7 +551,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                   <button
                     onClick={markAllAsRead}
                     disabled={markingAllRead}
-                    className="w-full px-4 py-3 text-sm bg-[#0a2352] text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 text-sm bg-[#3B82F6] text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <CheckCheck className="w-4 h-4" />
                     {markingAllRead ? 'Marking all as read...' : `Mark all as read (${unreadCount})`}

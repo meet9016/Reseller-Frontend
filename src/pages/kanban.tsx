@@ -642,7 +642,7 @@ export default function LeadsPage() {
                         <h3 className="font-semibold text-white capitalize">
                           {status.title}
                         </h3>
-                        <span className="rounded-full bg-[#ffffff] px-3 py-1 text-sm font-medium text-[#0a2352]">
+                        <span className="rounded-full bg-[#ffffff] px-3 py-1 text-sm font-medium text-[#3B82F6]">
                           {status.leads.length}
                         </span>
                       </div>

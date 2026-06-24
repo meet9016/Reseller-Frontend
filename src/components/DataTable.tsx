@@ -307,7 +307,7 @@ export default function DataTable<T extends Record<string, any>>({
                         {onView && (
                           <button
                             onClick={() => onView(row)}
-                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-[#0a2352] hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95"
+                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-[#3B82F6] hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95"
                           >
                             <FiEye className="h-4 w-4 group-hover:scale-110 transition-transform" />
                           </button>
