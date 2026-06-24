@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast'; // or react-toastify, I'll use toastify
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiLead, ApiStatus } from './types';
 import { X } from 'lucide-react';
+import DatePicker from '@/components/ui/DatePicker';
+import TimePicker from '@/components/ui/TimePicker';
 
 interface Props {
   isOpen: boolean;
@@ -216,22 +218,18 @@ export default function UpdateLeadStageDrawer({ isOpen, onClose, lead, onSuccess
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Next Followup Date <span className="text-red-500">*</span>
                     </label>
-                    <input 
-                      type="date" 
-                      className="w-full text-sm border-gray-300 rounded-lg focus:ring-primary focus:border-primary py-2 px-3 border"
+                    <DatePicker
                       value={nextDate}
-                      onChange={e => setNextDate(e.target.value)}
+                      onChange={(val) => setNextDate(val)}
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Next Followup Time
                     </label>
-                    <input 
-                      type="time" 
-                      className="w-full text-sm border-gray-300 rounded-lg focus:ring-primary focus:border-primary py-2 px-3 border"
+                    <TimePicker
                       value={nextTime}
-                      onChange={e => setNextTime(e.target.value)}
+                      onChange={(val) => setNextTime(val)}
                     />
                   </div>
                 </div>

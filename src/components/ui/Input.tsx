@@ -336,10 +336,10 @@ import React, { useState } from "react";
 import { Eye, EyeOff, AlertCircle, CheckCircle, Check } from "lucide-react";
 
 interface FormInputProps {
-  label?: string;
+  label?: React.ReactNode;
   name: string;
   type?: string;
-  value: any;
+  value?: any;
   onChange: (e: any) => void;
   onBlur?: (e: any) => void;
   error?: string;
@@ -354,6 +354,8 @@ interface FormInputProps {
   className?: string;
   checked?: boolean; // For checkbox
   checkboxColor?: string; // Custom color for checkbox
+  labelClassName?: string; // Custom class for label container
+  compact?: boolean; // Compact mode
 }
 
 const FormInput: React.FC<FormInputProps> = ({
@@ -375,6 +377,8 @@ const FormInput: React.FC<FormInputProps> = ({
   className = "",
   checked,
   checkboxColor = "#1e40af", // Default dark blue color
+  labelClassName,
+  compact,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -533,7 +537,7 @@ const FormInput: React.FC<FormInputProps> = ({
             />
           </div>
 
-          <div className="flex-1">
+          <div className={`flex-1 ${labelClassName || ''}`}>
             {label && (
               <div className="flex items-center justify-between">
                 <label

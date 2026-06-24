@@ -3,6 +3,7 @@ import { X, Calendar, CreditCard, Image as ImageIcon, Pencil, CheckCircle, Eye }
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
+import DatePicker from '@/components/ui/DatePicker';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -279,14 +280,13 @@ export default function PaymentModal({ isOpen, onClose, lead, onSuccess }: Payme
                 <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
                   <Calendar className="h-4 w-4 text-[#3B82F6]" /> Payment Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={paymentDate}
-                  onChange={(e) => {
-                    setPaymentDate(e.target.value);
+                  onChange={(val) => {
+                    setPaymentDate(val);
                     if (errors.date) setErrors((prev) => ({ ...prev, date: undefined }));
                   }}
-                  className={`w-full border ${errors.date ? 'border-red-500' : 'border-gray-300'} rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]`}
+                  error={!!errors.date}
                 />
                 {errors.date && <p className="mt-1 text-xs text-red-500">{errors.date}</p>}
               </div>

@@ -8,6 +8,8 @@ import { baseUrl, getAuthToken } from '@/config';
 import { ApiLead, ApiStatus } from './types';
 import { Eye, Download, FileText, Image, File, FileSpreadsheet, Search } from 'lucide-react';
 import { getFileIcon } from '@/utills/utill';
+import DatePicker from '@/components/ui/DatePicker';
+import TimePicker from '@/components/ui/TimePicker';
 
 interface Props {
   lead: ApiLead | null;
@@ -120,6 +122,8 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
     setLocalFollowUps(prev => [...prev, tempFollowUp]);
 
     // Clear form fields
+      onClose()
+
     setFollowupNote('');
     setEditNextDate('');
     setEditNextTime('');
@@ -297,20 +301,16 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500">Date</label>
-                      <input
-                        type="date"
+                      <DatePicker
                         value={editNextDate}
-                        onChange={(e) => setEditNextDate(e.target.value)}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                        onChange={(val) => setEditNextDate(val)}
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-500">Time</label>
-                      <input
-                        type="time"
+                      <TimePicker
                         value={editNextTime}
-                        onChange={(e) => setEditNextTime(e.target.value)}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 transition-all outline-none"
+                        onChange={(val) => setEditNextTime(val)}
                       />
                     </div>
                   </div>

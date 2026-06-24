@@ -7,6 +7,8 @@ import { baseUrl, getAuthToken } from '@/config';
 import { toast } from 'react-toastify';
 import Label from './ui/Label';
 import Select from 'react-select';
+import DatePicker from '@/components/ui/DatePicker';
+import TimePicker from '@/components/ui/TimePicker';
 
 interface DropdownItem {
   _id: string;
@@ -434,22 +436,22 @@ export default function LeadAddDialog({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Next Follow-up Date</Label>
-                  <input
-                    type="date"
-                    name="nextFollowupDate"
+                  <DatePicker
                     value={formData.nextFollowupDate}
-                    onChange={handleChange}
-                    className="w-full border border-slate-400 rounded px-3 py-2 text-black"
+                    onChange={(val) => {
+                      setFormData((prev) => ({ ...prev, nextFollowupDate: val }));
+                      setFormError(null);
+                    }}
                   />
                 </div>
                 <div>
                   <Label>Next Follow-up Time</Label>
-                  <input
-                    type="time"
-                    name="nextFollowupTime"
+                  <TimePicker
                     value={formData.nextFollowupTime}
-                    onChange={handleChange}
-                    className="w-full border border-slate-400 rounded px-3 py-2 text-black"
+                    onChange={(val) => {
+                      setFormData((prev) => ({ ...prev, nextFollowupTime: val }));
+                      setFormError(null);
+                    }}
                   />
                 </div>
               </div>

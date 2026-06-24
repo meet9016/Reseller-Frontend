@@ -12,6 +12,7 @@ import { getFileIcon } from '@/utills/utill';
 import FormInput from './ui/Input';
 import FormSelect from './ui/FormSelect';
 import Label from './ui/Label';
+import DatePicker from '@/components/ui/DatePicker';
 
 // Types
 export interface Attachment {
@@ -388,7 +389,7 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
             value={formik.values.subject}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            error={formik.touched.subject && formik.errors.subject}
+            error={formik.touched.subject ? formik.errors.subject : undefined}
             placeholder=""
             as="input"
             required={requiredFields.includes('subject')}
@@ -422,30 +423,32 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
-            <FormInput
-              label="Start Date"
-              name="startDate"
-              type="date"
-              value={formik.values.startDate}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.startDate && formik.errors.startDate}
-              placeholder=""
-              as="input"
-              required={requiredFields.includes('startDate')}
-            />
-            <FormInput
-              label="End Date"
-              name="endDate"
-              type="date"
-              value={formik.values.endDate}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.endDate && formik.errors.endDate}
-              placeholder=""
-              as="input"
-              required={requiredFields.includes('endDate')}
-            />
+            <div className="w-full">
+              <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                Start Date{requiredFields.includes('startDate') && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <DatePicker
+                value={formik.values.startDate}
+                onChange={(val) => formik.setFieldValue('startDate', val)}
+                error={!!(formik.touched.startDate && formik.errors.startDate)}
+              />
+              {formik.touched.startDate && formik.errors.startDate && (
+                <p className="text-red-700 text-xs mt-1">{formik.errors.startDate}</p>
+              )}
+            </div>
+            <div className="w-full">
+              <label className="block mb-1.5 text-sm font-medium text-gray-700">
+                End Date{requiredFields.includes('endDate') && <span className="text-red-500 ml-1">*</span>}
+              </label>
+              <DatePicker
+                value={formik.values.endDate}
+                onChange={(val) => formik.setFieldValue('endDate', val)}
+                error={!!(formik.touched.endDate && formik.errors.endDate)}
+              />
+              {formik.touched.endDate && formik.errors.endDate && (
+                <p className="text-red-700 text-xs mt-1">{formik.errors.endDate}</p>
+              )}
+            </div>
           </div>
 
           {/* Status & Priority */}
@@ -457,7 +460,7 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
               onChange={(val) => formik.setFieldValue('status', val)}
               // onBlur={() => formik.setFieldTouched('status')}
               options={dropdownStatuses.map((s: any) => ({ value: s._id, label: s.name! }))}
-              error={formik.touched.status && formik.errors.status}
+              error={formik.touched.status ? formik.errors.status : undefined}
               placeholder="— Select Status —"
               required={requiredFields.includes('status')}
             />
@@ -468,7 +471,7 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
               onChange={(val) => updateField('priority', val)}
               onBlur={() => formik.setFieldTouched('priority')}
               options={PRIORITY_OPTIONS.map((p) => ({ value: p.value, label: p.label }))}
-              error={formik.touched.priority && formik.errors.priority}
+              error={formik.touched.priority ? formik.errors.priority : undefined}
               placeholder="— Select Priority —"
               required={requiredFields.includes('priority')}
             />
@@ -498,14 +501,16 @@ export default function TaskDialog({ isOpen, onClose, mode, initialData, onSucce
                           checked={formik.values.assignedTeams.includes(t._id)}
                           onChange={() => toggleTeam(t._id)}
                           label={
-                            <div className="flex items-center justify-between w-full">
-                              <span className="text-sm text-gray-700">{t.name}</span>
-                              {memberCount > 0 && (
-                                <span className="text-xs ml-2 text-gray-400">
-                                  {memberCount} member{memberCount > 1 ? 's' : ''}
-                                </span>
-                              )}
-                            </div>
+                            (
+                              <div className="flex items-center justify-between w-full">
+                                <span className="text-sm text-gray-700">{t.name}</span>
+                                {memberCount > 0 && (
+                                  <span className="text-xs ml-2 text-gray-400">
+                                    {memberCount} member{memberCount > 1 ? 's' : ''}
+                                  </span>
+                                )}
+                              </div>
+                            ) as any
                           }
                           className="hover:bg-gray-50 rounded px-2 py-2 mt-2"
                           labelClassName="w-full"

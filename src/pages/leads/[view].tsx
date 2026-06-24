@@ -25,6 +25,7 @@ import {
 import { useLeadsData } from '@/components/leads/useLeadsData';
 import FormInput from '@/components/ui/Input';
 import { FormMultiSelect } from '@/components/ui/FormSelect';
+import DatePicker from '@/components/ui/DatePicker';
 
 export type ViewMode = 'list' | 'kanban';
 export type KanbanSubView = 'board' | 'lost' | 'won';
@@ -488,25 +489,20 @@ export default function LeadsPage() {
               </div>
 
               <div className="space-y-2">
-                <FormInput
-                  label="From Date"
-                  name="fromDate"
-                  type="date"
+                <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>
+                <DatePicker
                   value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="bg-white"
+                  onChange={(val) => setFromDate(val)}
+                  placeholder="Select from date"
                 />
               </div>
 
               <div className="space-y-2">
-                <FormInput
-                  label="To Date"
-                  name="toDate"
-                  type="date"
+                <label className="block mb-1.5 text-sm font-medium text-gray-700">To Date</label>
+                <DatePicker
                   value={toDate}
-
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="bg-white"
+                  onChange={(val) => setToDate(val)}
+                  placeholder="Select to date"
                 />
               </div>
             </div>
