@@ -16,7 +16,8 @@ interface Reseller {
   email: string;
   status: string;
   role: string;
-  address: string;
+  roleName?: string;
+  address?: string;
   city: string;
   state: string;
   pincode: string;
@@ -68,6 +69,20 @@ export function ResellersContent() {
     return '';
   }, [token]);
 
+  const getUserId = useCallback((): string => {
+    if (!token) return '';
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(window.atob(parts[1]));
+        return payload?.id || payload?._id || '';
+      }
+    } catch (e) {
+      console.error('Failed to parse token payload:', e);
+    }
+    return '';
+  }, [token]);
+
   const fetchResellers = useCallback(async () => {
     if (getUserRole() === 'reseller') {
       return;
@@ -108,6 +123,7 @@ export function ResellersContent() {
         email: item.email || '',
         status: item.status || 'active',
         role: typeof item.role === 'object' ? item.role?._id || '' : item.role || '',
+        roleName: typeof item.role === 'object' ? item.role?.roleName || '' : '',
         address: item.address || '',
         city: item.city || '',
         state: item.state || '',
@@ -224,6 +240,7 @@ export function ResellersContent() {
         email: item.email || '',
         status: item.status || 'active',
         role: typeof item.role === 'object' ? item.role?._id || '' : item.role || '',
+        roleName: typeof item.role === 'object' ? item.role?.roleName || '' : '',
         address: item.address || '',
         city: item.city || '',
         state: item.state || '',
@@ -305,6 +322,21 @@ export function ResellersContent() {
           }}
           onEdit={handleEdit}
           onDelete={handleDeleteClick}
+          canEdit={(row) => {
+            const rowRole = row.roleName?.toLowerCase() || '';
+            const myId = getUserId();
+            if (rowRole === 'admin') {
+              return myId === row.id;
+            }
+            return true;
+          }}
+          canDelete={(row) => {
+            const rowRole = row.roleName?.toLowerCase() || '';
+            if (rowRole === 'admin') {
+              return false;
+            }
+            return true;
+          }}
           actions
           addButton={{
             label: 'Add Reseller',

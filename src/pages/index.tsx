@@ -121,6 +121,8 @@ export default function Dashboard() {
   const token =
     typeof window !== "undefined" ? getAuthToken() : null;
 
+  const isReseller = user?.role?.roleName?.toLowerCase() === 'reseller';
+
   // Fetch user info and permissions
   useEffect(() => {
     if (!token) return;
@@ -581,12 +583,12 @@ export default function Dashboard() {
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      
+
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold text-gray-900 text-sm">
                           {lead.lead?.customerName || lead.customerName || "Unknown"}
                         </h4>
-                       
+
                         <span
                           className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${getStatusColor(
                             lead.lead?.leadStatus?.name || lead.leadStatus?.name || "",
@@ -596,9 +598,9 @@ export default function Dashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-xs">
-                         <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {lead?.customerContact} 
+                          {lead?.customerContact}
                         </span>
                         <span className="text-gray-400 flex items-center gap-1">
                           <CalendarIcon className="h-3 w-3" />
@@ -925,7 +927,7 @@ export default function Dashboard() {
         </div>
 
         {/* Follow-ups and Tasks Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {isReseller && <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="h-full min-h-[450px]">
             {renderFollowupTable(
               "All Follow-ups",
@@ -971,7 +973,8 @@ export default function Dashboard() {
           <div className="h-full min-h-[450px]">
             {renderTodayTasksTable(todayTasks, tasksLoading)}
           </div>
-        </div>
+        </div>}
+
 
       </div>
 
