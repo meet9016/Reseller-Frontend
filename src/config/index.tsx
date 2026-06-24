@@ -61,6 +61,7 @@ export const baseUrl = {
   deleteReseller: `${API}reseller`,
   settlements: `${API}settlement/all`,
   addSettlement: `${API}settlement/pay`,
+  resellerLeadSettlements: `${API}settlement/leads`,
   getBaseUrl: API,
   getImageUrl: process.env.NEXT_PUBLIC_IMAGE_URL,
 };

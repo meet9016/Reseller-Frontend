@@ -19,9 +19,20 @@ interface Settlement {
   pendingCommission: number;
 }
 
+interface LeadSettlement {
+  id: string;
+  customerName: string;
+  status: string;
+  paymentAmount: number;
+  commissionAmount: number;
+  paymentDate: string | null;
+  paymentMode: string;
+}
+
 export function SettlementsContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [settlementsData, setSettlementsData] = useState<Settlement[]>([]);
+  const [resellerLeadsData, setResellerLeadsData] = useState<LeadSettlement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [selectedReseller, setSelectedReseller] = useState<Settlement | null>(null);
@@ -57,14 +68,22 @@ export function SettlementsContent() {
 
       const payload = res.data?.data || [];
       setSettlementsData(payload);
+
+      if (getUserRole() === 'reseller') {
+        const leadsRes = await axios.get(baseUrl.resellerLeadSettlements, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        setResellerLeadsData(leadsRes.data?.data || []);
+      }
     } catch (error) {
       console.error('Failed to fetch settlements:', error);
       toast.error('Failed to load settlements data');
       setSettlementsData([]);
+      setResellerLeadsData([]);
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, getUserRole]);
 
   useEffect(() => {
     fetchSettlements();
@@ -215,6 +234,52 @@ export function SettlementsContent() {
     });
   }
 
+  const resellerColumns: Column<LeadSettlement>[] = [
+    {
+      key: 'customerName',
+      label: 'LEAD NAME',
+      render: (value) => <span className="font-semibold text-gray-900">{value}</span>,
+    },
+    {
+      key: 'status',
+      label: 'STATUS',
+      render: (value) => (
+        <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+          {value}
+        </span>
+      ),
+    },
+    {
+      key: 'paymentAmount',
+      label: 'LEAD REVENUE',
+      render: (value) => (
+        <div className="flex items-center gap-1">
+          <IndianRupee className="h-3 w-3 text-emerald-600" />
+          <span className="font-semibold text-emerald-700">
+            {value.toLocaleString('en-IN')}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'commissionAmount',
+      label: 'COMMISSION EARNED',
+      render: (value) => (
+        <div className="flex items-center gap-1">
+          <IndianRupee className="h-3 w-3 text-gray-600" />
+          <span className="font-semibold text-gray-800">
+            {value.toLocaleString('en-IN')}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'paymentDate',
+      label: 'DATE',
+      render: (value) => value ? new Date(value).toLocaleDateString('en-IN') : '-',
+    },
+  ];
+
   // Calculate totals for summary cards
   const totalLeadsAmount = settlementsData.reduce((acc, curr) => acc + curr.totalLeadsAmount, 0);
   const totalCommissionAmount = settlementsData.reduce((acc, curr) => acc + curr.totalCommission, 0);
@@ -263,13 +328,23 @@ export function SettlementsContent() {
           </div>
         </div>
 
-        <DataTable
-          data={settlementsData}
-          columns={columns}
-          searchable={false}
-          pagination={false}
-          actions={false}
-        />
+        {userRole === 'reseller' ? (
+          <DataTable
+            data={resellerLeadsData}
+            columns={resellerColumns}
+            searchable={false}
+            pagination={false}
+            actions={false}
+          />
+        ) : (
+          <DataTable
+            data={settlementsData}
+            columns={columns}
+            searchable={false}
+            pagination={false}
+            actions={false}
+          />
+        )}
       </div>
 
       {isPayModalOpen && selectedReseller && (
