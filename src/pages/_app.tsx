@@ -16,28 +16,26 @@ const poppins = Poppins({
   display: "swap",
 });
 
+if (typeof window !== "undefined") {
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        clearAuthToken();
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+}
+
 export default function App({ Component, pageProps }: AppProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const pathName = usePathname();
   const router = useRouter();
   const isLoginPage = pathName === "/login";
-
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          clearAuthToken();
-          router.replace("/");
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, [router]);
 
   const getLabel = () => {
     if (pathName === "/") return "Dashboard"
