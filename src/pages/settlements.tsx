@@ -18,6 +18,7 @@ interface Settlement {
   totalCommission: number;
   paidCommission: number;
   pendingCommission: number;
+  resellerImage?: string;
 }
 
 interface LeadSettlement {
@@ -163,11 +164,22 @@ export function SettlementsContent() {
       key: 'resellerName',
       label: 'RESELLER',
       render: (value, row) => (
-        <div className="flex flex-col">
-          <span className="font-semibold text-gray-900">{value}</span>
-          <a href={`mailto:${row.resellerEmail}`} className="text-xs text-primary underline">
-            {row.resellerEmail}
-          </a>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-sky-900">
+            {row.resellerImage ? (
+              <img src={`${process.env.NEXT_PUBLIC_IMAGE_URL || ''}/images/ResellerProfileImages/${row.resellerImage}`} alt={value} className="h-full w-full object-contain" />
+            ) : (
+              <span className="text-xs font-bold text-gray-500">
+                {value?.charAt(0)?.toUpperCase() || '?'}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">{value}</span>
+            <a href={`mailto:${row.resellerEmail}`} className="text-xs text-primary underline">
+              {row.resellerEmail}
+            </a>
+          </div>
         </div>
       ),
     },
