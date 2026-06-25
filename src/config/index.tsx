@@ -62,6 +62,8 @@ export const baseUrl = {
   settlements: `${API}settlement/all`,
   addSettlement: `${API}settlement/pay`,
   resellerLeadSettlements: `${API}settlement/leads`,
+  settingsRequiredFields: `${API}settings/required-fields`,
+  settingsLeadFields: `${API}settings/lead-fields`,
   getBaseUrl: API,
   getImageUrl: process.env.NEXT_PUBLIC_IMAGE_URL,
 };
