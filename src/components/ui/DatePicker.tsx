@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface DatePickerProps {
@@ -62,28 +63,55 @@ export default function DatePicker({
   const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
   const [dropdownPosition, setDropdownPosition] = useState<'below' | 'above'>('below');
+  const [coords, setCoords] = useState({ left: 0, top: 0, bottom: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const isAbove = spaceBelow < 340;
+    
+    setDropdownPosition(isAbove ? 'above' : 'below');
+    setCoords({
+      left: rect.left,
+      top: rect.bottom + 4,
+      bottom: window.innerHeight - rect.top + 4,
+    });
+  }, []);
+
+  // Update position on open, scroll, and resize
+  useEffect(() => {
+    if (!open) return;
+    updatePosition();
+    
+    const handleScroll = () => updatePosition();
+    
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', handleScroll, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [open, updatePosition]);
 
   // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        popupRef.current && !popupRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  // Determine dropdown position
-  useEffect(() => {
-    if (!open || !triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    setDropdownPosition(spaceBelow < 340 ? 'above' : 'below');
   }, [open]);
 
   // Sync view when value changes externally
@@ -176,13 +204,15 @@ export default function DatePicker({
         <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
       </button>
 
-      {/* Dropdown */}
-      {open && (
+      {/* Dropdown Portal */}
+      {open && typeof document !== 'undefined' && createPortal(
         <div
-          className={`absolute z-[9999] w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-3 animate-in fade-in zoom-in-95 duration-150
-            ${dropdownPosition === 'above' ? 'bottom-full mb-1' : 'top-full mt-1'}
-          `}
-          style={{ left: 0 }}
+          ref={popupRef}
+          className={`fixed z-[999999] w-72 bg-white rounded-xl shadow-xl border border-gray-200 p-3 animate-in fade-in zoom-in-95 duration-150`}
+          style={{
+            left: coords.left,
+            ...(dropdownPosition === 'below' ? { top: coords.top } : { bottom: coords.bottom })
+          }}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
@@ -261,7 +291,8 @@ export default function DatePicker({
               </button>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

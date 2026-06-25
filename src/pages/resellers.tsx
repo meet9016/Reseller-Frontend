@@ -269,12 +269,12 @@ export function ResellersContent() {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       fetchResellers();
-      toast.success('Reseller deleted successfully');
+      toast.success('Reseller deactivated successfully');
       setShowDeleteDialog(false);
       setResellerToDelete(null);
     } catch (err: any) {
-      console.error('Delete failed:', err);
-      toast.error(err?.response?.data?.message || 'Failed to delete reseller');
+      console.error('Deactivate failed:', err);
+      toast.error(err?.response?.data?.message || 'Failed to deactivate reseller');
     }
   };
 
@@ -351,7 +351,7 @@ export function ResellersContent() {
           setShowDeleteDialog(false);
           setResellerToDelete(null);
         }}
-        title="Delete Reseller"
+        title="Deactivate Reseller"
         size="md"
         footer={
           <>
@@ -368,15 +368,14 @@ export function ResellersContent() {
               onClick={handleConfirmDelete}
               className="rounded-lg cursor-pointer bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
-              Delete
+              Deactivate
             </button>
           </>
         }
       >
         <div className="py-4">
           <p className="text-gray-700">
-            Are you sure you want to delete reseller "{resellerToDelete?.fullName}"?
-            This action cannot be undone.
+            Are you sure you want to deactivate reseller "{resellerToDelete?.fullName}"?
           </p>
         </div>
       </DeleteDialog>

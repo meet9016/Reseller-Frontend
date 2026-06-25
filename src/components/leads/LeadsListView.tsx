@@ -147,8 +147,22 @@ export default function LeadsListView({
     }
   }, [externalLeads]);
 
+  // Extract user role from token
+  const userRole = (() => {
+    const t = typeof window !== 'undefined' ? getAuthToken() : null;
+    if (!t) return '';
+    try {
+      const parts = t.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(window.atob(parts[1]));
+        return payload?.role?.roleName?.toLowerCase() || '';
+      }
+    } catch { }
+    return '';
+  })();
+
   // ── Columns ──────────────────────────────────────────────────────────────
-  const columns: Column<TableLead>[] = [
+  const baseColumns: Column<TableLead>[] = [
     {
       key: 'name',
       label: 'FULL NAME',
@@ -231,6 +245,15 @@ export default function LeadsListView({
       render: (v) => (v && Number(v) > 0 ? <span className="font-bold text-blue-600">₹{Number(v).toLocaleString('en-IN')}</span> : <span className="text-gray-400">-</span>)
     },
   ];
+
+  const columns = [...baseColumns];
+  if (userRole === 'admin') {
+    columns.splice(2, 0, {
+      key: 'staff',
+      label: 'RESELLER',
+      render: (v) => <span className="text-gray-700">{v || '-'}</span>,
+    });
+  }
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleView = async (row: TableLead) => {
