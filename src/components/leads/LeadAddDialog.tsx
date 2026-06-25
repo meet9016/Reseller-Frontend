@@ -38,6 +38,7 @@ const validationSchema = Yup.object().shape({
     .required('Payment Amount is required')
     .min(0, 'Payment Amount cannot be negative'),
   leadStatus: Yup.string().required('Lead Status is required'),
+  leadSource: Yup.string().required('Lead Source is required'),
   remarks: Yup.string().optional(),
   isActive: Yup.boolean(),
 });
@@ -52,22 +53,27 @@ export default function LeadAddDialog({
 }: Props) {
   const [loading, setLoading] = useState(false);
   const [statuses, setStatuses] = useState<{ _id: string; name: string }[]>([]);
+  const [sources, setSources] = useState<{ _id: string; name: string }[]>([]);
   const [staffMembers, setStaffMembers] = useState<{ _id: string; fullName: string }[]>([]);
   const token = getAuthToken;
 
   useEffect(() => {
     if (!isOpen) return;
-    const fetchStatuses = async () => {
+    const fetchDropdowns = async () => {
       try {
         const headers = { Authorization: `Bearer ${token()}` };
-        const res = await axios.get(baseUrl.leadStatuses, { headers });
-        setStatuses(res.data?.data || res.data || []);
+        const [statusRes, sourceRes] = await Promise.all([
+          axios.get(baseUrl.leadStatuses, { headers }),
+          axios.get(baseUrl.leadSources, { headers }),
+        ]);
+        setStatuses(statusRes.data?.data || statusRes.data || []);
+        setSources(sourceRes.data?.data || sourceRes.data || []);
       } catch (err) {
-        console.error('Failed to fetch lead statuses:', err);
+        console.error('Failed to fetch dropdowns:', err);
       }
     };
 
-    fetchStatuses();
+    fetchDropdowns();
   }, [isOpen]);
 
   const formik = useFormik({
@@ -80,6 +86,7 @@ export default function LeadAddDialog({
       address: '',
       paymentAmount: '',
       leadStatus: '',
+      leadSource: '',
       assignedTo: '',
       remarks: '',
       isActive: true,
@@ -99,6 +106,7 @@ export default function LeadAddDialog({
           address: values.address.trim(),
           paymentAmount: Number(values.paymentAmount),
           leadStatus: values.leadStatus,
+          leadSource: values.leadSource,
           assignedTo: values.assignedTo,
           remarks: values.remarks,
           isActive: values.isActive,
@@ -148,6 +156,7 @@ export default function LeadAddDialog({
           address: (initialData as any).address || '',
           paymentAmount: (initialData as any).paymentAmount != null ? String((initialData as any).paymentAmount) : '',
           leadStatus: typeof initialData.leadStatus === 'object' ? initialData.leadStatus?._id || '' : (initialData.leadStatus || ''),
+          leadSource: typeof (initialData as any).leadSource === 'object' ? (initialData as any).leadSource?._id || '' : ((initialData as any).leadSource || (initialData as any).source || ''),
           assignedTo: typeof initialData.assignedTo === 'object' ? initialData.assignedTo?._id || '' : (initialData.assignedTo || ''),
           remarks: (initialData as any).remarks || '',
           isActive: initialData.isActive ?? true,
@@ -309,6 +318,20 @@ export default function LeadAddDialog({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormSelect
+              label="Lead Source"
+              name="leadSource"
+              value={formik.values.leadSource}
+              onChange={(val) => {
+                formik.setFieldValue('leadSource', val);
+                formik.setFieldTouched('leadSource', true, false);
+              }}
+              onBlur={formik.handleBlur}
+              options={sources.map((s) => ({ value: s._id, label: s.name }))}
+              error={getFieldError('leadSource')}
+              required
+              placeholder="Select Source"
+            />
 
             {/* <FormSelect
               label="Assigned Staff"

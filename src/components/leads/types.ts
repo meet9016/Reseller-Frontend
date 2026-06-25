@@ -14,6 +14,11 @@ export type ApiStatus = {
   name: string;
 };
 
+export type ApiSource = {
+  _id: string;
+  name: string;
+};
+
 
 export type ApiFollowUp = {
   _id?: string;
@@ -37,6 +42,7 @@ export type ApiLead = {
   product?: string;
   paymentAmount?: number | string;
   leadStatus?: ApiStatus;
+  leadSource?: ApiSource;
   assignedTo?: ApiUser;
   priority?: 'High' | 'Medium' | 'Low' | 'high' | 'medium' | 'low';
   lastFollowUp?: string;
