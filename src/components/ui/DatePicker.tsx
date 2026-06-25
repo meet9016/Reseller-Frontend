@@ -192,7 +192,10 @@ export default function DatePicker({
         ref={triggerRef}
         type="button"
         disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (!open) updatePosition();
+          setOpen((o) => !o);
+        }}
         className={`w-full flex items-center justify-between gap-2 border rounded-lg px-3 py-2 text-sm text-left transition-all
           ${error ? 'border-red-500' : open ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-300'}
           ${disabled ? 'bg-gray-100 cursor-not-allowed text-gray-400' : 'bg-white hover:border-gray-400 cursor-pointer'}

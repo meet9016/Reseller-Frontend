@@ -47,9 +47,16 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
   useEffect(() => {
     if (lead) {
       setEditStatus(lead.leadStatus?._id || '');
-      setEditNextDate(lead.nextFollowupDate || '');
-      setEditNextTime(lead.nextFollowupTime || '');
+      setEditNextDate('');
+      setEditNextTime('');
       setLocalFollowUps(lead.followUps || []);
+      setFollowupNote('');
+    } else {
+      setEditStatus('');
+      setEditNextDate('');
+      setEditNextTime('');
+      setLocalFollowUps([]);
+      setFollowupNote('');
     }
   }, [lead]);
 
@@ -336,7 +343,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                         </svg>
                         Recording...
                       </span>
-                    ) : 'Record Follow-up'}
+                    ) : 'Save Follow-up'}
                   </button>
                 </div>
                 )}
