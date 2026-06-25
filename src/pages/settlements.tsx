@@ -37,9 +37,15 @@ export function SettlementsContent() {
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [selectedReseller, setSelectedReseller] = useState<Settlement | null>(null);
   const [payAmount, setPayAmount] = useState<string>('');
+  const [payMethod, setPayMethod] = useState<string>('Bank Transfer');
+  const [payRefId, setPayRefId] = useState<string>('');
   const [payError, setPayError] = useState<string>('');
   const [payNote, setPayNote] = useState<string>('');
   const [isPaying, setIsPaying] = useState(false);
+
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const token = typeof window !== 'undefined' ? getAuthToken() : null;
 
@@ -95,6 +101,22 @@ export function SettlementsContent() {
 
   if (!isMounted) return null;
 
+  const fetchHistory = async (resellerId: string) => {
+    setIsHistoryLoading(true);
+    try {
+      const res = await axios.get(`${baseUrl.settlementHistory}/${resellerId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      setHistoryData(res.data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch history:', error);
+      toast.error('Failed to load settlement history');
+      setHistoryData([]);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  };
+
   const handlePaySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPayError('');
@@ -112,6 +134,8 @@ export function SettlementsContent() {
         {
           resellerId: selectedReseller._id,
           amount: parseFloat(payAmount),
+          paymentMethod: payMethod,
+          referenceId: payRefId,
           note: payNote,
         },
         {
@@ -121,6 +145,8 @@ export function SettlementsContent() {
       toast.success('Settlement payment recorded successfully');
       setIsPayModalOpen(false);
       setPayAmount('');
+      setPayMethod('Bank Transfer');
+      setPayRefId('');
       setPayNote('');
       setSelectedReseller(null);
       fetchSettlements();
@@ -219,17 +245,32 @@ export function SettlementsContent() {
       key: '_id',
       label: 'ACTIONS',
       render: (_, row) => (
-        <button
-          onClick={() => {
-            setSelectedReseller(row);
-            setPayAmount(row.pendingCommission > 0 ? row.pendingCommission.toString() : '');
-            setIsPayModalOpen(true);
-          }}
-          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 flex items-center gap-1 shadow-sm"
-        >
-          <Banknote className="h-3 w-3" />
-          Pay
-        </button>
+        <div className="flex items-center gap-2">
+          {row.pendingCommission > 0 && (
+            <button
+              onClick={() => {
+                setSelectedReseller(row);
+                setPayAmount(row.pendingCommission.toString());
+                setIsPayModalOpen(true);
+              }}
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 flex items-center gap-1 shadow-sm"
+            >
+              <Banknote className="h-3 w-3" />
+              Pay
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setSelectedReseller(row);
+              fetchHistory(row._id);
+              setIsHistoryModalOpen(true);
+            }}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1 shadow-sm"
+          >
+            <ReceiptText className="h-3 w-3" />
+            View Payments
+          </button>
+        </div>
       ),
     });
   }
@@ -380,6 +421,28 @@ export function SettlementsContent() {
                   {payError && <p className="mt-1 text-sm text-red-500">{payError}</p>}
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                  <select
+                    className="block w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    value={payMethod}
+                    onChange={(e) => setPayMethod(e.target.value)}
+                  >
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference ID (Optional)</label>
+                  <input
+                    type="text"
+                    className="block w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="e.g. UTR Number"
+                    value={payRefId}
+                    onChange={(e) => setPayRefId(e.target.value)}
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Note (Optional)</label>
                   <textarea
                     className="block w-full rounded-xl border border-gray-300 px-3 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -407,6 +470,68 @@ export function SettlementsContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {isHistoryModalOpen && selectedReseller && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-xl animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Settlement History</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Payout records for <strong>{selectedReseller.resellerName}</strong>
+            </p>
+            <div className="flex-1 overflow-auto border border-gray-200 rounded-xl bg-gray-50 p-4">
+              {isHistoryLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  <span className="ml-2 text-sm text-gray-500">Loading history...</span>
+                </div>
+              ) : historyData.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <ReceiptText className="h-10 w-10 mx-auto text-gray-300 mb-2" />
+                  <p>No settlement history found.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {historyData.map((item, idx) => (
+                    <div key={item._id || idx} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-gray-900 flex items-center"><IndianRupee className="h-4 w-4" />{item.amount.toLocaleString('en-IN')}</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${item.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{item.status || 'Completed'}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+                          <span>Date: {new Date(item.createdAt).toLocaleString('en-IN')}</span>
+                          <span>Method: {item.paymentMethod || 'Bank Transfer'}</span>
+                          {item.referenceId && <span>Ref: <span className="font-mono text-gray-700">{item.referenceId}</span></span>}
+                        </div>
+                        {item.note && <p className="text-sm text-gray-700 mt-2 bg-gray-50 p-2 rounded-md italic">"{item.note}"</p>}
+                      </div>
+                      <div className="text-xs text-gray-500 text-right sm:min-w-[120px]">
+                        {item.processedBy && (
+                          <>
+                            <p className="font-medium text-gray-700">Processed by:</p>
+                            <p>{item.processedBy.firstName} {item.processedBy.lastName}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsHistoryModalOpen(false);
+                  setHistoryData([]);
+                }}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

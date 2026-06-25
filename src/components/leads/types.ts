@@ -89,3 +89,21 @@ export type LeadCountSummary = {
   totalLost: number;
   totalWon: number;
 };
+
+export type SettlementTransactionHistory = {
+  _id: string;
+  reseller: string;
+  amount: number;
+  paymentMethod: string;
+  referenceId?: string;
+  status: string;
+  note?: string;
+  processedBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+};

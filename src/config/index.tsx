@@ -62,6 +62,7 @@ export const baseUrl = {
   settlements: `${API}settlement/all`,
   addSettlement: `${API}settlement/pay`,
   resellerLeadSettlements: `${API}settlement/leads`,
+  settlementHistory: `${API}settlement/history`,
   settingsRequiredFields: `${API}settings/required-fields`,
   settingsLeadFields: `${API}settings/lead-fields`,
   getBaseUrl: API,
