@@ -34,12 +34,10 @@ export type ApiLead = {
   fullName: string;
   customerName?: string;
   companyName?: string;
-  address?: string;
   contact: string;
   customerContact?: string;
   email: string;
   customerEmail?: string;
-  product?: string;
   paymentAmount?: number | string;
   leadStatus?: ApiStatus;
   leadSource?: ApiSource;
@@ -77,10 +75,8 @@ export type ApiLead = {
 export type AddLeadForm = {
   name: string;
   companyName?: string;
-  address?: string;
   phone: string;
   email: string;
-  product?: string;
   paymentAmount?: string;
   status: string;
   staff: string;

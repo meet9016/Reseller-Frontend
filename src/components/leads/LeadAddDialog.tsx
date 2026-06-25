@@ -57,8 +57,6 @@ export default function LeadAddDialog({
           customerEmail: Yup.string().trim().email('Invalid email format'),
           customerContact: Yup.string().trim().matches(/^[0-9]{10}$/, 'Customer Contact must be exactly 10 digits').required('Customer Contact is required'),
           companyName: Yup.string().trim(),
-          product: Yup.string().trim(),
-          address: Yup.string().trim(),
           paymentAmount: Yup.number().typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),
           leadStatus: Yup.string(),
           leadSource: Yup.string(),
@@ -70,8 +68,6 @@ export default function LeadAddDialog({
           customerName: 'Customer Name',
           customerEmail: 'Customer Email',
           companyName: 'Company Name',
-          product: 'Product',
-          address: 'Address',
           paymentAmount: 'Payment Amount',
           leadStatus: 'Lead Status',
           leadSource: 'Lead Source',
@@ -98,8 +94,6 @@ export default function LeadAddDialog({
       customerEmail: '',
       customerContact: '',
       companyName: '',
-      product: '',
-      address: '',
       paymentAmount: '',
       leadStatus: '',
       leadSource: '',
@@ -118,8 +112,6 @@ export default function LeadAddDialog({
           customerEmail: values.customerEmail.trim().toLowerCase(),
           customerContact: values.customerContact.trim(),
           companyName: values.companyName?.trim() || "",
-          product: values.product.trim(),
-          address: values.address.trim(),
           paymentAmount: Number(values.paymentAmount),
           leadStatus: values.leadStatus,
           leadSource: values.leadSource,
@@ -168,8 +160,6 @@ export default function LeadAddDialog({
           customerEmail: (initialData as any).customerEmail || initialData.email || '',
           customerContact: (initialData as any).customerContact || (initialData as any).customerContact || initialData.contact || '',
           companyName: initialData.companyName || '',
-          product: (initialData as any).product || '',
-          address: (initialData as any).address || '',
           paymentAmount: (initialData as any).paymentAmount != null ? String((initialData as any).paymentAmount) : '',
           leadStatus: typeof initialData.leadStatus === 'object' ? initialData.leadStatus?._id || '' : (initialData.leadStatus || ''),
           leadSource: typeof (initialData as any).leadSource === 'object' ? (initialData as any).leadSource?._id || '' : ((initialData as any).leadSource || (initialData as any).source || ''),
@@ -280,27 +270,6 @@ export default function LeadAddDialog({
               onBlur={formik.handleBlur}
               error={getFieldError('companyName')}
               required={requiredFields.includes('companyName')}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormInput
-              label="Product Name"
-              name="product"
-              value={formik.values.product}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={getFieldError('product')}
-              required={requiredFields.includes('product')}
-            />
-            <FormInput
-              label="Address"
-              name="address"
-              value={formik.values.address}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={getFieldError('address')}
-              required={requiredFields.includes('address')}
             />
           </div>
 
