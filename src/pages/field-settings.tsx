@@ -22,6 +22,7 @@ const TASK_FIELDS = [
 export function FieldSettingsContent() {
   const [leadFields, setLeadFields] = useState<{ id: string; label: string }[]>([]);
   const [requiredLeads, setRequiredLeads] = useState<string[]>([]);
+  const [requiredTasks, setRequiredTasks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,9 +38,11 @@ export function FieldSettingsContent() {
 
         setLeadFields(fieldsRes.data?.data || []);
         setRequiredLeads(reqRes.data?.data?.requiredLeads || []);
-      } catch (err) {
+        setRequiredTasks(reqRes.data?.data?.requiredTasks || []);
+      } catch (err: any) {
         console.error('Failed to fetch field settings', err);
-        toast.error('Failed to load field settings');
+        const errorMessage = err.response?.data?.message || 'Failed to load field settings';
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -54,18 +57,26 @@ export function FieldSettingsContent() {
     );
   };
 
+  const handleToggleTask = (id: string) => {
+    if (id === 'subject' || id === 'taskStatus' || id === 'priority') return; // Core fields
+    setRequiredTasks(prev =>
+      prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
+    );
+  };
+
   const handleSave = async () => {
     try {
       const token = getAuthToken();
       const headers = { Authorization: `Bearer ${token}` };
 
-      await axios.post(baseUrl.settingsRequiredFields || 'http://localhost:5005/v1/api/settings/required-fields', { requiredLeads }, { headers });
+      await axios.post(baseUrl.settingsRequiredFields || 'http://localhost:5005/v1/api/settings/required-fields', { requiredLeads, requiredTasks }, { headers });
       toast.success('Field requirements saved successfully');
       
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event('fieldSettingsUpdated'));
-    } catch (err) {
-      toast.error('Failed to save field settings');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Failed to save field settings';
+      toast.error(errorMessage);
     }
   };
 
@@ -129,7 +140,43 @@ export function FieldSettingsContent() {
           </div>
         </div>
 
-    
+        {/* Task Fields */}
+        <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+          <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
+            Add Task Required Fields
+          </h3>
+          <div className="space-y-2">
+            {TASK_FIELDS.map(field => {
+              const isMandatory = field.id === 'subject' || field.id === 'status' || field.id === 'priority';
+              const isChecked = isMandatory || requiredTasks.includes(field.id);
+              
+              return (
+                <label
+                  key={field.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isMandatory ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${
+                    isChecked
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="font-medium">{field.label} {isMandatory && <span className="text-xs ml-2 text-blue-600">(Mandatory)</span>}</span>
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    checked={isChecked}
+                    disabled={isMandatory}
+                    onChange={() => handleToggleTask(field.id)}
+                  />
+                  {isChecked ? (
+                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-gray-300" />
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
