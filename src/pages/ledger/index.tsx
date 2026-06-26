@@ -24,7 +24,7 @@ export default function LedgerPage() {
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Filters
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -46,9 +46,9 @@ export default function LedgerPage() {
       const res = await axios.get(`${baseUrl.getBaseUrl}settlement/history/${reqId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       let data = res.data.data || [];
-      
+
       // Apply filters manually if the API doesn't support them
       if (selectedMonth && selectedYear) {
         data = data.filter((tx: any) => {
@@ -56,7 +56,7 @@ export default function LedgerPage() {
           return date.getMonth() + 1 === parseInt(selectedMonth) && date.getFullYear() === parseInt(selectedYear);
         });
       }
-      
+
       setTransactions(data);
     } catch (error) {
       console.error("Error fetching ledger:", error);
@@ -118,7 +118,7 @@ export default function LedgerPage() {
       label: 'Status',
       render: (v) => (
         <span className={`px-2 py-1 rounded-full text-xs font-semibold
-          ${v === 'Completed' ? 'bg-green-100 text-green-800' : 
+          ${v === 'Completed' ? 'bg-green-100 text-green-800' :
             v === 'Failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}
         >
           {v}
@@ -179,12 +179,12 @@ export default function LedgerPage() {
             Total Amount: <span className="text-emerald-600 font-bold ml-1 flex inline-flex items-center">₹{totalFilteredAmount.toLocaleString('en-IN')}</span>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-3">
-          <select 
-            value={selectedMonth} 
+          <select
+            value={selectedMonth}
             onChange={e => setSelectedMonth(e.target.value)}
-            className="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="border-gray-300  rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">All Months</option>
             <option value="1">January</option>
@@ -201,10 +201,10 @@ export default function LedgerPage() {
             <option value="12">December</option>
           </select>
 
-          <select 
-            value={selectedYear} 
+          <select
+            value={selectedYear}
             onChange={e => setSelectedYear(e.target.value)}
-            className="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="2024">2024</option>
             <option value="2025">2025</option>
@@ -214,7 +214,7 @@ export default function LedgerPage() {
           <select
             value={selectedReseller}
             onChange={e => setSelectedReseller(e.target.value)}
-            className="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">All Resellers</option>
             {uniqueResellers.map((r: any) => (
@@ -225,7 +225,7 @@ export default function LedgerPage() {
           <select
             value={selectedMethod}
             onChange={e => setSelectedMethod(e.target.value)}
-            className="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">All Methods</option>
             <option value="Bank Transfer">Bank Transfer</option>
@@ -237,7 +237,7 @@ export default function LedgerPage() {
             type="date"
             value={selectedDate}
             onChange={e => setSelectedDate(e.target.value)}
-            className="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
       </div>

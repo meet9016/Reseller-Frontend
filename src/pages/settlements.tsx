@@ -254,40 +254,40 @@ export function SettlementsContent() {
     },
   ];
 
-  if (userRole === 'admin') {
-    columns.push({
-      key: '_id',
-      label: 'ACTIONS',
-      render: (_, row) => (
-        <div className="flex items-center gap-2">
-          {row.pendingCommission > 0 && (
-            <button
-              onClick={() => {
-                setSelectedReseller(row);
-                setPayAmount(row.pendingCommission.toString());
-                setIsPayModalOpen(true);
-              }}
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 flex items-center gap-1 shadow-sm"
-            >
-              <Banknote className="h-3 w-3" />
-              Pay
-            </button>
-          )}
-          <button
-            onClick={() => {
-              setSelectedReseller(row);
-              fetchHistory(row._id);
-              setIsHistoryModalOpen(true);
-            }}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1 shadow-sm"
-          >
-            <ReceiptText className="h-3 w-3" />
-            View Payments
-          </button>
-        </div>
-      ),
-    });
-  }
+  // if (userRole === 'admin') {
+  //   columns.push({
+  //     key: '_id',
+  //     label: 'ACTIONS',
+  //     render: (_, row) => (
+  //       <div className="flex items-center gap-2">
+  //         {row.pendingCommission > 0 && (
+  //           <button
+  //             onClick={() => {
+  //               setSelectedReseller(row);
+  //               setPayAmount(row.pendingCommission.toString());
+  //               setIsPayModalOpen(true);
+  //             }}
+  //             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90 flex items-center gap-1 shadow-sm"
+  //           >
+  //             <Banknote className="h-3 w-3" />
+  //             Pay
+  //           </button>
+  //         )}
+  //         <button
+  //           onClick={() => {
+  //             setSelectedReseller(row);
+  //             fetchHistory(row._id);
+  //             setIsHistoryModalOpen(true);
+  //           }}
+  //           className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1 shadow-sm"
+  //         >
+  //           <ReceiptText className="h-3 w-3" />
+  //           View Payments
+  //         </button>
+  //       </div>
+  //     ),
+  //   });
+  // }
 
   const resellerColumns: Column<LeadSettlement>[] = [
     {

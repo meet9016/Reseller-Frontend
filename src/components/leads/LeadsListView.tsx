@@ -386,8 +386,8 @@ export default function LeadsListView({
           {
             label: (row) => row.paymentStatus === 'Paid' ? 'View Payment' : 'Add Payment',
             icon: (row) => row.paymentStatus === 'Paid'
-              ? <span className="text-xs">✓</span>
-              : <span className="text-xs font-bold">₹</span>,
+              ? <span className="text-xs group-hover:text-white">✓</span>
+              : <span className="text-xs font-bold group-hover:text-white">₹</span>,
             color: (row) => row.paymentStatus === 'Paid' ? 'green' : 'blue',
             show: (row) => row.status?.toLowerCase() === 'won' || !!row.isWon,
             onClick: (row) => {

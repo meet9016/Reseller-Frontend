@@ -76,8 +76,13 @@ export default function DatePicker({
     const isAbove = spaceBelow < 340;
     
     setDropdownPosition(isAbove ? 'above' : 'below');
+    
+    // Prevent overlapping the right edge of the screen
+    const popupWidth = 288; // w-72 = 288px
+    const maxLeft = window.innerWidth - popupWidth - 16; // 16px safe margin
+    
     setCoords({
-      left: rect.left,
+      left: Math.min(rect.left, maxLeft),
       top: rect.bottom + 4,
       bottom: window.innerHeight - rect.top + 4,
     });

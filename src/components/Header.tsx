@@ -50,6 +50,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     if (pathName === "/setup") return "Setup"
     if (pathName === "/tasks") return "Tasks"
     if (pathName === "/resellers") return "Reseller List"
+    if (pathName === "/ledger") return "Ledger"
+
     return ""
   }
 
