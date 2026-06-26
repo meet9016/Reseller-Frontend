@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { EMAIL_REGEX } from '@/utills/emailRegex';
 import Dialog from './Dialog';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
@@ -45,7 +46,7 @@ const getValidationSchema = (isUpdate: boolean) => Yup.object({
 
   email: Yup.string()
     .required('Email is required')
-    .email('Invalid email format'),
+    .matches(EMAIL_REGEX, { message: 'Invalid email format', excludeEmptyString: true }),
 
   password: isUpdate
     ? Yup.string().notRequired()

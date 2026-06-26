@@ -8,6 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { EMAIL_REGEX } from '../utills/emailRegex';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
   // Formik validation schema
   const validationSchema = Yup.object({
     email: Yup.string()
-      .email('Invalid email address')
+      .matches(EMAIL_REGEX, { message: 'Invalid email address', excludeEmptyString: true })
       .required('Email is required'),
     password: Yup.string()
       .min(6, 'Password must be at least 6 characters')
@@ -96,7 +97,7 @@ export default function LoginPage() {
             {/* Email Field */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Email Address <span className="text-[#3B82F6]">*</span>
+                Email Address <span className="text-red-700 ml-1">*</span>
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -123,7 +124,7 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
-                Password <span className="text-[#3B82F6]">*</span>
+                Password <span className="text-red-700 ml-1">*</span>
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -178,7 +179,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-       
+
       </div>
     </div>
 

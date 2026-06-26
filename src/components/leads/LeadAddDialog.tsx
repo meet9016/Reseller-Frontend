@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { EMAIL_REGEX } from '@/utills/emailRegex';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { DefaultEditor } from 'react-simple-wysiwyg';
@@ -54,7 +55,7 @@ export default function LeadAddDialog({
 
         const schemaShape: any = {
           customerName: Yup.string().trim(),
-          customerEmail: Yup.string().trim().email('Invalid email format'),
+          customerEmail: Yup.string().trim().matches(EMAIL_REGEX, { message: 'Invalid email format', excludeEmptyString: true }),
           customerContact: Yup.string().trim().matches(/^[0-9]{10}$/, 'Customer Contact must be exactly 10 digits').required('Customer Contact is required'),
           companyName: Yup.string().trim(),
           paymentAmount: Yup.number().typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),

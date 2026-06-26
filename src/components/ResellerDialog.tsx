@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { EMAIL_REGEX } from '@/utills/emailRegex';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { toast } from 'react-toastify';
@@ -344,12 +345,19 @@ export default function ResellerDialog({
                 <FormInput
                   label="Commission (%)"
                   name="commissionRate"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
+                  type="text"
                   value={formik.values.commissionRate}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val === '') {
+                      formik.setFieldValue('commissionRate', '');
+                      return;
+                    }
+                    const num = parseInt(val, 10);
+                    if (num >= 0 && num <= 100) {
+                      formik.setFieldValue('commissionRate', num.toString());
+                    }
+                  }}
                   onBlur={formik.handleBlur}
                   error={formik.touched.commissionRate && formik.errors.commissionRate ? formik.errors.commissionRate : undefined}
                   required

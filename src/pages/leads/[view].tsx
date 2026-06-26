@@ -371,7 +371,7 @@ export default function LeadsPage() {
 
           <div className="flex flex-wrap items-center gap-2 md:gap-3 md:ml-auto">
             {/* Tab Toggle (All/My) */}
-            {canReadAll && canReadOwn && (
+            {/* {canReadAll && canReadOwn && (
               <div className="flex items-center bg-gray-100 p-1 rounded-md">
                 <button
                   onClick={() => setActiveTab('all')}
@@ -386,7 +386,7 @@ export default function LeadsPage() {
                   My
                 </button>
               </div>
-            )}
+            )} */}
 
             {/* Advanced Filter Button */}
             <button
