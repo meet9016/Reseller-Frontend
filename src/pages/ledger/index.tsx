@@ -36,6 +36,7 @@ export default function LedgerPage() {
     setLoading(true);
     try {
       const token = getAuthToken();
+      console.log(token,"token")
       if (!token) return;
 
       const userRes = await axios.get(baseUrl.currentStaff, { headers: { Authorization: `Bearer ${token}` } });
