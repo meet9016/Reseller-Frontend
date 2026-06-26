@@ -38,7 +38,7 @@ const validationSchema = Yup.object({
     .min(2, 'Status name must be at least 2 characters')
     .max(100, 'Status name must be at most 100 characters')
     .matches(/^[a-zA-Z0-9\s&-]+$/, 'Status name can only contain letters, numbers, spaces, &, and -')
-    .test('not-reserved', 'This is a reserved status name and cannot be modified', function(value) {
+    .test('not-reserved', 'This is a reserved status name and cannot be modified', function (value) {
       const reservedNames = ['new lead', 'won', 'lost'];
       // Only validate for edit mode if the original name wasn't reserved
       const originalName = this.parent.originalName;
@@ -47,7 +47,7 @@ const validationSchema = Yup.object({
       }
       return !reservedNames.includes(value?.toLowerCase());
     }),
-  
+
   order: Yup.number()
     .required('Order is required')
     .integer('Order must be a whole number')
@@ -158,7 +158,14 @@ export function LeadStatusContent() {
       formik.resetForm();
     } catch (err: any) {
       console.error('Failed to save', err);
-      toast.error(err?.response?.data?.message || 'Operation failed');
+      const msg = err?.response?.data?.message || 'Operation failed';
+      if (msg.toLowerCase().includes('order')) {
+        formik.setFieldTouched('order', true, false);
+        formik.setFieldError('order', msg);
+      } else {
+        formik.setFieldTouched('name', true, false);
+        formik.setFieldError('name', msg);
+      }
     } finally {
       setIsSubmitting(false);
     }

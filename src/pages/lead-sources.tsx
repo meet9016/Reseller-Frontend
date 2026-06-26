@@ -7,6 +7,7 @@ import Dialog from '@/components/Dialog';
 import DataTable, { Column } from '@/components/DataTable';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
+import { toast } from 'react-toastify';
 import DeleteDialog from '@/components/DeleteDialog';
 import FormInput from '@/components/ui/Input';
 
@@ -139,9 +140,16 @@ export function LeadSourcesContent() {
       // Close dialog and reset form
       setIsDialogOpen(false);
       formik.resetForm();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save lead source', err);
-      alert('Operation failed');
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Operation failed';
+      if (msg.toLowerCase().includes('order')) {
+        formik.setFieldTouched('order', true, false);
+        formik.setFieldError('order', msg);
+      } else {
+        formik.setFieldTouched('name', true, false);
+        formik.setFieldError('name', msg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -166,7 +174,7 @@ export function LeadSourcesContent() {
       setSourceToDelete(null);
     } catch (err) {
       console.error('Failed to delete', err);
-      alert('Delete failed');
+      toast.error('Delete failed');
     }
   };
 
@@ -215,7 +223,7 @@ export function LeadSourcesContent() {
             setIsDialogOpen(true);
           } catch (err) {
             console.error('Failed to fetch by id', err);
-            alert('Failed to fetch data');
+            toast.error('Failed to fetch data');
           }
         }}
         onDelete={handleDeleteClick}

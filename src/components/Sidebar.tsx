@@ -81,11 +81,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const hasAnySetupPerm = canViewStaff || canViewRole || canViewLeadStatus || canViewLeadSource;
 
   // if (hasAnySetupPerm) {
-  menuItems.push({
-    icon: Settings,
-    label: "Setup",
-    path: "/setup",
-  });
+  if (userRole?.toLowerCase() !== 'admin') {
+    menuItems.push({
+      icon: Settings,
+      label: "Setup",
+      path: "/setup",
+    });
+  }
   // }
 
   const isActive = (path?: string) => {
