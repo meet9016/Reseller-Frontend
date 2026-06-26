@@ -56,12 +56,12 @@ export default function LeadAddDialog({
         const schemaShape: any = {
           customerName: Yup.string().trim(),
           customerEmail: Yup.string().trim().matches(EMAIL_REGEX, { message: 'Invalid email format', excludeEmptyString: true }),
-          customerContact: Yup.string().trim().matches(/^[0-9]{10}$/, 'Customer Contact must be exactly 10 digits'),
+          customerContact: Yup.string().trim().test('is-10-digits', 'Customer Contact must be exactly 10 digits', val => !val || /^[0-9]{10}$/.test(val)),
           companyName: Yup.string().trim(),
-          paymentAmount: Yup.number().typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),
+          paymentAmount: Yup.number().transform((value, originalValue) => originalValue === '' ? undefined : value).typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),
           leadStatus: Yup.string(),
           leadSource: Yup.string(),
-          remarks: Yup.string().optional(),
+          remarks: Yup.string(),
           isActive: Yup.boolean(),
         };
 
@@ -228,127 +228,111 @@ export default function LeadAddDialog({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {requiredFields.includes('customerName') && (
-              <FormInput
-                label="Customer Name"
-                name="customerName"
-                value={formik.values.customerName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={getFieldError('customerName')}
-                required
-              />
-            )}
-            {requiredFields.includes('customerEmail') && (
-              <FormInput
-                label="Customer Email"
-                name="customerEmail"
-                type="email"
-                value={formik.values.customerEmail}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={getFieldError('customerEmail')}
-                required
-              />
-            )}
-            {requiredFields.includes('customerContact') && (
-              <FormInput
-                label="Customer Contact"
-                name="customerContact"
-                type="tel"
-                isPhone={true}
-                value={formik.values.customerContact}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const val = e.target.value;
-                  formik.setFieldValue('customerContact', val);
-                }}
-                onBlur={formik.handleBlur}
-                error={getFieldError('customerContact')}
-                required
-              />
-            )}
-            {requiredFields.includes('companyName') && (
-              <FormInput
-                label="Company Name"
-                name="companyName"
-                value={formik.values.companyName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={getFieldError('companyName')}
-                required
-              />
-            )}
-            {requiredFields.includes('paymentAmount') && (
-              <FormInput
-                label="Payment Amount"
-                name="paymentAmount"
-                value={formik.values.paymentAmount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const val = e.target.value.replace(/\D/g, '');
-                  formik.setFieldValue('paymentAmount', val);
-                }}
-                onBlur={formik.handleBlur}
-                error={getFieldError('paymentAmount')}
-                icon={<span className="text-gray-700 font-medium text-lg">₹</span>}
-                required
-              />
-            )}
-            {requiredFields.includes('leadStatus') && (
-              <FormSelect
-                label="Lead Status"
-                name="leadStatus"
-                value={formik.values.leadStatus}
-                onChange={(val) => {
-                  formik.setFieldValue('leadStatus', val);
-                  formik.setFieldTouched('leadStatus', true, false);
-                }}
-                onBlur={formik.handleBlur}
-                options={statuses.map((s) => ({ value: s._id, label: s.name }))}
-                error={getFieldError('leadStatus')}
-                required
-                placeholder="Select Status"
-              />
-            )}
-            {requiredFields.includes('leadSource') && (
-              <FormSelect
-                label="Lead Source"
-                name="leadSource"
-                value={formik.values.leadSource}
-                onChange={(val) => {
-                  formik.setFieldValue('leadSource', val);
-                  formik.setFieldTouched('leadSource', true, false);
-                }}
-                onBlur={formik.handleBlur}
-                options={sources.map((s) => ({ value: s._id, label: s.name }))}
-                error={getFieldError('leadSource')}
-                required
-                placeholder="Select Source"
-              />
-            )}
+            <FormInput
+              label="Customer Name"
+              name="customerName"
+              value={formik.values.customerName}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('customerName')}
+              required={requiredFields.includes('customerName')}
+            />
+            <FormInput
+              label="Customer Email"
+              name="customerEmail"
+              type="email"
+              value={formik.values.customerEmail}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('customerEmail')}
+              required={requiredFields.includes('customerEmail')}
+            />
+            <FormInput
+              label="Customer Contact"
+              name="customerContact"
+              type="tel"
+              isPhone={true}
+              value={formik.values.customerContact}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const val = e.target.value;
+                formik.setFieldValue('customerContact', val);
+              }}
+              onBlur={formik.handleBlur}
+              error={getFieldError('customerContact')}
+              required={requiredFields.includes('customerContact')}
+            />
+            <FormInput
+              label="Company Name"
+              name="companyName"
+              value={formik.values.companyName}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('companyName')}
+              required={requiredFields.includes('companyName')}
+            />
+            <FormInput
+              label="Payment Amount"
+              name="paymentAmount"
+              value={formik.values.paymentAmount}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const val = e.target.value.replace(/\D/g, '');
+                formik.setFieldValue('paymentAmount', val);
+              }}
+              onBlur={formik.handleBlur}
+              error={getFieldError('paymentAmount')}
+              icon={<span className="text-gray-700 font-medium text-lg">₹</span>}
+              required={requiredFields.includes('paymentAmount')}
+            />
+            <FormSelect
+              label="Lead Status"
+              name="leadStatus"
+              value={formik.values.leadStatus}
+              onChange={(val) => {
+                formik.setFieldValue('leadStatus', val);
+                formik.setFieldTouched('leadStatus', true, false);
+              }}
+              onBlur={formik.handleBlur}
+              options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+              error={getFieldError('leadStatus')}
+              required={requiredFields.includes('leadStatus')}
+              placeholder="Select Status"
+            />
+            <FormSelect
+              label="Lead Source"
+              name="leadSource"
+              value={formik.values.leadSource}
+              onChange={(val) => {
+                formik.setFieldValue('leadSource', val);
+                formik.setFieldTouched('leadSource', true, false);
+              }}
+              onBlur={formik.handleBlur}
+              options={sources.map((s) => ({ value: s._id, label: s.name }))}
+              error={getFieldError('leadSource')}
+              required={requiredFields.includes('leadSource')}
+              placeholder="Select Source"
+            />
           </div>
 
-          {requiredFields.includes('remarks') && (
-            <div className="w-full">
-              <label className="block mb-1.5 text-sm font-semibold text-gray-700">
-                Remarks <span className="text-red-500">*</span>
-              </label>
-              <div className={`rounded-xl border overflow-hidden ${formik.touched.remarks && formik.errors.remarks ? 'border-red-500' : 'border-gray-300'}`}>
-                <DefaultEditor
-                  value={formik.values.remarks}
-                  onChange={(e) => {
-                    formik.setFieldValue('remarks', e.target.value);
-                    if (formik.errors.remarks) {
-                      formik.setFieldError('remarks', undefined);
-                    }
-                  }}
-                  onBlur={() => formik.setFieldTouched('remarks', true)}
-                />
-              </div>
-              {getFieldError('remarks') && (
-                <p className="mt-1 text-xs text-red-500">{getFieldError('remarks')}</p>
-              )}
+          <div className="w-full">
+            <label className="block mb-1.5 text-sm font-semibold text-gray-700">
+              Remarks {requiredFields.includes('remarks') && <span className="text-red-700 ml-1">*</span>}
+            </label>
+            <div className={`rounded-xl border overflow-hidden ${formik.touched.remarks && formik.errors.remarks ? 'border-red-500' : 'border-gray-300'}`}>
+              <DefaultEditor
+                value={formik.values.remarks}
+                onChange={(e) => {
+                  formik.setFieldValue('remarks', e.target.value);
+                  if (formik.errors.remarks) {
+                    formik.setFieldError('remarks', undefined);
+                  }
+                }}
+                onBlur={() => formik.setFieldTouched('remarks', true)}
+              />
             </div>
-          )}
+            {getFieldError('remarks') && (
+              <p className="mt-1 text-xs text-red-500">{getFieldError('remarks')}</p>
+            )}
+          </div>
 
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
