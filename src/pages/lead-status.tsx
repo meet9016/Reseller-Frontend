@@ -141,10 +141,9 @@ export function LeadStatusContent() {
       const payload = { name: values.name.trim(), order: values.order };
 
       if (values._id) {
-        // EDIT: fetch by ID first
+        // EDIT
         const existing = await axios.get(`${baseUrl.leadStatuses}/${values._id}`, { headers });
         const id = existing.data.data._id;
-
         await axios.put(`${baseUrl.leadStatuses}/${id}`, payload, { headers });
         toast.success('Lead status updated successfully');
       } else {
@@ -244,7 +243,7 @@ export function LeadStatusContent() {
               _id: data._id,
               name: data.name,
               order: data.order,
-              originalName: data.name, // Store original name for validation
+              originalName: data.name,
             });
             setIsDialogOpen(true);
           } catch (err: any) {

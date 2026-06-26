@@ -103,7 +103,7 @@ export function LeadSourcesContent() {
 
       setAllData(items);
       setTotalRecords(res.data.pagination?.totalRecords || items.length);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load lead sources', err);
       setAllData([]);
       setTotalRecords(0);
@@ -124,25 +124,21 @@ export function LeadSourcesContent() {
 
     try {
       if (values._id) {
-        // EDIT: call getById before updating
+        // EDIT
         const existing = await axios.get(`${baseUrl.leadSources}/${values._id}`, { headers });
         const id = existing.data.data._id;
-
         await axios.put(`${baseUrl.leadSources}/${id}`, payload, { headers });
       } else {
         // ADD
         await axios.post(baseUrl.leadSources, payload, { headers });
       }
 
-      // refresh data after add/edit
       await fetchData();
-      
-      // Close dialog and reset form
       setIsDialogOpen(false);
       formik.resetForm();
     } catch (err: any) {
       console.error('Failed to save lead source', err);
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Operation failed';
+      const msg = err.response?.data?.message || 'Operation failed';
       if (msg.toLowerCase().includes('order')) {
         formik.setFieldTouched('order', true, false);
         formik.setFieldError('order', msg);
@@ -172,9 +168,9 @@ export function LeadSourcesContent() {
       await fetchData();
       setShowDeleteDialog(false);
       setSourceToDelete(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete', err);
-      toast.error('Delete failed');
+      toast.error(err.response?.data?.message || 'Delete failed');
     }
   };
 
@@ -221,9 +217,9 @@ export function LeadSourcesContent() {
               order: data.order,
             });
             setIsDialogOpen(true);
-          } catch (err) {
+          } catch (err: any) {
             console.error('Failed to fetch by id', err);
-            toast.error('Failed to fetch data');
+            toast.error(err.response?.data?.message || 'Failed to fetch data');
           }
         }}
         onDelete={handleDeleteClick}
