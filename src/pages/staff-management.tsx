@@ -1,4 +1,5 @@
 'use client';
+import { useSelector } from 'react-redux';
 
 import { useEffect, useState, useCallback } from 'react';
 import DataTable, { Column } from '@/components/DataTable';
@@ -60,23 +61,12 @@ export function StaffManagementContent() {
     delete?: boolean;
   } | null>(null);
 
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
     if (!token) return;
-    axios
-      .get(baseUrl.currentStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.permissions)
-          ? role.permissions[0]
-          : role.permissions || {};
-        setSetupPermissions(rawPerms.staff || null);
-      })
-      .catch(() => {
-        setSetupPermissions(null);
-      });
-  }, [token]);
+    setSetupPermissions(rawPerms?.staff || null);
+  }, [token, rawPerms]);
 
   const fetchStaff = useCallback(async () => {
     setIsLoading(true);

@@ -1,6 +1,7 @@
 // components/leads/useLeadsData.ts
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiLead, ApiStatus, ApiUser, LeadCountSummary } from './types';
@@ -19,6 +20,7 @@ export function useLeadsData(
   viewMode: 'list' | 'kanban' = 'list',
   kanbanSubView: 'board' | 'lost' | 'won' = 'board'
 ) {
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
   const [leads, setLeads] = useState<ApiLead[]>([]);
   const [leadsList, setLeadsList] = useState<ApiLead[]>([]);
   const [lostLeads, setLostLeads] = useState<ApiLead[]>([]);
@@ -269,16 +271,14 @@ export function useLeadsData(
 
   const fetchMeta = useCallback(async () => {
     try {
-      const [stRes, staffRes, meRes] = await Promise.all([
+      const [stRes, staffRes] = await Promise.all([
         axios.get(baseUrl.leadStatuses, { headers: getHeaders() }),
         axios.get(baseUrl.getAllStaff, { headers: getHeaders() }).catch(() => ({ data: { data: [] } })),
-        axios.get(baseUrl.currentStaff, { headers: getHeaders() }),
       ]);
       setStatuses(stRes.data?.data ?? stRes.data ?? []);
       setStaffMembers(staffRes.data?.data ?? staffRes.data ?? []);
-      const role = meRes.data?.data?.role || {};
-      const rawPerms = Array.isArray(role.permissions) ? role.permissions[0] : role.permissions || {};
-      const lp = rawPerms.lead || {};
+      
+      const lp = rawPerms?.lead || {};
       setPermissions({
         create: !!lp.create, update: !!lp.update, delete: !!lp.delete,
         readAll: !!lp.readAll, readOwn: !!lp.readOwn,
@@ -286,7 +286,7 @@ export function useLeadsData(
     } catch (e) {
       console.error('fetchMeta error:', e);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rawPerms]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─────────────────────────────────────────────────────────────────────────
   // refetchAll — always reads latest values from ref, no stale closures

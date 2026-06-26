@@ -4,6 +4,7 @@
 
 import { useRouter } from 'next/router';
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { ListCollapse, Plus, Filter, Kanban, Search, Download, Upload } from 'lucide-react';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
@@ -83,46 +84,18 @@ export default function LeadsPage() {
 
   const token = typeof window !== 'undefined' ? getAuthToken() : null;
 
-  const userRole = useMemo(() => {
-    if (!token) return '';
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const payload = JSON.parse(window.atob(parts[1]));
-        return payload?.role?.roleName?.toLowerCase() || '';
-      }
-    } catch (e) {
-      return '';
-    }
-    return '';
-  }, [token]);
+  const { role, permissions: rawPerms } = useSelector((state: any) => state.auth);
+  
+  const userRole = role?.toLowerCase() || '';
 
   // ── Fetch permissions ────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
 
-    const fetchPermissions = async () => {
-      try {
-        const res = await axios.get(baseUrl.currentStaff, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.permissions)
-          ? role.permissions[0]
-          : role.permissions || {};
-
-        const lp = rawPerms.lead || {};
-        setLeadPermissions(lp);
-        if (!lp.readAll && lp.readOwn) setActiveTab('my');
-      } catch (error) {
-        console.error('Failed to fetch permissions:', error);
-        setLeadPermissions(null);
-      }
-    };
-
-    fetchPermissions();
-  }, [token]);
+    const lp = rawPerms?.lead || {};
+    setLeadPermissions(lp);
+    if (!lp.readAll && lp.readOwn) setActiveTab('my');
+  }, [token, rawPerms]);
 
   const filters = useMemo(
     () => ({

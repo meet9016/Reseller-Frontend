@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Plus, ListCollapse, Kanban } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -47,22 +48,15 @@ export default function TasksPage() {
   const effectiveTab = (!taskPermissions?.readAll && taskPermissions?.readOwn) ? 'my' : activeTab;
 
   // ── Permissions ────────────────────────────────────────────────────────────
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
     if (permissionsChecked.current) return;
-    const token = getAuthToken();
-    if (!token) return;
-
-    axios.get(baseUrl.currentStaff, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => {
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.permissions) ? role.permissions[0] : role.permissions || {};
-        const tp = rawPerms.task || {};
-        setTaskPermissions(tp);
-        if (!tp.readAll && tp.readOwn) setActiveTab('my');
-        permissionsChecked.current = true;
-      })
-      .catch(console.error);
-  }, []);
+    const tp = rawPerms?.task || {};
+    setTaskPermissions(tp);
+    if (!tp.readAll && tp.readOwn) setActiveTab('my');
+    permissionsChecked.current = true;
+  }, [rawPerms]);
 
   // ── Data Fetchers ──────────────────────────────────────────────────────────
   const fetchTasks = useCallback(async () => {

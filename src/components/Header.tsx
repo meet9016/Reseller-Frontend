@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { baseUrl, clearAuthToken, getAuthToken } from '@/config';
 import { useRouter } from 'next/router';
@@ -137,27 +138,24 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   //   fetchNotifications();
   // }, []);
 
+  const { user: authUser, role: authRole } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
     const token = getAuthToken();
     if (!token) return;
 
     let socket: any;
 
-    axios
-      .get(baseUrl.currentStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const staffData = res.data?.data;
-        if (!staffData) return;
-        setUserName(staffData.fullName || 'User');
-        setUserRole(staffData.role?.roleName || '');
-        setUserEmail(staffData.email || '');
-        setUserProfileImage(staffData.profileImage || staffData.avatar || staffData.image || '');
-        const currentUserId = staffData._id;
-        if (!currentUserId) return;
+    const staffData = authUser;
+    if (!staffData) return;
+    setUserName(staffData.fullName || 'User');
+    setUserRole(authRole || '');
+    setUserEmail(staffData.email || '');
+    setUserProfileImage(staffData.profileImage || staffData.avatar || staffData.image || '');
+    const currentUserId = staffData._id;
+    if (!currentUserId) return;
 
-        // ✅ Correct socket URL (NO /api/v1/api)
+    // ✅ Correct socket URL (NO /api/v1/api)
         const socketUrl = (
           process.env.NEXT_PUBLIC_SOCKET_URL ||
           process.env.NEXT_PUBLIC_IMAGE_URL ||
@@ -272,10 +270,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           console.log('[Socket] 📩 task_updated:', notif);
           // setNotifications((prev) => [notif, ...prev]);
         });
-      })
-      .catch((err) => {
-        console.error('[Socket] ❌ Failed to get user:', err);
-      });
 
     // =========================
     // 🧹 CLEANUP

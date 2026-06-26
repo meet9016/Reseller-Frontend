@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { store } from '@/store';
 import axios from 'axios';
 import { toast } from 'react-hot-toast'; // or react-toastify, I'll use toastify since it's in LeadViewDialog
 import { baseUrl, getAuthToken } from '@/config';
@@ -85,11 +86,11 @@ export default function UpdateLeadStageDrawer({ isOpen, onClose, lead, onSuccess
         // Fetch current user info if needed for followup
         let staffInfo = undefined;
         try {
-          const userRes = await axios.get(baseUrl.currentStaff, { headers });
-          if (userRes.data?.data) {
+          const authState = store.getState().auth;
+          if (authState.user) {
             staffInfo = {
-              _id: userRes.data.data._id,
-              fullName: userRes.data.data.fullName
+              _id: authState.user._id,
+              fullName: authState.user.fullName
             };
           }
         } catch (e) {

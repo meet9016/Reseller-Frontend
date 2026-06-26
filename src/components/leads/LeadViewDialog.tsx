@@ -1,6 +1,5 @@
-
-
 import { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Dialog, { CenterDialog } from '@/components/Dialog';
@@ -71,20 +70,14 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
     );
   }, [localFollowUps, followUpSearch]);
 
-  // Get current staff info from localStorage or API
+  const { user: authUser, role: authRole } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
-    const fetchCurrentStaff = async () => {
-      try {
-        const res = await axios.get(baseUrl.currentStaff, {
-          headers: { Authorization: `Bearer ${getAuthToken()}` }
-        });
-        setStaffInfo(res.data?.data);
-      } catch (error) {
-        console.error('Failed to fetch staff info', error);
-      }
-    };
-    fetchCurrentStaff();
-  }, []);
+    if (authUser) {
+      // Create a mock staff info object with role info for compatibility with existing code
+      setStaffInfo({ ...authUser, role: { roleName: authRole } });
+    }
+  }, [authUser, authRole]);
 
   const isReseller = staffInfo?.role?.roleName?.toLowerCase() === 'reseller';
   const isWon = lead?.leadStatus?.name?.toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || lead?.isWon;

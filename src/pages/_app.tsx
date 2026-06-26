@@ -1,4 +1,7 @@
 import "@/styles/globals.css";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor } from "@/store";
 import type { AppProps } from "next/app";
 import { Poppins } from "next/font/google";
 import { ToastContainer } from "react-toastify";
@@ -48,41 +51,45 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   return (
-    <div className={poppins.className}>
-      <div className="flex min-h-screen bg-white">
-        {!isLoginPage && (
-          <Sidebar
-            isOpen={isSidebarOpen}
-            toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
-          />
-        )}
-        <div
-          className={`flex-1 min-w-0 transition-all duration-300 ease-in-out ${
-            !isLoginPage ? (isSidebarOpen ? 'md:ml-64' : 'md:ml-20') : ''
-          }`}
-        >
-          <main className="animate-in fade-in duration-300">
-            {/* Only show header for non-login pages */}
-            {!isLoginPage ? (
-              <Header toggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
-            ) : null}
-            <div className={isLoginPage ? "p-0" : "p-4 md:p-6"}>
-              <Component {...pageProps} />
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <div className={poppins.className}>
+          <div className="flex min-h-screen bg-white">
+            {!isLoginPage && (
+              <Sidebar
+                isOpen={isSidebarOpen}
+                toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+              />
+            )}
+            <div
+              className={`flex-1 min-w-0 transition-all duration-300 ease-in-out ${
+                !isLoginPage ? (isSidebarOpen ? 'md:ml-64' : 'md:ml-20') : ''
+              }`}
+            >
+              <main className="animate-in fade-in duration-300">
+                {/* Only show header for non-login pages */}
+                {!isLoginPage ? (
+                  <Header toggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
+                ) : null}
+                <div className={isLoginPage ? "p-0" : "p-4 md:p-6"}>
+                  <Component {...pageProps} />
+                </div>
+              </main>
             </div>
-          </main>
+          </div>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
         </div>
-      </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-      />
-    </div>
+      </PersistGate>
+    </Provider>
   );
 }

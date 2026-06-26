@@ -1,4 +1,5 @@
 'use client';
+import { useSelector } from 'react-redux';
 
 import React from "react"
 import { useState, useEffect } from 'react';
@@ -41,55 +42,21 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [canViewLead, setCanViewLead] = useState(false);
-  const [canViewTask, setCanViewTask] = useState(false);
-  const [canViewStaff, setCanViewStaff] = useState(false);
-  const [canViewRole, setCanViewRole] = useState(false);
-  const [canViewLeadStatus, setCanViewLeadStatus] = useState(false);
-  const [canViewLeadSource, setCanViewLeadSource] = useState(false);
+  const { role: userRole, permissions: rawPerms } = useSelector((state: any) => state.auth);
 
-  const [userRole, setUserRole] = useState('');
+  const leadPerms = rawPerms?.lead || {};
+  const taskPerms = rawPerms?.task || {};
+  const staffPerms = rawPerms?.staff || {};
+  const rolePerms = rawPerms?.role || {};
+  const leadStatusPerms = rawPerms?.leadStatus || {};
+  const leadSourcePerms = rawPerms?.leadSource || {};
 
-  useEffect(() => {
-    const token = getAuthToken();
-    if (!token) return;
-    axios
-      .get(baseUrl.currentStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const role = res.data?.data?.role || {};
-        setUserRole(role.roleName);
-
-        const rawPerms = Array.isArray(role.permissions)
-          ? role.permissions[0]
-          : role.permissions || {};
-        const leadPerms = rawPerms.lead || {};
-        const taskPerms = rawPerms.task || {};
-        const staffPerms = rawPerms.staff || {};
-        const rolePerms = rawPerms.role || {};
-        const leadStatusPerms = rawPerms.leadStatus || {};
-        const leadSourcePerms = rawPerms.leadSource || {};
-
-
-        setCanViewLead(!!(leadPerms.readOwn || leadPerms.readAll));
-        setCanViewTask(!!(taskPerms.readOwn || taskPerms.readAll));
-        setCanViewStaff(!!staffPerms.readAll);
-        setCanViewRole(!!rolePerms.readAll);
-        setCanViewLeadStatus(!!leadStatusPerms.readAll);
-        setCanViewLeadSource(!!leadSourcePerms.readAll);
-
-      })
-      .catch(() => {
-        setCanViewLead(false);
-        setCanViewTask(false);
-        setCanViewStaff(false);
-        setCanViewRole(false);
-        setCanViewLeadStatus(false);
-        setCanViewLeadSource(false);
-
-      });
-  }, []);
+  const canViewLead = !!(leadPerms.readOwn || leadPerms.readAll);
+  const canViewTask = !!(taskPerms.readOwn || taskPerms.readAll);
+  const canViewStaff = !!staffPerms.readAll;
+  const canViewRole = !!rolePerms.readAll;
+  const canViewLeadStatus = !!leadStatusPerms.readAll;
+  const canViewLeadSource = !!leadSourcePerms.readAll;
 
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },

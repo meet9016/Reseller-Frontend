@@ -1,4 +1,5 @@
 'use client';
+import { useSelector } from 'react-redux';
 
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
@@ -69,23 +70,12 @@ export function OrganizationsContent() {
     enableReinitialize: true,
   });
 
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
     if (!token) return;
-    axios
-      .get(baseUrl.currentStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.organizations)
-          ? role.organizations[0]
-          : role.organizations || {};
-        setSetupPermissions(rawPerms.organizations || null);
-      })
-      .catch(() => {
-        setSetupPermissions(null);
-      });
-  }, [token]);
+    setSetupPermissions(rawPerms?.organizations || null);
+  }, [token, rawPerms]);
 
   const fetchData = async () => {
     try {

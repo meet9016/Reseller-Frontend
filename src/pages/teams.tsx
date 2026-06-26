@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Dialog from '@/components/Dialog';
@@ -70,23 +71,12 @@ export function TeamsContent() {
     enableReinitialize: true,
   });
 
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
     if (!token) return;
-    axios
-      .get(baseUrl.currentStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.teams)
-          ? role.teams[0]
-          : role.teams || {};
-        setSetupPermissions(rawPerms.teams || null);
-      })
-      .catch(() => {
-        setSetupPermissions(null);
-      });
-  }, [token]);
+    setSetupPermissions(rawPerms?.teams || null);
+  }, [token, rawPerms]);
 
   const fetchData = async () => {
     try {

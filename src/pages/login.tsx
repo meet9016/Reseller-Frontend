@@ -1,4 +1,6 @@
 'use client';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../store/slices/authSlice';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +14,7 @@ import { EMAIL_REGEX } from '../utills/emailRegex';
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -42,6 +45,19 @@ export default function LoginPage() {
 
         if (result.status === 'Success') {
           setAuthToken(result.token);
+          
+          dispatch(setCredentials({
+            token: result.token,
+            user: {
+              _id: result.data._id,
+              fullName: result.data.fullName,
+              email: result.data.email,
+              phone: result.data.phone,
+            },
+            role: result.data.role?.roleName || null,
+            permissions: result.data.role?.permissions?.[0] || null,
+          }));
+
           toast.success(result.message || 'Login successful');
           router.push('/');
         } else {

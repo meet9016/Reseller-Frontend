@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import Head from 'next/head';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -21,6 +22,7 @@ interface SettlementTransaction {
 }
 
 export default function LedgerPage() {
+  const { role, user } = useSelector((state: any) => state.auth);
   const [transactions, setTransactions] = useState<SettlementTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,14 +38,12 @@ export default function LedgerPage() {
     setLoading(true);
     try {
       const token = getAuthToken();
-      console.log(token,"token")
       if (!token) return;
 
-      const userRes = await axios.get(baseUrl.currentStaff, { headers: { Authorization: `Bearer ${token}` } });
-      const role = userRes.data?.data?.role?.roleName?.toLowerCase() || '';
-      const userId = userRes.data?.data?._id;
+      const roleName = role?.toLowerCase() || '';
+      const userId = user?._id;
 
-      const reqId = role === 'admin' ? 'all' : userId;
+      const reqId = roleName === 'admin' ? 'all' : userId;
       const res = await axios.get(`${baseUrl.getBaseUrl}settlement/history/${reqId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

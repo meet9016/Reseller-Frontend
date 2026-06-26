@@ -1,4 +1,5 @@
 'use client';
+import { useSelector } from 'react-redux';
 
 import { useEffect, useMemo, useState } from 'react';
 import Dialog from '@/components/Dialog';
@@ -46,43 +47,12 @@ export default function Setup() {
     }, undefined, { shallow: true });
   };
 
-  // Fetch permissions - FIXED: Always call useEffect, but check token inside
+  const { permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchPermissions = async () => {
-      if (!token) {
-        if (isMounted) setLoadingPermissions(false);
-        return;
-      }
-
-      try {
-        const res = await axios.get(baseUrl.currentStaff, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!isMounted) return;
-        const role = res.data?.data?.role || {};
-        const rawPerms = Array.isArray(role.permissions)
-          ? role.permissions[0]
-          : role.permissions || {};
-        setPermissions(rawPerms);
-      } catch {
-        if (!isMounted) return;
-        setPermissions(null);
-      } finally {
-        if (isMounted) {
-          setLoadingPermissions(false);
-        }
-      }
-    };
-
-    fetchPermissions();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token]);
+    setPermissions(rawPerms || {});
+    setLoadingPermissions(false);
+  }, [rawPerms]);
 
   type Item = { name: string; order: number };
   type BackendItem = { name?: string; order?: number | string };

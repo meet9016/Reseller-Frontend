@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import type { ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -125,29 +126,25 @@ export default function Dashboard() {
 
   const isReseller = user?.role?.roleName?.toLowerCase() === 'reseller';
 
+  const { user: authUser, permissions: rawPerms } = useSelector((state: any) => state.auth);
+
   // Fetch user info and permissions
   useEffect(() => {
     if (!token) return;
-    axios.get(baseUrl.currentStaff, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => {
-        const staff = res.data?.data || {};
-        setUser(staff);
-        const role = staff.role || {};
-        const rawPerms = Array.isArray(role.permissions) ? role.permissions[0] : role.permissions || {};
-        const lp = rawPerms.lead || {};
-        setPermissions({
-          readAll: !!lp.readAll,
-          readOwn: !!lp.readOwn,
-        });
+    
+    setUser(authUser);
+    const lp = rawPerms?.lead || {};
+    setPermissions({
+      readAll: !!lp.readAll,
+      readOwn: !!lp.readOwn,
+    });
 
-        // Set greeting based on time
-        const hour = new Date().getHours();
-        if (hour < 12) setGreeting("Good Morning");
-        else if (hour < 17) setGreeting("Good Afternoon");
-        else setGreeting("Good Evening");
-      })
-      .catch(console.error);
-  }, [token]);
+    // Set greeting based on time
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good Morning");
+    else if (hour < 17) setGreeting("Good Afternoon");
+    else setGreeting("Good Evening");
+  }, [token, authUser, rawPerms]);
 
   // Redirect if no token
   useEffect(() => {
