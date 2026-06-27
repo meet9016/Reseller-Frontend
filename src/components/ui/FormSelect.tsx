@@ -15,9 +15,9 @@ export interface SelectOption {
 
 function getBorderClasses(hasError: boolean, isFocused: boolean, disabled: boolean): string {
   if (disabled) return "border-gray-200 bg-gray-50/50 opacity-60 cursor-not-allowed";
-  if (hasError) return "border-red-500 ring-2 ring-red-500";
-  if (isFocused) return "border-secondary ring-2 ring-blue-50";
-  return "border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-md";
+  if (hasError) return "border-red-500 ring-2 ring-red-500/20";
+  if (isFocused) return "border-secondary ring-2 ring-blue-500/20";
+  return "border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md";
 }
 
 // ─── Portal Dropdown Hook ──────────────────────────────────────────────────────
@@ -225,7 +225,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 
       {hasError && (
         <div className="mt-1.5 flex items-center gap-1.5 px-1 animate-in slide-in-from-top-1 duration-200">
-          <AlertCircle size={14} className="text-red-500" />
+          <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
           <p className="text-red-500 text-xs font-medium">{error}</p>
         </div>
       )}
@@ -449,7 +449,7 @@ export const FormMultiSelect: React.FC<FormMultiSelectProps> = ({
 
       {hasError && (
         <div className="mt-1.5 flex items-center gap-1.5 px-1 animate-in slide-in-from-top-1 duration-200">
-          <AlertCircle size={14} className="text-red-500" />
+          <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
           <p className="text-red-500 text-xs font-medium">{error}</p>
         </div>
       )}

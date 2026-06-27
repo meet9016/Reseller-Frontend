@@ -66,14 +66,13 @@ const FormInput: React.FC<FormInputProps> = ({
 
   const getInputClasses = () => {
     let base = `
-      w-full px-3 py-2.5 rounded-xl
+      w-full px-3 py-2.5 rounded-xl border
       bg-white/90 backdrop-blur-sm
       text-gray-800 text-sm outline-none transition-all duration-200
-      border-2
     `;
 
     if (disabled) {
-      base += " bg-gray-50 cursor-not-allowed opacity-70";
+      base += " bg-gray-50 cursor-not-allowed opacity-70 border-gray-200";
     } else {
       base += " hover:shadow-sm";
     }
@@ -82,13 +81,13 @@ const FormInput: React.FC<FormInputProps> = ({
     if (isPassword) base += " pr-10";
 
     if (hasError) {
-      base += " border-red-500 ring-2 ring-red-500 focus:border-red-500 focus:ring-red-500";
+      base += " border-red-500 ring-2 ring-red-500/20 focus:border-red-500 focus:ring-red-500/20";
     } else if (showSuccess) {
-      base += " border-green-700 ring-2 ring-green-300 focus:border-green-700 focus:ring-green-300";
+      base += " border-green-500 ring-2 ring-green-500/20 focus:border-green-500 focus:ring-green-500/20";
     } else if (isFocused) {
-      base += " border-blue-700 ring-2 ring-blue-300";
-    } else {
-      base += " border-gray-500 hover:border-gray-700";
+      base += " border-blue-500 ring-2 ring-blue-500/20";
+    } else if (!disabled) {
+      base += " border-gray-300 hover:border-gray-400";
     }
 
     return `${base} ${className}`;
@@ -96,7 +95,7 @@ const FormInput: React.FC<FormInputProps> = ({
 
   const getFileInputClasses = () => {
     let classes = `
-      w-full px-3 py-2 rounded-xl border-2
+      w-full px-3 py-2 rounded-xl border
       bg-white/90 backdrop-blur-sm
       text-sm outline-none transition-all duration-200
       file:mr-3 file:py-2 file:px-4 file:rounded-lg
@@ -106,19 +105,19 @@ const FormInput: React.FC<FormInputProps> = ({
     `;
 
     if (disabled) {
-      classes += " bg-gray-50 cursor-not-allowed opacity-70";
+      classes += " bg-gray-50 cursor-not-allowed opacity-70 border-gray-200";
     } else {
-      classes += " cursor-pointer";
+      classes += " cursor-pointer hover:shadow-sm";
     }
 
     if (hasError) {
-      classes += " border-red-500 ring-2 ring-red-500";
+      classes += " border-red-500 ring-2 ring-red-500/20";
     } else if (showSuccess) {
-      classes += " border-green-700 ring-2 ring-green-300";
+      classes += " border-green-500 ring-2 ring-green-500/20";
     } else if (isFocused) {
-      classes += " border-blue-700 ring-2 ring-blue-300";
-    } else {
-      classes += " border-gray-500 hover:border-gray-700";
+      classes += " border-blue-500 ring-2 ring-blue-500/20";
+    } else if (!disabled) {
+      classes += " border-gray-300 hover:border-gray-400";
     }
 
     return classes;
@@ -244,12 +243,9 @@ const FormInput: React.FC<FormInputProps> = ({
             )}
 
             {hasError && (
-              <div className="mt-1 flex items-center gap-1.5">
-                <AlertCircle
-                  size={12}
-                  className="text-red-500 flex-shrink-0"
-                />
-                <p className="text-red-500 text-xs">{error}</p>
+              <div className="mt-1.5 flex items-center gap-1.5 px-1 animate-in slide-in-from-top-1 duration-200">
+                <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
+                <p className="text-red-500 text-xs font-medium">{error}</p>
               </div>
             )}
           </div>
@@ -385,9 +381,9 @@ const FormInput: React.FC<FormInputProps> = ({
 
       {/* Error Message with Icon */}
       {hasError && (
-        <div className="mt-2 flex items-center gap-1.5">
+        <div className="mt-1.5 flex items-center gap-1.5 px-1 animate-in slide-in-from-top-1 duration-200">
           <AlertCircle size={14} className="text-red-500 flex-shrink-0" />
-          <p className="text-red-500 text-xs">{error}</p>
+          <p className="text-red-500 text-xs font-medium">{error}</p>
         </div>
       )}
 
