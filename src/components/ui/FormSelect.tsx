@@ -15,7 +15,7 @@ export interface SelectOption {
 
 function getBorderClasses(hasError: boolean, isFocused: boolean, disabled: boolean): string {
   if (disabled) return "border-gray-200 bg-gray-50/50 opacity-60 cursor-not-allowed";
-  if (hasError) return "border-red-500 ring-2 ring-red-50";
+  if (hasError) return "border-red-500 ring-2 ring-red-500";
   if (isFocused) return "border-secondary ring-2 ring-blue-50";
   return "border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-md";
 }

@@ -89,6 +89,8 @@ export default function SalesExecutiveForm({
 
   // Initialize formik
   const formik = useFormik({
+    validateOnChange: false,
+    validateOnBlur: false,
     initialValues: {
       fullName: '',
       number: '',

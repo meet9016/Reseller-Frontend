@@ -69,15 +69,16 @@ export function TaskStatusContent() {
 
     // Initialize formik
     const formik = useFormik({
-        initialValues: {
+    validateOnChange: false,
+    validateOnBlur: false,
+    initialValues: {
             _id: '',
             name: '',
             order: 1,
             color: '#6B7280',
         },
         validationSchema,
-        validateOnChange: true,
-        validateOnBlur: true,
+
         onSubmit: async (values) => {
             await saveTaskStatus(values);
         },

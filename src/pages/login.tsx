@@ -30,6 +30,8 @@ export default function LoginPage() {
 
   // Formik form handling
   const formik = useFormik({
+    validateOnChange: false,
+    validateOnBlur: false,
     initialValues: {
       email: '',
       password: '',

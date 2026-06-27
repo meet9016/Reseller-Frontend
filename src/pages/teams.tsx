@@ -58,13 +58,14 @@ export function TeamsContent() {
 
   // Initialize formik
   const formik = useFormik({
+    validateOnChange: false,
+    validateOnBlur: false,
     initialValues: {
       _id: '',
       name: '',
     },
     validationSchema,
-    validateOnChange: true,
-    validateOnBlur: true,
+
     onSubmit: async (values) => {
       await handleSave(values);
     },

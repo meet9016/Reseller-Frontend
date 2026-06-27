@@ -102,6 +102,8 @@ export default function RoleForm({
 
   // Initialize formik
   const formik = useFormik({
+    validateOnChange: false,
+    validateOnBlur: false,
     initialValues: {
       roleName: '',
       permissions: normalizePermissions(),

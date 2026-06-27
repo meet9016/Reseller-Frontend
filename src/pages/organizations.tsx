@@ -57,6 +57,7 @@ export function OrganizationsContent() {
 
   // Initialize formik
   const formik = useFormik({
+
     initialValues: {
       _id: '',
       name: '',
