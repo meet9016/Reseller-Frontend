@@ -728,7 +728,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-              {greeting}, {user?.fullName?.split(' ')[0] || 'User'}! 👋
+              {greeting}, {user?.fullName?.split(' ')[0] || 'User'} ! 
             </h2>
             <p className="text-gray-500 mt-1 flex items-center gap-2">
               <Activity className="h-4 w-4 text-blue-500" />

@@ -98,13 +98,13 @@ export function FieldSettingsContent() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
         {/* Lead Fields */}
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
           <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
             Add Lead Required Fields
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-2 grid grid-cols-2 md:grid-cols-2 gap-3">
             {loading ? (
               <p className="text-gray-500">Loading fields...</p>
             ) : leadFields.map(field => {
@@ -113,15 +113,14 @@ export function FieldSettingsContent() {
               const isPayment = field.id === 'paymentAmount';
 
               const isChecked = isContact || isPayment || requiredLeads.includes(field.id);
-              
+
               return (
                 <label
                   key={field.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isContact || isPayment ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${
-                    isChecked
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isContact || isPayment ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${isChecked
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   <span className="font-medium">{field.label} {(isContact || isPayment) && <span className="text-xs ml-2 text-blue-600">(Mandatory)</span>}</span>
                   <input

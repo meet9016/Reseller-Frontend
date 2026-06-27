@@ -201,7 +201,7 @@ export default function DataTable<T extends Record<string, any>>({
               </button>
             )}
 
-            {onExport && (
+            {/* {onExport && (
               <button
                 onClick={onExport}
                 className="group relative inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -209,7 +209,7 @@ export default function DataTable<T extends Record<string, any>>({
                 <FiDownload className="h-4 w-4" />
                 <span className="hidden sm:inline">Export</span>
               </button>
-            )}
+            )} */}
 
             {searchable && (
               <div className="relative w-full sm:w-auto">

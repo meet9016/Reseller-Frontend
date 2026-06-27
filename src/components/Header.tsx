@@ -158,120 +158,120 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     if (!currentUserId) return;
 
     // ✅ Correct socket URL (NO /api/v1/api)
-        const socketUrl = (
-          process.env.NEXT_PUBLIC_SOCKET_URL ||
-          process.env.NEXT_PUBLIC_IMAGE_URL ||
-          ''
-        ).replace(/\/api\/?$/, '');
+    const socketUrl = (
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      process.env.NEXT_PUBLIC_IMAGE_URL ||
+      ''
+    ).replace(/\/api\/?$/, '');
 
 
-        socket = io(socketUrl || 'http://localhost:5000', {
-          transports: ['websocket', 'polling'],
-        });
+    socket = io(socketUrl || 'http://localhost:5000', {
+      transports: ['websocket', 'polling'],
+    });
 
-        // =========================
-        // 🔥 GLOBAL EVENT LOGGER
-        // =========================
-        socket.onAny((event: string, ...args: any[]) => {
-          console.log('[Socket][onAny] 👉', event, args);
-        });
+    // =========================
+    // 🔥 GLOBAL EVENT LOGGER
+    // =========================
+    socket.onAny((event: string, ...args: any[]) => {
+      console.log('[Socket][onAny] 👉', event, args);
+    });
 
-        // =========================
-        // 🔌 CONNECTION EVENTS
-        // =========================
-        socket.on('connect', () => {
-          console.log('[Socket] ✅ Connected:', socket.id);
+    // =========================
+    // 🔌 CONNECTION EVENTS
+    // =========================
+    socket.on('connect', () => {
+      console.log('[Socket] ✅ Connected:', socket.id);
 
-          socket.emit('joinRoom', currentUserId);
-          console.log('[Socket] 📌 Joined room:', currentUserId);
-        });
+      socket.emit('joinRoom', currentUserId);
+      console.log('[Socket] 📌 Joined room:', currentUserId);
+    });
 
-        socket.on('disconnect', (reason: string) => {
-          console.log('[Socket] ❌ Disconnected:', reason);
-        });
+    socket.on('disconnect', (reason: string) => {
+      console.log('[Socket] ❌ Disconnected:', reason);
+    });
 
-        socket.on('connect_error', (error: any) => {
-          console.error('[Socket] 🚨 Connect Error:', error.message);
-        });
+    socket.on('connect_error', (error: any) => {
+      console.error('[Socket] 🚨 Connect Error:', error.message);
+    });
 
-        // =========================
-        // 🔄 RECONNECT EVENTS
-        // =========================
-        socket.io.on('reconnect_attempt', () => {
-          console.log('[Socket] 🔄 Reconnect Attempt...');
-        });
+    // =========================
+    // 🔄 RECONNECT EVENTS
+    // =========================
+    socket.io.on('reconnect_attempt', () => {
+      console.log('[Socket] 🔄 Reconnect Attempt...');
+    });
 
-        socket.io.on('reconnect', (attempt: number) => {
-          console.log('[Socket] ♻️ Reconnected after:', attempt);
-        });
+    socket.io.on('reconnect', (attempt: number) => {
+      console.log('[Socket] ♻️ Reconnected after:', attempt);
+    });
 
-        socket.io.on('reconnect_error', (err: any) => {
-          console.error('[Socket] 🚨 Reconnect Error:', err.message);
-        });
+    socket.io.on('reconnect_error', (err: any) => {
+      console.error('[Socket] 🚨 Reconnect Error:', err.message);
+    });
 
-        // =========================
-        // ⚡ ENGINE EVENTS (DEEP DEBUG)
-        // =========================
-        socket.io.engine.on('upgrade', () => {
-          console.log('[Socket] ⚡ Upgraded to WebSocket');
-        });
+    // =========================
+    // ⚡ ENGINE EVENTS (DEEP DEBUG)
+    // =========================
+    socket.io.engine.on('upgrade', () => {
+      console.log('[Socket] ⚡ Upgraded to WebSocket');
+    });
 
-        socket.io.engine.on('packet', (packet: any) => {
-          console.log('[Socket] 📦 Packet:', packet);
-        });
+    socket.io.engine.on('packet', (packet: any) => {
+      console.log('[Socket] 📦 Packet:', packet);
+    });
 
-        // =========================
-        // 📩 CUSTOM EVENTS
-        // =========================
+    // =========================
+    // 📩 CUSTOM EVENTS
+    // =========================
 
-        socket.on('new_task_assigned', (notif: Notification) => {
-          console.log('[Socket] 📩 new_task_assigned:', notif);
+    socket.on('new_task_assigned', (notif: Notification) => {
+      console.log('[Socket] 📩 new_task_assigned:', notif);
 
-          // setNotifications((prev) => [notif, ...prev]);
+      // setNotifications((prev) => [notif, ...prev]);
 
-          if (typeof window !== 'undefined' && 'Notification' in window) {
-            if (Notification.permission === 'granted') {
-              const browserNotif = new window.Notification(notif.title, {
-                body: notif.message,
-                icon: '/notification-icon.png',
-                badge: '/badge-icon.png',
-              });
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          const browserNotif = new window.Notification(notif.title, {
+            body: notif.message,
+            icon: '/notification-icon.png',
+            badge: '/badge-icon.png',
+          });
 
-              browserNotif.onclick = async () => {
-                window.focus();
-                try {
-                  if (!notif.isRead) {
-                    await axios.put(
-                      `${baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl}/notification/mark-read/${notif._id}`,
-                      {},
-                      {
-                        headers: {
-                          Authorization: `Bearer ${getAuthToken()}`,
-                        },
-                      }
-                    );
+          browserNotif.onclick = async () => {
+            window.focus();
+            try {
+              if (!notif.isRead) {
+                await axios.put(
+                  `${baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl}/notification/mark-read/${notif._id}`,
+                  {},
+                  {
+                    headers: {
+                      Authorization: `Bearer ${getAuthToken()}`,
+                    },
                   }
-                  router.push(
-                    notif.type === 'task' ? '/tasks' : '/leads/list'
-                  );
-                } catch (e) {
-                  console.error(e);
-                }
-                browserNotif.close();
-              };
+                );
+              }
+              router.push(
+                notif.type === 'task' ? '/tasks' : '/leads/list'
+              );
+            } catch (e) {
+              console.error(e);
             }
-          }
-        });
+            browserNotif.close();
+          };
+        }
+      }
+    });
 
-        socket.on('new_lead_assigned', (notif: Notification) => {
-          console.log('[Socket] 📩 new_lead_assigned:', notif);
-          // setNotifications((prev) => [notif, ...prev]);
-        });
+    socket.on('new_lead_assigned', (notif: Notification) => {
+      console.log('[Socket] 📩 new_lead_assigned:', notif);
+      // setNotifications((prev) => [notif, ...prev]);
+    });
 
-        socket.on('task_updated', (notif: Notification) => {
-          console.log('[Socket] 📩 task_updated:', notif);
-          // setNotifications((prev) => [notif, ...prev]);
-        });
+    socket.on('task_updated', (notif: Notification) => {
+      console.log('[Socket] 📩 task_updated:', notif);
+      // setNotifications((prev) => [notif, ...prev]);
+    });
 
     // =========================
     // 🧹 CLEANUP
@@ -450,13 +450,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
         {/* Alerts / Notifications */}
         <div className="relative" ref={dropdownRef}>
-          <button
-            // onClick={() => {
-            //   if (!showNotifications) {
-            //     fetchNotifications();
-            //   }
-            //   setShowNotifications(!showNotifications);
-            // }}
+          {/* <button
+            onClick={() => {
+              if (!showNotifications) {
+                fetchNotifications();
+              }
+              setShowNotifications(!showNotifications);
+            }}
             className="relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
           >
             <Bell className="h-5 w-5 text-gray-600" />
@@ -465,7 +465,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
-          </button>
+          </button> */}
 
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-lg bg-white shadow-xl overflow-hidden z-50">
