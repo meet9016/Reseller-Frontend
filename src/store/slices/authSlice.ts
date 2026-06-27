@@ -27,7 +27,7 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{
         token: string;
-        user: any;
+        user: any;  
         role: string;
         permissions: any;
       }>

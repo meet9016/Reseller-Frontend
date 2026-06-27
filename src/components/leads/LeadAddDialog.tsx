@@ -51,6 +51,8 @@ export default function LeadAddDialog({
         setSources(sourceRes.data?.data || sourceRes.data || []);
         
         const reqs = reqRes.data?.data?.requiredLeads || [];
+        if (!reqs.includes('customerContact')) reqs.push('customerContact');
+        if (!reqs.includes('paymentAmount')) reqs.push('paymentAmount');
         setRequiredFields(reqs);
 
         const schemaShape: any = {

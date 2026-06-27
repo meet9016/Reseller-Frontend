@@ -110,23 +110,25 @@ export function FieldSettingsContent() {
             ) : leadFields.map(field => {
               // Ensure customerContact is always checked and disabled
               const isContact = field.id === 'customerContact';
-              const isChecked = isContact || requiredLeads.includes(field.id);
+              const isPayment = field.id === 'paymentAmount';
+
+              const isChecked = isContact || isPayment || requiredLeads.includes(field.id);
               
               return (
                 <label
                   key={field.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isContact ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${
+                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${isContact || isPayment ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'} ${
                     isChecked
                       ? 'bg-blue-50 border-blue-200 text-blue-700'
                       : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <span className="font-medium">{field.label} {isContact && <span className="text-xs ml-2 text-blue-600">(Mandatory)</span>}</span>
+                  <span className="font-medium">{field.label} {(isContact || isPayment) && <span className="text-xs ml-2 text-blue-600">(Mandatory)</span>}</span>
                   <input
                     type="checkbox"
                     className="hidden"
                     checked={isChecked}
-                    disabled={isContact}
+                    disabled={isContact || isPayment}
                     onChange={() => handleToggleLead(field.id)}
                   />
                   {isChecked ? (

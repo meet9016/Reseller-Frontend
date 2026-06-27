@@ -377,7 +377,7 @@ export default function LeadsPage() {
             </button>
 
             {/* Excel Export Button */}
-            <button
+            {/* <button
               onClick={handleExport}
               disabled={exporting}
               title="Export to Excel"
@@ -385,10 +385,10 @@ export default function LeadsPage() {
             >
               <Download className="h-4 w-4" />
               <span className="hidden sm:inline">{exporting ? '...' : 'Export'}</span>
-            </button>
+            </button> */}
 
             {/* Bulk Import Button */}
-            {canCreate && (
+            {/* {canCreate && (
               <button
                 onClick={() => setShowBulkImport(true)}
                 title="Bulk Import Leads"
@@ -397,7 +397,7 @@ export default function LeadsPage() {
                 <Upload className="h-4 w-4" />
                 <span className="hidden sm:inline">Import</span>
               </button>
-            )}
+            )} */}
 
             {/* Desktop View toggle */}
             {userRole !== 'admin' && (
