@@ -383,7 +383,7 @@ export default function LeadsKanbanView({
                                                 isUpdating={updatingId === lead._id}
                                                 onDragStart={() => { if (permissions?.update) setDraggingId(lead._id); }}
                                                 onView={() => onView?.(lead)}
-                                                onEdit={permissions?.update ? () => onEdit?.(lead) : undefined}
+                                                onEdit={permissions?.update && !group.title.match(/^won$/i) ? () => onEdit?.(lead) : undefined}
                                                 onMarkLost={permissions?.update ? () => markLost(lead._id) : undefined}
                                                 onMarkWon={permissions?.update ? () => markWon(lead._id) : undefined}
                                             />
@@ -461,7 +461,7 @@ export default function LeadsKanbanView({
                         onPageSizeChange={wonPagination?.handleRowsPerPageChange}
                         actions
                         onView={(row) => onView?.(row)}
-                        onEdit={permissions?.update ? (row) => onEdit?.(row) : undefined}
+                        onEdit={undefined}
                         extraActions={permissions?.update ? [
                             {
                                 label: (row) => row?.paymentStatus === 'Paid' ? 'Payment Details' : 'Payment',
