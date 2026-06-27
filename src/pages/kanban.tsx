@@ -672,98 +672,98 @@ export default function LeadsPage() {
                           {status.leads.map((lead: any) => {
                             const isWon = status.title.toLowerCase() === 'won' || lead.isWon || lead.leadStatus?.name?.toLowerCase() === 'won';
                             return (
-                            <div
-                              key={lead._id}
-                              className={`${isWon ? 'cursor-default' : 'cursor-move'} rounded-lg bg-[#ffffff] p-3 transition-shadow hover:shadow-md`}
-                              draggable={!isWon}
-                              onDragStart={(e) => {
-                                if (!isWon) handleDragStart(lead._id);
-                                else e.preventDefault();
-                              }}
-                            >
-                              {/* Lead Card Header */}
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <div className="font-semibold text-gray-900">
-                                    {lead.fullName}
+                              <div
+                                key={lead._id}
+                                className={`${isWon ? 'cursor-default' : 'cursor-move'} rounded-lg bg-[#ffffff] p-3 transition-shadow hover:shadow-md`}
+                                draggable={!isWon}
+                                onDragStart={(e) => {
+                                  if (!isWon) handleDragStart(lead._id);
+                                  else e.preventDefault();
+                                }}
+                              >
+                                {/* Lead Card Header */}
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <div className="font-semibold text-gray-900">
+                                      {lead.fullName}
+                                    </div>
+                                    <div className="mt-1 text-sm text-gray-600">
+                                      {lead.companyName || "-"}
+                                    </div>
                                   </div>
-                                  <div className="mt-1 text-sm text-gray-600">
-                                    {lead.companyName || "-"}
-                                  </div>
-                                </div>
 
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => handleView(lead._id)}
-                                    className="h-8 w-8 rounded-full bg-[#007bff] text-[#ffffff] flex items-center justify-center
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleView(lead._id)}
+                                      className="h-8 w-8 rounded-full bg-[#007bff] text-[#ffffff] flex items-center justify-center
              hover:-translate-y-1 hover:shadow-md 
              transition-transform transition-shadow duration-200 ease-out"
-                                    title="View"
-                                  >
-                                    <FiEye className="h-4 w-4" />
-                                  </button>
+                                      title="View"
+                                    >
+                                      <FiEye className="h-4 w-4" />
+                                    </button>
 
-                                  {!isWon && (
-                                    <button
-                                      onClick={() => handleEdit(lead._id)}
-                                      className="h-8 w-8 rounded-full bg-[#008001] text-[#ffffff] flex items-center justify-center
+                                    {!isWon && (
+                                      <button
+                                        onClick={() => handleEdit(lead._id)}
+                                        className="h-8 w-8 rounded-full bg-[#008001] text-[#ffffff] flex items-center justify-center
                hover:-translate-y-1 hover:shadow-md 
                transition-transform transition-shadow duration-200 ease-out"
-                                      title="Edit"
-                                    >
-                                      <FiEdit className="h-4 w-4" />
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Lead Details */}
-                              <div className="mt-2 text-sm text-gray-700">
-
-                                <div className="flex items-start gap-2">
-
-                                  {/* Left Content */}
-                                  <div className="flex-1 min-w-0 space-y-2">
-
-                                    <div className="flex items-center gap-2">
-                                      <FiPhone className="h-4 w-4 text-dark flex-shrink-0" />
-                                      <span className="truncate">{formatContactNumber(lead.contact)}</span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <FiMail className="h-4 w-4 text-dark flex-shrink-0" />
-                                      <span className="truncate">
-                                        {lead.email}
-                                      </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                      {lead.assignedTo?.avatar ? (
-                                        <img
-                                          src={lead.assignedTo.avatar}
-                                          alt={lead.assignedTo.fullName}
-                                          className="h-6 w-6 rounded-full object-contain"
-                                        />
-                                      ) : (
-                                        <div className="h-6 w-6 rounded-full bg-gradient-to-r from-[#9160ff] to-[#c387ff] flex items-center justify-center text-xs font-semibold text-white">
-                                          {lead.assignedTo?.fullName?.charAt(0).toUpperCase()}
-                                        </div>
-                                      )}
-                                      <span className="truncate">{lead.assignedTo?.fullName || "Unassigned"}</span>
-                                    </div>
+                                        title="Edit"
+                                      >
+                                        <FiEdit className="h-4 w-4" />
+                                      </button>
+                                    )}
                                   </div>
-
-                                  {/* Priority Right */}
-                                  {lead.priority && (
-                                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600 capitalize whitespace-nowrap">
-                                      {lead.priority}
-                                    </span>
-                                  )}
                                 </div>
+
+                                {/* Lead Details */}
+                                <div className="mt-2 text-sm text-gray-700">
+
+                                  <div className="flex items-start gap-2">
+
+                                    {/* Left Content */}
+                                    <div className="flex-1 min-w-0 space-y-2">
+
+                                      <div className="flex items-center gap-2">
+                                        <FiPhone className="h-4 w-4 text-dark flex-shrink-0" />
+                                        <span className="truncate">{formatContactNumber(lead.contact)}</span>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <FiMail className="h-4 w-4 text-dark flex-shrink-0" />
+                                        <span className="truncate">
+                                          {lead.email}
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        {lead.assignedTo?.avatar ? (
+                                          <img
+                                            src={lead.assignedTo.avatar}
+                                            alt={lead.assignedTo.fullName}
+                                            className="h-6 w-6 rounded-full object-contain"
+                                          />
+                                        ) : (
+                                          <div className="h-6 w-6 rounded-full bg-gradient-to-r from-[#9160ff] to-[#c387ff] flex items-center justify-center text-xs font-semibold text-white">
+                                            {lead.assignedTo?.fullName?.charAt(0).toUpperCase()}
+                                          </div>
+                                        )}
+                                        <span className="truncate">{lead.assignedTo?.fullName || "Unassigned"}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Priority Right */}
+                                    {lead.priority && (
+                                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-600 capitalize whitespace-nowrap">
+                                        {lead.priority}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+
                               </div>
-
-
-                            </div>
                             );
                           })}
                         </div>
@@ -1066,7 +1066,7 @@ export default function LeadsPage() {
                 onChange={(e) =>
                   setAddForm((p) => ({ ...p, name: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -1079,7 +1079,7 @@ export default function LeadsPage() {
                 onChange={(e) =>
                   setAddForm((p) => ({ ...p, companyName: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -1092,7 +1092,7 @@ export default function LeadsPage() {
                 onChange={(e) =>
                   setAddForm((p) => ({ ...p, address: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -1105,7 +1105,7 @@ export default function LeadsPage() {
                 onChange={(e) =>
                   setAddForm((p) => ({ ...p, phone: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -1118,7 +1118,7 @@ export default function LeadsPage() {
                 onChange={(e) =>
                   setAddForm((p) => ({ ...p, email: e.target.value }))
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1132,7 +1132,7 @@ export default function LeadsPage() {
                   onChange={(e) =>
                     setAddForm((p) => ({ ...p, product: e.target.value }))
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
               <div>
@@ -1145,7 +1145,7 @@ export default function LeadsPage() {
                   onChange={(e) =>
                     setAddForm((p) => ({ ...p, paymentAmount: e.target.value }))
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -1157,7 +1157,7 @@ export default function LeadsPage() {
                   </label>
                   <select
                     value={addForm.status}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
                     onChange={(e) =>
                       setAddForm((p) => ({ ...p, status: e.target.value }))
                     }
@@ -1180,7 +1180,7 @@ export default function LeadsPage() {
                   onChange={(e) =>
                     setAddForm((p) => ({ ...p, staff: e.target.value }))
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="">Select Staff</option>
                   {staffMembers.map((s) => (

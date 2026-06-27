@@ -173,7 +173,7 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
               type="text"
               placeholder="Search leads..."
               onChange={handleSearchChange}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm transition-shadow"
+              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm transition-shadow"
             />
           </div>
           <div className="flex items-center gap-2 flex-1 sm:flex-none">
@@ -182,7 +182,7 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
               <select
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
-                className="w-full sm:w-auto pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm appearance-none bg-white transition-shadow cursor-pointer"
+                className="w-full sm:w-auto pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm appearance-none bg-white transition-shadow cursor-pointer"
               >
                 {months.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
@@ -193,7 +193,7 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
               <select
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm appearance-none bg-white transition-shadow cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none text-sm appearance-none bg-white transition-shadow cursor-pointer"
               >
                 {years.map(y => (
                   <option key={y} value={y}>{y}</option>

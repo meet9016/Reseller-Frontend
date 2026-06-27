@@ -32,7 +32,7 @@ export default function TaskKanbanView({
   const [pageMap, setPageMap] = useState<Record<string, number>>({});
   const [hasMoreMap, setHasMoreMap] = useState<Record<string, boolean>>({});
   const [loadingMoreMap, setLoadingMoreMap] = useState<Record<string, boolean>>({});
-  
+
   const [draggedTask, setDraggedTask] = useState<{ taskId: string; sourceStatusId: string } | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -116,7 +116,7 @@ export default function TaskKanbanView({
 
     if (!draggedTask) return;
     const { taskId, sourceStatusId } = draggedTask;
-    
+
     if (sourceStatusId === targetStatusId) {
       setDraggedTask(null);
       return;
@@ -149,7 +149,7 @@ export default function TaskKanbanView({
         { headers: { Authorization: `Bearer ${token()}` } },
       );
       toast.success('Task status updated');
-      
+
       // Silent re-fetch to sync
       fetchStatusTasks(sourceStatusId, 1, false, true);
       fetchStatusTasks(targetStatusId, 1, false, true);
@@ -174,7 +174,7 @@ export default function TaskKanbanView({
           return (
             <div
               key={status._id}
-              className={`w-80 flex-shrink-0 flex flex-col transition-all ${dragOverStatus === status._id ? 'ring-2 ring-blue-400 ring-opacity-75' : ''
+              className={`w-80 flex-shrink-0 flex flex-col transition-all ${dragOverStatus === status._id ? 'ring-1 ring-blue-400 ring-opacity-75' : ''
                 }`}
               onDragOver={(e) => handleDragOver(e, status._id)}
               onDragLeave={handleDragLeave}
@@ -255,7 +255,7 @@ function KanbanCard({ task, statusId, isDragging, isUpdating, onDragStart, onVie
     <div
       draggable={!isUpdating}
       onDragStart={() => onDragStart(task._id, statusId)}
-      className={`group bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-grab active:cursor-grabbing flex flex-col justify-between h-[180px] ${isDragging ? 'opacity-50 scale-95 ring-2 ring-blue-500' : ''
+      className={`group bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-grab active:cursor-grabbing flex flex-col justify-between h-[180px] ${isDragging ? 'opacity-50 scale-95 ring-1 ring-blue-500' : ''
         } ${isUpdating ? 'opacity-70 pointer-events-none' : ''}`}
     >
       <div className="relative h-full flex flex-col justify-between">
@@ -272,7 +272,7 @@ function KanbanCard({ task, statusId, isDragging, isUpdating, onDragStart, onVie
             >
               {task.subject}
             </div>
-            
+
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button onClick={(e) => { e.stopPropagation(); onView(); }} className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 shadow-sm transition-all" title="View"><Eye className="w-3.5 h-3.5" /></button>
               <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 shadow-sm transition-all" title="Edit"><Edit className="w-3.5 h-3.5" /></button>

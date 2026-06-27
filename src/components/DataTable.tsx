@@ -194,7 +194,7 @@ export default function DataTable<T extends Record<string, any>>({
             {onRefresh && (
               <button
                 onClick={onRefresh}
-                className="group relative inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="group relative inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <FiRefreshCw className="h-4 w-4 transition-transform group-hover:rotate-180 duration-500" />
                 <span className="hidden sm:inline">Refresh</span>
@@ -204,7 +204,7 @@ export default function DataTable<T extends Record<string, any>>({
             {/* {onExport && (
               <button
                 onClick={onExport}
-                className="group relative inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="group relative inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <FiDownload className="h-4 w-4" />
                 <span className="hidden sm:inline">Export</span>
@@ -219,14 +219,14 @@ export default function DataTable<T extends Record<string, any>>({
                   placeholder="Search anything..."
                   value={searchValue}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full sm:w-80 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 hover:border-gray-300"
+                  className="w-full sm:w-80 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100 hover:border-gray-300"
                 />
               </div>
             )}
 
             {/* <button
               onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2"
             >
               <FiFilter className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
@@ -235,7 +235,7 @@ export default function DataTable<T extends Record<string, any>>({
             {addButton && (
               <button
                 onClick={addButton.onClick}
-                className="inline-flex items-center gap-2 rounded-md bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-md bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
               >
                 {addButton.icon || <span className="text-lg">+</span>}
                 {addButton.label}
@@ -349,108 +349,108 @@ export default function DataTable<T extends Record<string, any>>({
                       </td>
                     )}
                     {columns.map((column) => (
-                    <td
-                      key={String(column.key)}
-                      className={`px-6 py-4 text-sm text-gray-700 whitespace-nowrap ${column.className || ''}`}
-                    >
-                      {renderCell(column, row)}
-                    </td>
-                  ))}
+                      <td
+                        key={String(column.key)}
+                        className={`px-6 py-4 text-sm text-gray-700 whitespace-nowrap ${column.className || ''}`}
+                      >
+                        {renderCell(column, row)}
+                      </td>
+                    ))}
 
-                  {actions && (onView || onEdit || onDelete || extraActions || expandableContent) && (
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                    {actions && (onView || onEdit || onDelete || extraActions || expandableContent) && (
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
 
-                        {/* VIEW */}
-                        {onView && (
-                          <button
-                            onClick={() => onView(row)}
-                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-[#3B82F6] hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:scale-95"
-                          >
-                            <FiEye className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                          </button>
-                        )}
-
-                        {/* EDIT */}
-                        {onEdit && (!canEdit || canEdit(row)) && (
-                          <button
-                            onClick={() => onEdit(row)}
-                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-green-600 transition-all duration-200 hover:bg-green-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
-                          >
-                            <FiEdit className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                          </button>
-                        )}
-
-                        {/* DELETE */}
-                        {onDelete && (!canDelete || canDelete(row)) && (
-                          <button
-                            onClick={() => onDelete(row)}
-                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-red-600 transition-all duration-200 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:scale-95"
-                          >
-                            <FiTrash2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                          </button>
-                        )}
-
-                        {/* EXTRA ACTIONS */}
-                        {extraActions?.map((act, idx) => {
-                          const evaluatedLabel = typeof act.label === 'function' ? act.label(row) : act.label;
-                          const evaluatedIcon = typeof act.icon === 'function' ? act.icon(row) : act.icon;
-                          const evaluatedColor = typeof act.color === 'function' ? act.color(row) : act.color;
-
-                          const colors: Record<string, string> = {
-                            blue: 'text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500',
-                            green: 'text-green-600 hover:bg-green-600 hover:text-white focus:ring-green-500',
-                            red: 'text-red-600 hover:bg-red-500 hover:text-white focus:ring-red-500',
-                            orange: 'text-orange-600 hover:bg-orange-500 hover:text-white focus:ring-orange-500',
-                            purple: 'text-purple-600 hover:bg-purple-600 hover:text-white focus:ring-purple-500',
-                          };
-                          const colorClass = colors[evaluatedColor || 'blue'];
-
-                          if (act.show && !act.show(row)) return null;
-
-                          return (
+                          {/* VIEW */}
+                          {onView && (
                             <button
-                              key={idx}
-                              onClick={() => act.onClick(row)}
-                              title={evaluatedLabel as string}
-                              className={`group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 ${colorClass}`}
+                              onClick={() => onView(row)}
+                              className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-[#3B82F6] hover:text-white hover:shadow-md focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 active:scale-95"
                             >
-                              {evaluatedIcon ? (
-                                <span className="group-hover:scale-110 transition-transform">{evaluatedIcon}</span>
+                              <FiEye className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* EDIT */}
+                          {onEdit && (!canEdit || canEdit(row)) && (
+                            <button
+                              onClick={() => onEdit(row)}
+                              className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-green-600 transition-all duration-200 hover:bg-green-600 hover:text-white hover:shadow-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-offset-2 active:scale-95"
+                            >
+                              <FiEdit className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* DELETE */}
+                          {onDelete && (!canDelete || canDelete(row)) && (
+                            <button
+                              onClick={() => onDelete(row)}
+                              className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-red-600 transition-all duration-200 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:ring-offset-2 active:scale-95"
+                            >
+                              <FiTrash2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                            </button>
+                          )}
+
+                          {/* EXTRA ACTIONS */}
+                          {extraActions?.map((act, idx) => {
+                            const evaluatedLabel = typeof act.label === 'function' ? act.label(row) : act.label;
+                            const evaluatedIcon = typeof act.icon === 'function' ? act.icon(row) : act.icon;
+                            const evaluatedColor = typeof act.color === 'function' ? act.color(row) : act.color;
+
+                            const colors: Record<string, string> = {
+                              blue: 'text-blue-600 hover:bg-blue-600 hover:text-white focus:ring-blue-500',
+                              green: 'text-green-600 hover:bg-green-600 hover:text-white focus:ring-green-500',
+                              red: 'text-red-600 hover:bg-red-500 hover:text-white focus:ring-red-500',
+                              orange: 'text-orange-600 hover:bg-orange-500 hover:text-white focus:ring-orange-500',
+                              purple: 'text-purple-600 hover:bg-purple-600 hover:text-white focus:ring-purple-500',
+                            };
+                            const colorClass = colors[evaluatedColor || 'blue'];
+
+                            if (act.show && !act.show(row)) return null;
+
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => act.onClick(row)}
+                                title={evaluatedLabel as string}
+                                className={`group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 transition-all duration-200 shadow-sm focus:outline-none focus:ring-1 focus:ring-offset-2 active:scale-95 ${colorClass}`}
+                              >
+                                {evaluatedIcon ? (
+                                  <span className="group-hover:scale-110 transition-transform">{evaluatedIcon}</span>
+                                ) : (
+                                  <FiMoreVertical className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                )}
+                              </button>
+                            );
+                          })}
+
+                          {/* EXPAND ACTION */}
+                          {expandableContent && (
+                            <button
+                              onClick={() => toggleRow(index)}
+                              className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:shadow-md focus:outline-none focus:ring-1 focus:ring-gray-300 focus:ring-offset-2 active:scale-95 ml-auto"
+                            >
+                              {expandedRows[index] ? (
+                                <FiChevronUp className="h-4 w-4 transition-transform" />
                               ) : (
-                                <FiMoreVertical className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                                <FiChevronDown className="h-4 w-4 transition-transform" />
                               )}
                             </button>
-                          );
-                        })}
-
-                        {/* EXPAND ACTION */}
-                        {expandableContent && (
-                          <button
-                            onClick={() => toggleRow(index)}
-                            className="group h-9 w-9 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-gray-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 active:scale-95 ml-auto"
-                          >
-                            {expandedRows[index] ? (
-                              <FiChevronUp className="h-4 w-4 transition-transform" />
-                            ) : (
-                              <FiChevronDown className="h-4 w-4 transition-transform" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-                {expandableContent && expandedRows[index] && (
-                  <tr key={`expand-${index}`} className="border-b border-gray-100 bg-gray-50/30">
-                    <td colSpan={columns.length + (actions ? 1 : 0)} className="p-0">
-                      <div className="overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300">
-                        {expandableContent(row)}
-                      </div>
-                    </td>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
-                )}
-              </React.Fragment>
+                  {expandableContent && expandedRows[index] && (
+                    <tr key={`expand-${index}`} className="border-b border-gray-100 bg-gray-50/30">
+                      <td colSpan={columns.length + (actions ? 1 : 0)} className="p-0">
+                        <div className="overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300">
+                          {expandableContent(row)}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))
             )}
           </tbody>
@@ -489,7 +489,7 @@ export default function DataTable<T extends Record<string, any>>({
                 disabled={currentPage === 1}
                 className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-200 ${currentPage === 1
                   ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2'
                   }`}
               >
                 <FiChevronLeft className="h-4 w-4" />
@@ -521,7 +521,7 @@ export default function DataTable<T extends Record<string, any>>({
                 disabled={currentPage === totalPages}
                 className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-200 ${currentPage === totalPages
                   ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2'
                   }`}
               >
                 <FiChevronRight className="h-4 w-4" />

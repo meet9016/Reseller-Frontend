@@ -33,7 +33,7 @@ export default function Search({ onSearch, placeholder = 'Search by name, email,
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
-          className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:border-sky-950 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:border-sky-950 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200"
         />
         {query && (
           <button
@@ -48,7 +48,7 @@ export default function Search({ onSearch, placeholder = 'Search by name, email,
       <div className="flex gap-2">
         <button
           type="submit"
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-950 to-sky-950 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-sky-950 hover:to-sky-950 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-950 focus:ring-offset-2 active:scale-95 sm:flex-none"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-sky-950 to-sky-950 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-sky-950 hover:to-sky-950 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-sky-950 focus:ring-offset-2 active:scale-95 sm:flex-none"
         >
           <FiSearch className="h-4 w-4" />
           Search
@@ -57,7 +57,7 @@ export default function Search({ onSearch, placeholder = 'Search by name, email,
           <button
             type="button"
             onClick={handleReset}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 active:scale-95 sm:hidden"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-gray-300 active:scale-95 sm:hidden"
           >
             <FiX className="h-4 w-4" />
             Clear

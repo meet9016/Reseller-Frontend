@@ -15,8 +15,8 @@ export interface SelectOption {
 
 function getBorderClasses(hasError: boolean, isFocused: boolean, disabled: boolean): string {
   if (disabled) return "border-gray-200 bg-gray-50/50 opacity-60 cursor-not-allowed";
-  if (hasError) return "border-red-500 ring-2 ring-red-500/20";
-  if (isFocused) return "border-secondary ring-2 ring-blue-500/20";
+  if (hasError) return "border-red-500 ring-1 ring-red-500";
+  if (isFocused) return "border-secondary ring-1 ring-blue-500";
   return "border-gray-300 hover:border-gray-400 shadow-sm hover:shadow-md";
 }
 
@@ -103,7 +103,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
         if (onBlur) {
           onBlur({
             target: { name: name || "" },
-            persist: () => {},
+            persist: () => { },
           });
         }
       }
@@ -126,14 +126,14 @@ export const FormSelect: React.FC<FormSelectProps> = ({
     if (onBlur) {
       onBlur({
         target: { name: name || "" },
-        persist: () => {},
+        persist: () => { },
       });
     }
   };
 
   const triggerClasses = `
     w-full flex items-center justify-between
-    px-4 py-2.5 rounded-xl border
+    px-4 py-2 rounded-lg border
     bg-white transition-all duration-300
     outline-none select-none
     ${disabled ? "" : "cursor-pointer"}
@@ -145,7 +145,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
   return (
     <div className="w-full relative">
       {label && (
-        <label className="block text-sm font-bold text-gray-700 mb-1.5 px-1">
+        <label className="block text-sm  text-gray-700 mb-1.5 px-1">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -168,7 +168,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
             {selected ? (
               <span className="flex items-center gap-2">
                 {selected.color && (
-                  <span className="w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm" style={{ backgroundColor: selected.color }} />
+                  <span className="w-2 h-2 rounded-full " style={{ backgroundColor: selected.color }} />
                 )}
                 {selected.label}
               </span>

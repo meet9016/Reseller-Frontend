@@ -39,13 +39,13 @@ const validationSchema = Yup.object({
         .min(2, 'Status name must be at least 2 characters')
         .max(50, 'Status name must be at most 50 characters')
         .matches(/^[a-zA-Z0-9\s&-]+$/, 'Status name can only contain letters, numbers, spaces, &, and -'),
-    
+
     order: Yup.number()
         .required('Order is required')
         .integer('Order must be a whole number')
         .min(1, 'Order must be at least 1')
         .max(9999, 'Order must be at most 9999'),
-    
+
     color: Yup.string()
         .required('Color is required')
         .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color code. Use format: #RRGGBB or #RGB'),
@@ -69,9 +69,9 @@ export function TaskStatusContent() {
 
     // Initialize formik
     const formik = useFormik({
-    validateOnChange: false,
-    validateOnBlur: false,
-    initialValues: {
+        validateOnChange: false,
+        validateOnBlur: false,
+        initialValues: {
             _id: '',
             name: '',
             order: 1,
@@ -423,7 +423,7 @@ export function TaskStatusContent() {
                             <input
                                 type="color"
                                 name="color"
-                                className="h-10 w-16 border border-gray-300 rounded-lg cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="h-10 w-16 border border-gray-300 rounded-lg cursor-pointer shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 value={formik.values.color}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -432,11 +432,10 @@ export function TaskStatusContent() {
                             <input
                                 type="text"
                                 name="color"
-                                className={`flex-1 border rounded-lg px-3 py-2 font-mono shadow-sm focus:outline-none focus:ring-2 ${
-                                    formik.touched.color && formik.errors.color
+                                className={`flex-1 border rounded-lg px-3 py-2 font-mono shadow-sm focus:outline-none focus:ring-1 ${formik.touched.color && formik.errors.color
                                         ? 'border-red-500 focus:ring-red-200'
                                         : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                                }`}
+                                    }`}
                                 placeholder="#6B7280"
                                 value={formik.values.color}
                                 onChange={formik.handleChange}
@@ -461,9 +460,9 @@ export function TaskStatusContent() {
                                     className="w-5 h-5 rounded-full shadow-sm"
                                     style={{ backgroundColor: formik.values.color }}
                                 />
-                                <span 
+                                <span
                                     className="text-sm font-medium px-3 py-1 rounded-full"
-                                    style={{ 
+                                    style={{
                                         backgroundColor: formik.values.color + '20',
                                         color: formik.values.color
                                     }}

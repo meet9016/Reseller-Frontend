@@ -332,7 +332,7 @@ export default function LeadAddDialog({
               />
             </div>
             {getFieldError('remarks') && (
-              <p className="mt-1 text-xs text-red-500">{getFieldError('remarks')}</p>
+              <p className="mt-1 text-xs text-red-500 font-medium">{getFieldError('remarks')}</p>
             )}
           </div>
 

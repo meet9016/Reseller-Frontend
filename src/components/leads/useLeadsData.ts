@@ -251,22 +251,22 @@ export function useLeadsData(
     tab = stateRef.current.activeTab,
     f: Filters = stateRef.current.filters
   ) => {
-    // try {
-    //   const url = getLeadsCountUrl(tab);
-    //   const res = await axios.get(url, {
-    //     headers: getHeaders(),
-    //     params: {
-    //       search: f.search || undefined,
-    //       status: f.status || undefined,
-    //       staff: f.staff || undefined,
-    //       from: f.from || undefined,
-    //       to: f.to || undefined,
-    //     },
-    //   });
-    //   setCounts(res.data?.data || null);
-    // } catch (e) {
-    //   console.error('fetchCounts error:', e);
-    // }
+    try {
+      const url = getLeadsCountUrl(tab);
+      const res = await axios.get(url, {
+        headers: getHeaders(),
+        params: {
+          search: f.search || undefined,
+          status: f.status || undefined,
+          staff: f.staff || undefined,
+          from: f.from || undefined,
+          to: f.to || undefined,
+        },
+      });
+      setCounts(res.data?.data || null);
+    } catch (e) {
+      console.error('fetchCounts error:', e);
+    }
   }, [getLeadsCountUrl]); 
 
   const fetchMeta = useCallback(async () => {

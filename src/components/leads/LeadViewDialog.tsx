@@ -124,7 +124,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
     setLocalFollowUps(prev => [...prev, tempFollowUp]);
 
     // Clear form fields
-      onClose()
+    onClose()
 
     setFollowupNote('');
     setEditNextDate('');
@@ -247,7 +247,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
               <InfoCard label="Phone" value={formatContactNumber((lead as any).customerContact || lead.contact)} />
               <InfoCard label="Email" value={(lead as any).customerEmail || lead.email} />
               <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? `₹${(lead as any).paymentAmount.toLocaleString()}` : undefined} />
-              
+
               <InfoCard label="Last Follow-Up" value={lead.lastFollowUp} />
               <InfoCard label="Active" value={lead.isActive ? 'Yes' : 'No'} />
             </div>
@@ -295,50 +295,50 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
 
                 {/* Add New Follow-up Section */}
                 {!isWon && (
-                <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Add New Follow-up</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500">Date</label>
-                      <DatePicker
-                        value={editNextDate}
-                        onChange={(val) => setEditNextDate(val)}
+                  <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Add New Follow-up</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-500">Date</label>
+                        <DatePicker
+                          value={editNextDate}
+                          onChange={(val) => setEditNextDate(val)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-gray-500">Time</label>
+                        <TimePicker
+                          value={editNextTime}
+                          onChange={(val) => setEditNextTime(val)}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1">
+                      <label className="text-xs font-medium text-gray-500">Note / Summary</label>
+                      <textarea
+                        value={followupNote}
+                        onChange={(e) => setFollowupNote(e.target.value)}
+                        placeholder="Describe the interaction..."
+                        rows={3}
+                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 transition-all outline-none resize-none"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-500">Time</label>
-                      <TimePicker
-                        value={editNextTime}
-                        onChange={(val) => setEditNextTime(val)}
-                      />
-                    </div>
+                    <button
+                      onClick={handleAddFollowup}
+                      disabled={!editNextDate || !followupNote || addingFollowup}
+                      className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      {addingFollowup ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Recording...
+                        </span>
+                      ) : 'Save Follow-up'}
+                    </button>
                   </div>
-                  <div className="mt-3 space-y-1">
-                    <label className="text-xs font-medium text-gray-500">Note / Summary</label>
-                    <textarea
-                      value={followupNote}
-                      onChange={(e) => setFollowupNote(e.target.value)}
-                      placeholder="Describe the interaction..."
-                      rows={3}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 transition-all outline-none resize-none"
-                    />
-                  </div>
-                  <button
-                    onClick={handleAddFollowup}
-                    disabled={!editNextDate || !followupNote || addingFollowup}
-                    className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  >
-                    {addingFollowup ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Recording...
-                      </span>
-                    ) : 'Save Follow-up'}
-                  </button>
-                </div>
                 )}
 
                 {/* Follow-up Table */}
@@ -353,7 +353,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                           placeholder="Search follow-ups..."
                           value={followUpSearch}
                           onChange={(e) => setFollowUpSearch(e.target.value)}
-                          className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 hover:border-gray-300"
+                          className="w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100 hover:border-gray-300"
                         />
                       </div>
                       {followUpSearch && (

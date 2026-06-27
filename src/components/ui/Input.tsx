@@ -81,11 +81,11 @@ const FormInput: React.FC<FormInputProps> = ({
     if (isPassword) base += " pr-10";
 
     if (hasError) {
-      base += " border-red-500 ring-2 ring-red-500/20 focus:border-red-500 focus:ring-red-500/20";
+      base += " border-red-500 ring-1 ring-red-500 focus:border-red-500 focus:ring-red-500/20";
     } else if (showSuccess) {
-      base += " border-green-500 ring-2 ring-green-500/20 focus:border-green-500 focus:ring-green-500/20";
+      base += " border-green-500 ring-1 ring-red-500 focus:border-green-500 focus:ring-red-500";
     } else if (isFocused) {
-      base += " border-blue-500 ring-2 ring-blue-500/20";
+      base += " border-blue-500 ring-1 ring-blue-500/20";
     } else if (!disabled) {
       base += " border-gray-300 hover:border-gray-400";
     }
@@ -111,11 +111,11 @@ const FormInput: React.FC<FormInputProps> = ({
     }
 
     if (hasError) {
-      classes += " border-red-500 ring-2 ring-red-500/20";
+      classes += " border-red-500 ring-1 ring-red-500/20";
     } else if (showSuccess) {
-      classes += " border-green-500 ring-2 ring-green-500/20";
+      classes += " border-green-500 ring-1 ring-red-500";
     } else if (isFocused) {
-      classes += " border-blue-500 ring-2 ring-blue-500/20";
+      classes += " border-blue-500 ring-1 ring-blue-500/20";
     } else if (!disabled) {
       classes += " border-gray-300 hover:border-gray-400";
     }
@@ -128,7 +128,7 @@ const FormInput: React.FC<FormInputProps> = ({
       appearance-none w-5 h-5 rounded
       border-2 transition-all duration-200
       cursor-pointer relative
-      focus:outline-none focus:ring-2 focus:ring-offset-2
+      focus:outline-none focus:ring-1 focus:ring-offset-2
     `;
 
     if (disabled) {

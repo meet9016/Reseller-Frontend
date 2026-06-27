@@ -85,7 +85,7 @@ export default function LeadsPage() {
   const token = typeof window !== 'undefined' ? getAuthToken() : null;
 
   const { role, permissions: rawPerms } = useSelector((state: any) => state.auth);
-  
+
   const userRole = role?.toLowerCase() || '';
 
   // ── Fetch permissions ────────────────────────────────────────────────────
@@ -308,23 +308,23 @@ export default function LeadsPage() {
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Leads</h1>
-            
+
             {/* Mobile View Toggle */}
             {userRole !== 'admin' && (
-            <div className="md:hidden relative flex items-center bg-gray-100 p-1 rounded-md w-fit">
-              <button
-                onClick={() => switchView('list')}
-                className={`relative z-10 cursor-pointer flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'list' ? 'bg-secondary text-white shadow-sm' : 'text-gray-700'}`}
-              >
-                <ListCollapse className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => switchView('kanban')}
-                className={`relative z-10 cursor-pointer flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-secondary text-white shadow-sm' : 'text-gray-700'}`}
-              >
-                <Kanban className="h-4 w-4" />
-              </button>
-            </div>
+              <div className="md:hidden relative flex items-center bg-gray-100 p-1 rounded-md w-fit">
+                <button
+                  onClick={() => switchView('list')}
+                  className={`relative z-10 cursor-pointer flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'list' ? 'bg-secondary text-white shadow-sm' : 'text-gray-700'}`}
+                >
+                  <ListCollapse className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => switchView('kanban')}
+                  className={`relative z-10 cursor-pointer flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-secondary text-white shadow-sm' : 'text-gray-700'}`}
+                >
+                  <Kanban className="h-4 w-4" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -337,7 +337,7 @@ export default function LeadsPage() {
                 placeholder="Search leads..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -365,8 +365,8 @@ export default function LeadsPage() {
             <button
               onClick={() => setShowFilterDrawer(!showFilterDrawer)}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs md:text-sm font-medium transition-all cursor-pointer ${showFilterDrawer || hasActiveFilters
-                  ? 'bg-primary-50 text-primary-600 border border-primary-200 hover:bg-primary-100'
-                  : 'bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200'
+                ? 'bg-primary-50 text-primary-600 border border-primary-200 hover:bg-primary-100'
+                : 'bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200'
                 }`}
             >
               <Filter className="h-4 w-4" />
@@ -401,22 +401,22 @@ export default function LeadsPage() {
 
             {/* Desktop View toggle */}
             {userRole !== 'admin' && (
-            <div className="hidden md:flex relative items-center bg-gray-100 p-1 rounded-md w-fit">
-              <button
-                onClick={() => switchView('list')}
-                className={`relative z-10 cursor-pointer flex items-center justify-center w-10 h-10 rounded-md transition-colors ${viewMode === 'list' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-700'}`}
-                title="List View"
-              >
-                <ListCollapse className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => switchView('kanban')}
-                className={`relative z-10 cursor-pointer flex items-center justify-center w-10 h-10 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-700'}`}
-                title="Kanban View"
-              >
-                <Kanban className="h-5 w-5" />
-              </button>
-            </div>
+              <div className="hidden md:flex relative items-center bg-gray-100 p-1 rounded-md w-fit">
+                <button
+                  onClick={() => switchView('list')}
+                  className={`relative z-10 cursor-pointer flex items-center justify-center w-10 h-10 rounded-md transition-colors ${viewMode === 'list' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-700'}`}
+                  title="List View"
+                >
+                  <ListCollapse className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => switchView('kanban')}
+                  className={`relative z-10 cursor-pointer flex items-center justify-center w-10 h-10 rounded-md transition-colors ${viewMode === 'kanban' ? 'bg-[#3B82F6] text-white shadow-sm' : 'text-gray-700'}`}
+                  title="Kanban View"
+                >
+                  <Kanban className="h-5 w-5" />
+                </button>
+              </div>
             )}
 
             {/* Add Lead button */}
@@ -435,23 +435,23 @@ export default function LeadsPage() {
         {/* ── Filter Section (Inline Expandable) ────────────────────────────── */}
         <div
           className={`grid transition-all duration-300 ease-in-out ${showFilterDrawer
-              ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t border-gray-100'
-              : 'grid-rows-[0fr] opacity-0 overflow-hidden'
+            ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t border-gray-100'
+            : 'grid-rows-[0fr] opacity-0 overflow-hidden'
             }`}
         >
           <div className="overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {userRole !== 'admin' && (
-              <div className="space-y-2">
-                <FormMultiSelect
-                  label="Lead Status"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e)}
-                  options={statuses.map((s) => ({ value: s._id, label: s.name }))}
-                />
-              </div>
+                <div className="space-y-2">
+                  <FormMultiSelect
+                    label="Lead Status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e)}
+                    options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+                  />
+                </div>
               )}
-      
+
 
               <div className="space-y-2">
                 <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>
