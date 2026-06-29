@@ -1,6 +1,7 @@
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export const baseUrl = {
+
   userSignup: `${API}users/signup`,
   userLogin: `${API}auth/login`,
   addRole: `${API}role`,
@@ -8,6 +9,7 @@ export const baseUrl = {
   findRoleById: `${API}role`,
   updateRole: `${API}role`,
   deleteRole: `${API}role`,
+  myProfile: `${API}reseller/me`,
   addStaff: `${API}reseller/create`,
   getAllStaff: `${API}reseller`,
   findStaffById: `${API}reseller`,
