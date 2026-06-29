@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { io } from 'socket.io-client';
 import Swal from 'sweetalert2';
-import ResellerDialog from '@/components/ResellerDialog';
+import UpdateProfileDialog from '@/components/UpdateProfileDialog';
 import { toast } from 'react-toastify';
 
 interface Notification {
@@ -27,29 +27,6 @@ interface HeaderProps {
   toggleSidebar: () => void;
 }
 
-interface ResellerDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: any) => void;
-  initialData?: Reseller | null;
-}
-
-interface Reseller {
-  id: string;
-  image?: string;
-  fullName: string;
-  phone: string;
-  email: string;
-  status: string;
-  role: string;
-  roleName?: string;
-  address?: string;
-  city: string;
-  state: string;
-  pincode: string;
-  commissionRate: string;
-}
-
 export default function Header({ toggleSidebar }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -64,10 +41,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const [currentUserData, setCurrentUserData] = useState<any>(null);
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingReseller, setEditingReseller] = useState<Reseller | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -91,48 +65,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   }
     const token = getAuthToken();
     if (!token) return;
-
-  const handleSubmit = async (values: any) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const payload = new FormData();
-      payload.append('fullName', values.fullName);
-      payload.append('email', values.email);
-      payload.append('phone', values.phone);
-      if (values.role) {
-        payload.append('role', values.role);
-      }
-      payload.append('status', values.status);
-      payload.append('commissionRate', values.commissionRate);
-
-      if (values.password.trim()) {
-        payload.append('password', values.password);
-      }
-
-      if (selectedFile) {
-        payload.append('profileImage', selectedFile);
-      }
-
-      const headers = {
-        Authorization: `Bearer ${token || getAuthToken()}`
-      };
-
-      await axios.put(`${baseUrl.updateReseller}/${editingReseller?.id}`, payload, { headers })
-
-      toast.success( 'Profile updated successfully');
-      setIsFormOpen(false);
-      setEditingReseller(null);
-      fetchProfile();
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Something went wrong';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchProfile = useCallback(async () => {
 
@@ -509,6 +441,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   // const totalCount = notifications.length;
 
   return (
+    <>
     <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-white border-b border-gray-200 px-4 md:px-6 backdrop-blur-sm">
       <div className="flex items-center gap-2 md:gap-4">
         {/* Hamburger Menu for Mobile */}
@@ -530,20 +463,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           title="Edit Profile"
           onClick={() => {
             if (currentUserData) {
-              setEditingReseller({
-                id: currentUserData._id,
-                fullName: currentUserData.fullName,
-                email: currentUserData.email,
-                phone: currentUserData.phone || '',
-                role: currentUserData.role || '',
-                status: currentUserData.status || 'active',
-                commissionRate: currentUserData.commissionRate || '0',
-                image: currentUserData.profileImage || '',
-                city: currentUserData.city || '',
-                state: currentUserData.state || '',
-                pincode: currentUserData.pincode || '',
-              });
-              setIsFormOpen(true);
+              setIsProfileOpen(true);
             }
           }}
         >
@@ -677,25 +597,17 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         >
           <LogOut className="h-5 w-5" />
         </button>
-        <ResellerDialog
-          isOpen={isFormOpen}
-          onClose={() => {
-            setIsFormOpen(false);
-            setEditingReseller(null);
-          }}
-          onSubmit={handleSubmit}
-          initialData={editingReseller ? {
-            _id: editingReseller.id,
-            fullName: editingReseller.fullName,
-            email: editingReseller.email,
-            phone: editingReseller.phone,
-            role: editingReseller.role,
-            status: editingReseller.status,
-            profileImage: editingReseller.image,
-            commissionRate: editingReseller.commissionRate,
-          } : null}
-        />
       </div>
     </header>
+    <UpdateProfileDialog
+      isOpen={isProfileOpen}
+      onClose={() => setIsProfileOpen(false)}
+      currentUser={currentUserData}
+      onSuccess={() => {
+        fetchProfile();
+        toast.success('Profile updated successfully');
+      }}
+    />
+    </>
   );
 }

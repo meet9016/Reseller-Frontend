@@ -60,6 +60,7 @@ export const baseUrl = {
   findResellerById: `${API}reseller`,
   updateReseller: `${API}reseller`,
   deleteReseller: `${API}reseller`,
+  updateMyProfile: `${API}reseller/me`,
   settlements: `${API}settlement/all`,
   addSettlement: `${API}settlement/pay`,
   resellerLeadSettlements: `${API}settlement/leads`,
