@@ -10,6 +10,12 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend
 } from "recharts";
 import {
   Users,
@@ -57,6 +63,8 @@ interface LeadSummary {
   totalLeads: number;
   currentMonthLeads: number;
   totalRevenue: number;
+  totalCommission: number;
+  totalSettlement: number;
   statusWiseCounts: StatusCount[];
 }
 
@@ -113,7 +121,17 @@ export default function Dashboard() {
 
   // Today's Tasks
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
-  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
+  // New state variables for Dashboard Tables
+  const [recentLeads, setRecentLeads] = useState<any[]>([]);
+  const [leadsLoading, setLeadsLoading] = useState(true);
+  
+  const [recentSettlements, setRecentSettlements] = useState<any[]>([]);
+  const [settlementsLoading, setSettlementsLoading] = useState(true);
+  
+  const [resellerPerformance, setResellerPerformance] = useState<any[]>([]);
+  const [performanceLoading, setPerformanceLoading] = useState(true);
 
   const [permissions, setPermissions] = useState<{ readAll: boolean; readOwn: boolean }>({ readAll: false, readOwn: false });
   const [user, setUser] = useState<any>(null);
@@ -334,6 +352,63 @@ export default function Dashboard() {
     }
   };
 
+  const fetchRecentLeads = async () => {
+    if (!token) return;
+    setLeadsLoading(true);
+    try {
+      const isMyOnly = !permissions.readAll && permissions.readOwn;
+      const url = isMyOnly ? baseUrl.myLeads : baseUrl.getAllLeads;
+      const res = await axios.get(`${url}?page=1&limit=5`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRecentLeads(res.data?.data || []);
+    } catch (err) {
+      console.error("Recent leads error:", err);
+      setRecentLeads([]);
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
+
+  const fetchRecentSettlements = async () => {
+    if (!token || !user) return;
+    setSettlementsLoading(true);
+    try {
+      const isMyOnly = !permissions.readAll && permissions.readOwn;
+      const url = isMyOnly 
+        ? `${baseUrl.settlementHistory}/${user._id}` 
+        : `${baseUrl.settlementHistory}/all`;
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // the history endpoint returns an array in data.data or directly in data
+      // Limit to 5
+      const dataArray = res.data?.data || res.data || [];
+      setRecentSettlements(Array.isArray(dataArray) ? dataArray.slice(0, 5) : []);
+    } catch (err) {
+      console.error("Recent settlements error:", err);
+      setRecentSettlements([]);
+    } finally {
+      setSettlementsLoading(false);
+    }
+  };
+
+  const fetchResellerPerformance = async () => {
+    if (!token) return;
+    setPerformanceLoading(true);
+    try {
+      const res = await axios.get(baseUrl.settlements, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setResellerPerformance(res.data?.data || []);
+    } catch (err) {
+      console.error("Reseller performance error:", err);
+      setResellerPerformance([]);
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       fetchLeadSummary();
@@ -341,15 +416,17 @@ export default function Dashboard() {
       fetchDueFollowups(1);
       fetchAllFollowups(1);
       fetchTodayTasks();
+      fetchRecentLeads();
+      fetchRecentSettlements();
 
-      // Only fetch staff stats if they have readAll
+      // Only fetch admin stats if they have readAll
       if (permissions.readAll) {
         fetchLeadsBySource();
         fetchStaffPerformance();
+        fetchResellerPerformance();
       }
     }
-  }, [token, permissions, fromDate, toDate]);
-
+  }, [token, permissions, fromDate, toDate, user]);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = window.sessionStorage.getItem("kanbanVisibleStatusNames");
@@ -451,6 +528,34 @@ export default function Dashboard() {
         fill: "#F59E0B",
         name: "Revenue",
         description: "Total from won leads"
+      },
+      {
+        key: "commission",
+        label: "Total Commission",
+        value: `₹${(summary.totalCommission || 0).toLocaleString()}`,
+        trend: 0,
+        tone: "neutral",
+        Icon: Award,
+        iconBg: "bg-indigo-500/10",
+        iconColor: "text-indigo-500",
+        type: "custom",
+        fill: "#6366F1",
+        name: "Commission",
+        description: "Total commission earned"
+      },
+      {
+        key: "settlement",
+        label: "Total Settlement",
+        value: `₹${(summary.totalSettlement || 0).toLocaleString()}`,
+        trend: 0,
+        tone: "neutral",
+        Icon: CheckCircle2,
+        iconBg: "bg-teal-500/10",
+        iconColor: "text-teal-500",
+        type: "custom",
+        fill: "#14B8A6",
+        name: "Settlement",
+        description: "Total settled amount"
       }
     ]
     : [];
@@ -460,6 +565,12 @@ export default function Dashboard() {
     value: s.count,
     fill: statusColorPalette[idx % statusColorPalette.length]
   })) || [];
+
+  const financialChartData = summary ? [
+    { name: 'Revenue', value: summary.totalRevenue || 0, fill: '#F59E0B' },
+    { name: 'Commission', value: summary.totalCommission || 0, fill: '#6366F1' },
+    { name: 'Settlement', value: summary.totalSettlement || 0, fill: '#14B8A6' },
+  ] : [];
 
   const handleQuickFilter = (range: string) => {
     const now = new Date();
@@ -768,7 +879,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {summaryCards.map((card) => (
             <div
               key={card.key}
@@ -921,6 +1032,50 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* Financial Overview - Bar Chart */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Financial Overview</h3>
+                <p className="text-sm text-gray-500 mt-1">Revenue vs Commission vs Settlement</p>
+              </div>
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={financialChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} width={60} tickFormatter={(value) => `₹${Intl.NumberFormat('en-IN', { notation: "compact" }).format(value)}`} />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                            <p className="text-sm font-bold text-gray-900">{payload[0].payload.name}</p>
+                            <p className="text-sm font-semibold" style={{ color: payload[0].payload.fill }}>
+                              ₹{Number(payload[0].value).toLocaleString()}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                    {financialChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
         {/* Follow-ups and Tasks Section */}
@@ -972,7 +1127,145 @@ export default function Dashboard() {
           </div>
         </div>}
 
+        {/* Recent Data Tables Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          {/* Recent Leads */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col max-h-[500px]">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Recent Leads</h3>
+              </div>
+              <Link href="/leads/list" className="text-sm font-semibold text-blue-600 hover:text-blue-700">View All</Link>
+            </div>
+            {leadsLoading ? (
+              <div className="flex-1 flex justify-center items-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div></div>
+            ) : recentLeads.length === 0 ? (
+              <div className="flex-1 flex justify-center items-center text-gray-500">No recent leads.</div>
+            ) : (
+              <div className="overflow-auto flex-1">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Customer</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {recentLeads.map((lead: any) => (
+                      <tr key={lead._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-900">{lead.customerName || lead.fullName || 'Unknown'}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.leadStatus?.name)}`}>
+                            {lead.leadStatus?.name || '-'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold text-gray-900">₹{(lead.paymentAmount || 0).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
+          {/* Recent Settlements */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col max-h-[500px]">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-50 rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Recent Settlements</h3>
+              </div>
+              <Link href="/settlements" className="text-sm font-semibold text-emerald-600 hover:text-emerald-700">View All</Link>
+            </div>
+            {settlementsLoading ? (
+              <div className="flex-1 flex justify-center items-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-emerald-600 border-r-transparent"></div></div>
+            ) : recentSettlements.length === 0 ? (
+              <div className="flex-1 flex justify-center items-center text-gray-500">No recent settlements.</div>
+            ) : (
+              <div className="overflow-auto flex-1">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Date</th>
+                      {permissions.readAll && <th className="px-4 py-3 font-medium">Reseller</th>}
+                      <th className="px-4 py-3 font-medium text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {recentSettlements.map((tx: any) => (
+                      <tr key={tx._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-500">{moment(tx.createdAt).format('DD MMM YYYY')}</td>
+                        {permissions.readAll && <td className="px-4 py-3 font-medium text-gray-900">{tx.reseller?.fullName || '-'}</td>}
+                        <td className="px-4 py-3 text-right font-bold text-emerald-600">₹{(tx.amount || 0).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Reseller Performance Table (Admin Only) */}
+        {permissions.readAll && (
+          <div className="mt-8 bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <Award className="h-5 w-5 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Reseller Performance Overview</h3>
+            </div>
+            
+            {performanceLoading ? (
+              <div className="h-32 flex justify-center items-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-600 border-r-transparent"></div></div>
+            ) : resellerPerformance.length === 0 ? (
+              <div className="h-32 flex justify-center items-center text-gray-500">No performance data found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-y border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 font-medium">Reseller Name</th>
+                      <th className="px-6 py-4 font-medium text-center">Total Leads</th>
+                      <th className="px-6 py-4 font-medium text-right">Total Revenue</th>
+                      <th className="px-6 py-4 font-medium text-right">Total Commission</th>
+                      <th className="px-6 py-4 font-medium text-right text-emerald-600">Settled</th>
+                      <th className="px-6 py-4 font-medium text-right text-amber-600">Pending</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {resellerPerformance.map((rp: any) => (
+                      <tr key={rp._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600">
+                              {rp.resellerName?.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">{rp.resellerName}</p>
+                              <p className="text-xs text-gray-500">{rp.resellerEmail}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center font-semibold">{rp.totalLeadsCount}</td>
+                        <td className="px-6 py-4 text-right font-medium">₹{(rp.totalLeadsAmount || 0).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-medium">₹{(rp.totalCommission || 0).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-emerald-600">₹{(rp.paidCommission || 0).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-amber-600">₹{(rp.unpaidCommission || 0).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <UpdateLeadStageDrawer

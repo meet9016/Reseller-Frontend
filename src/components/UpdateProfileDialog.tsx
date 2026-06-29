@@ -1,4 +1,4 @@
-// Trigger recompile
+// UpdateProfile Dialog
 'use client';
 
 import { useEffect, useState } from 'react';
