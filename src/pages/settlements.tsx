@@ -49,6 +49,46 @@ export function SettlementsContent() {
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalSelectedLeads, setGlobalSelectedLeads] = useState<any[]>([]);
+  const [globalSettlementMethod, setGlobalSettlementMethod] = useState<string>('Bank Transfer');
+  const [isSettlingLeads, setIsSettlingLeads] = useState(false);
+  const [activeTab, setActiveTab] = useState<'unsettled' | 'settled'>('unsettled');
+
+  // Automatically default the settlement method based on the selected leads' paymentMode
+  useEffect(() => {
+    if (globalSelectedLeads.length > 0) {
+      const mode = globalSelectedLeads[0].paymentMode;
+      if (mode && mode !== '-') {
+        if (['Bank Transfer', 'UPI', 'GPay', 'Cash'].includes(mode)) {
+          setGlobalSettlementMethod(mode);
+        }
+      }
+    }
+  }, [globalSelectedLeads]);
+
+  const handleGlobalSettleLeads = async () => {
+    if (globalSelectedLeads.length === 0) return;
+    setIsSettlingLeads(true);
+    try {
+      const leadIds = globalSelectedLeads.map(l => l.id);
+      await axios.post(
+        baseUrl.settleLeads,
+        { 
+          leadIds,
+          paymentMethod: globalSettlementMethod
+        },
+        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
+      );
+      toast.success('Leads settled successfully!');
+      setGlobalSelectedLeads([]);
+      setActiveTab('settled');
+      fetchSettlements();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Failed to settle leads');
+    } finally {
+      setIsSettlingLeads(false);
+    }
+  };
 
   const token = typeof window !== 'undefined' ? getAuthToken() : null;
 
@@ -409,8 +449,41 @@ export function SettlementsContent() {
               title="Reseller Settlements"
               subtitle="Manage commissions and record payments for your resellers."
               searchable
+              searchQuery={searchQuery}
               onSearch={(val) => setSearchQuery(val)}
-              expandableContent={(row) => <SettlementLeadsList resellerId={row._id} />}
+              headerActions={
+                <div className="flex items-center gap-2">
+                  {globalSelectedLeads.length > 0 && (
+                    <select
+                      value={globalSettlementMethod}
+                      onChange={(e) => setGlobalSettlementMethod(e.target.value)}
+                      className="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none cursor-pointer outline-none transition-shadow"
+                    >
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="UPI">UPI</option>
+                      <option value="GPay">GPay</option>
+                      <option value="Cash">Cash</option>
+                    </select>
+                  )}
+                  <button
+                    onClick={handleGlobalSettleLeads}
+                    disabled={globalSelectedLeads.length === 0 || isSettlingLeads}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+                  >
+                    {isSettlingLeads ? 'Processing...' : 'Settle Selected'}
+                  </button>
+                </div>
+              }
+              expandableContent={(row) => (
+                <SettlementLeadsList
+                  resellerId={row._id}
+                  onSuccess={fetchSettlements}
+                  selectedLeads={globalSelectedLeads}
+                  onSelectionChange={setGlobalSelectedLeads}
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                />
+              )}
             />
         )}
       </div>
@@ -456,6 +529,7 @@ export function SettlementsContent() {
                   >
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="UPI">UPI</option>
+                    <option value="GPay">GPay</option>
                     <option value="Cash">Cash</option>
                   </select>
                 </div>

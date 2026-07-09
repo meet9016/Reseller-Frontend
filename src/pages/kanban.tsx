@@ -14,6 +14,7 @@ import Dialog from "@/components/Dialog";
 import { ListCollapse, Plus } from "lucide-react";
 import Select from "react-select";
 import { formatContactNumber } from "@/utills/utill";
+import { EMAIL_REGEX } from "@/utills/emailRegex";
 
 type ApiUser = {
   _id: string;
@@ -310,6 +311,11 @@ export default function LeadsPage() {
 
     if (missingFields.length > 0) {
       toast.error(`Required fields missing: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    if (addForm.email && !EMAIL_REGEX.test(addForm.email)) {
+      toast.error("Invalid email domain");
       return;
     }
 

@@ -46,7 +46,7 @@ const getValidationSchema = (isUpdate: boolean) => Yup.object({
 
   email: Yup.string()
     .required('Email is required')
-    .matches(EMAIL_REGEX, { message: 'Invalid email format', excludeEmptyString: true }),
+    .matches(EMAIL_REGEX, { message: 'Invalid email domain', excludeEmptyString: true }),
 
   password: isUpdate
     ? Yup.string().notRequired()

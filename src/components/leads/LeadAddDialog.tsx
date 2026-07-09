@@ -57,7 +57,7 @@ export default function LeadAddDialog({
 
         const schemaShape: any = {
           customerName: Yup.string().trim(),
-          customerEmail: Yup.string().trim().matches(EMAIL_REGEX, { message: 'Invalid email format', excludeEmptyString: true }),
+          customerEmail: Yup.string().trim().matches(EMAIL_REGEX, { message: 'Invalid email domain', excludeEmptyString: true }),
           customerContact: Yup.string().trim().test('is-10-digits', 'Customer Contact must be exactly 10 digits', val => !val || /^[0-9]{10}$/.test(val)),
           companyName: Yup.string().trim(),
           paymentAmount: Yup.number().transform((value, originalValue) => originalValue === '' ? undefined : value).typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),

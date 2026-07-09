@@ -167,7 +167,7 @@ export default function LedgerPage() {
   const totalFilteredAmount = filteredTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+    <div className="space-y-6">
       <Head>
         <title>Ledger | Reseller Panel</title>
       </Head>

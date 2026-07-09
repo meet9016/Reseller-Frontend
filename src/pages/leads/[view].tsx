@@ -329,18 +329,20 @@ export default function LeadsPage() {
           </div>
 
           {/* Search Bar */}
-          <div className="w-full md:flex-1 md:max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search leads..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent"
-              />
+          {viewMode !== 'list' && (
+            <div className="w-full md:flex-1 md:max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search leads..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-2 md:gap-3 md:ml-auto">
             {/* Tab Toggle (All/My) */}
@@ -423,7 +425,7 @@ export default function LeadsPage() {
             {canCreate && (
               <button
                 onClick={handleOpenAdd}
-                className="flex cursor-pointer items-center gap-2 rounded-md bg-[#3B82F6] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition-all"
+                className="flex cursor-pointer items-center gap-2 rounded-md bg-[#3B82F6] px-6 py-1 text-sm font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition-all"
               >
                 <Plus className="h-4 w-4" />
                 Add Lead
@@ -440,52 +442,54 @@ export default function LeadsPage() {
             }`}
         >
           <div className="overflow-hidden">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {userRole !== 'admin' && (
-                <div className="space-y-2">
-                  <FormMultiSelect
-                    label="Lead Status"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e)}
-                    options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="flex flex-wrap items-end gap-4 flex-1 min-w-0">
+                {userRole !== 'admin' && (
+                  <div className="space-y-2 w-full max-w-[250px]">
+                    <FormMultiSelect
+                      label="Lead Status"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e)}
+                      options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+                    />
+                  </div>
+                )}
+
+
+                <div className="space-y-2 w-full max-w-[250px]">
+                  <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>
+                  <DatePicker
+                    value={fromDate}
+                    onChange={(val) => setFromDate(val)}
+                    placeholder="Select from date"
                   />
                 </div>
-              )}
 
-
-              <div className="space-y-2">
-                <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>
-                <DatePicker
-                  value={fromDate}
-                  onChange={(val) => setFromDate(val)}
-                  placeholder="Select from date"
-                />
+                <div className="space-y-2 w-full max-w-[250px]">
+                  <label className="block mb-1.5 text-sm font-medium text-gray-700">To Date</label>
+                  <DatePicker
+                    value={toDate}
+                    onChange={(val) => setToDate(val)}
+                    placeholder="Select to date"
+                  />
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <label className="block mb-1.5 text-sm font-medium text-gray-700">To Date</label>
-                <DatePicker
-                  value={toDate}
-                  onChange={(val) => setToDate(val)}
-                  placeholder="Select to date"
-                />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all cursor-pointer"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setShowFilterDrawer(false)}
+                  className="px-4 py-1.5 text-xs font-bold text-secondary bg-blue-50 hover:bg-blue-100 rounded-md transition-all cursor-pointer"
+                >
+                  Collapse
+                </button>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={clearFilters}
-                className="px-4 py-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all cursor-pointer"
-              >
-                Clear All
-              </button>
-              <button
-                onClick={() => setShowFilterDrawer(false)}
-                className="px-4 py-1.5 text-xs font-bold text-secondary bg-blue-50 hover:bg-blue-100 rounded-md transition-all cursor-pointer"
-              >
-                Collapse
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -514,6 +518,7 @@ export default function LeadsPage() {
               convert: canConvert,
             }}
             pagination={listPagination}
+            onSearchChange={setSearch}
           />
         ) : (
           <LeadsKanbanView

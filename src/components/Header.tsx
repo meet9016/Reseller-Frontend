@@ -2,14 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { baseUrl, clearAuthToken, getAuthToken } from '@/config';
 import { useRouter } from 'next/router';
-import { Bell, CheckCircle, CheckCheck, LogOut, Menu } from 'lucide-react';
+import { Bell, Check, CheckCircle, CheckCheck, LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { io } from 'socket.io-client';
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 
 interface Notification {
   _id: string;
@@ -41,6 +43,16 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const pathName = usePathname()
+
+  // Profile Edit States
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editContact, setEditContact] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string>('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const isLoginPage = pathName === "/login";
 
   const getLabel = () => {
@@ -60,36 +72,26 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
       if (Notification.permission === 'default') {
-      } else {
-        setNotificationPermission(Notification.permission);
+        Notification.requestPermission().then(permission => {
+          setNotificationPermission(permission);
+        });
       }
     }
   }, []);
 
   // Request notification permission with user interaction
-  // const requestNotificationPermission = async () => {
-  //   if (typeof window !== 'undefined' && 'Notification' in window) {
-  //     try {
-  //       const permission = await Notification.requestPermission();
-  //       setNotificationPermission(permission);
-
-  //       if (permission === 'granted') {
-  //         console.log('Notification permission granted');
-  //         // Show a test notification to confirm it's working
-  //         new Notification('Notifications Enabled', {
-  //           body: 'You will now receive notifications for new tasks and leads.',
-  //           icon: '/favicon.ico'
-  //         });
-  //       } else if (permission === 'denied') {
-  //         console.log('Notification permission denied');
-  //         // You can show a toast or tooltip here to inform the user
-  //       }
-  //     } catch (error) {
-  //       console.error('Error requesting notification permission:', error);
-  //     }
-  //   }
-  // };
+  const requestNotificationPermission = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+      } catch (error) {
+        console.error('Error requesting notification permission:', error);
+      }
+    }
+  };
 
   // Check notification permission status on mount
   useEffect(() => {
@@ -122,23 +124,23 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // const fetchNotifications = async () => {
-  //   try {
-  //     const token = getAuthToken();
-  //     if (!token) return;
-  //     const base = baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl;
-  //     const res = await axios.get(`${base}/notification/my-notifications`, {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-  //     setNotifications(res.data?.data || []);
-  //   } catch (error) {
-  //     console.error('Failed to fetch notifications', error);
-  //   }
-  // };
+  const fetchNotifications = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+      const base = baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl;
+      const res = await axios.get(`${base}/notification/my-notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(res.data?.data || []);
+    } catch (error) {
+      console.error('Failed to fetch notifications', error);
+    }
+  };
 
-  // useEffect(() => {
-  //   fetchNotifications();
-  // }, []);
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const { user: authUser, role: authRole } = useSelector((state: any) => state.auth);
 
@@ -226,51 +228,22 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
     socket.on('new_task_assigned', (notif: Notification) => {
       console.log('[Socket] 📩 new_task_assigned:', notif);
+      setNotifications((prev) => [notif, ...prev]);
+    });
 
-      // setNotifications((prev) => [notif, ...prev]);
-
-      if (typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
-          const browserNotif = new window.Notification(notif.title, {
-            body: notif.message,
-            icon: '/notification-icon.png',
-            badge: '/badge-icon.png',
-          });
-
-          browserNotif.onclick = async () => {
-            window.focus();
-            try {
-              if (!notif.isRead) {
-                await axios.put(
-                  `${baseUrl.getBaseUrl?.endsWith('/') ? baseUrl.getBaseUrl.slice(0, -1) : baseUrl.getBaseUrl}/notification/mark-read/${notif._id}`,
-                  {},
-                  {
-                    headers: {
-                      Authorization: `Bearer ${getAuthToken()}`,
-                    },
-                  }
-                );
-              }
-              router.push(
-                notif.type === 'task' ? '/tasks' : '/leads/list'
-              );
-            } catch (e) {
-              console.error(e);
-            }
-            browserNotif.close();
-          };
-        }
-      }
+    socket.on('new_notification', (notif: Notification) => {
+      console.log('[Socket] 📩 new_notification:', notif);
+      setNotifications((prev) => [notif, ...prev]);
     });
 
     socket.on('new_lead_assigned', (notif: Notification) => {
       console.log('[Socket] 📩 new_lead_assigned:', notif);
-      // setNotifications((prev) => [notif, ...prev]);
+      setNotifications((prev) => [notif, ...prev]);
     });
 
     socket.on('task_updated', (notif: Notification) => {
       console.log('[Socket] 📩 task_updated:', notif);
-      // setNotifications((prev) => [notif, ...prev]);
+      setNotifications((prev) => [notif, ...prev]);
     });
 
     // =========================
@@ -282,7 +255,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         socket.disconnect();
       }
     };
-  }, [router]);
+  }, [router, authUser, authRole]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -305,11 +278,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       });
 
       // Update the notification to mark it as read
-      // setNotifications(prev => prev.map(notification =>
-      //   notification._id === notifId
-      //     ? { ...notification, isRead: true }
-      //     : notification
-      // ));
+      setNotifications(prev => prev.map(notification =>
+        notification._id === notifId
+          ? { ...notification, isRead: true }
+          : notification
+      ));
     } catch (error) {
       console.error('Failed to mark read', error);
     }
@@ -327,10 +300,10 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       });
 
       // Mark all notifications as read in the state
-      // setNotifications(prev => prev.map(notification => ({
-      //   ...notification,
-      //   isRead: true
-      // })));
+      setNotifications(prev => prev.map(notification => ({
+        ...notification,
+        isRead: true
+      })));
     } catch (error) {
       console.error('Failed to mark all as read', error);
     } finally {
@@ -349,9 +322,9 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         });
 
         // Update the state to mark this notification as read
-        // setNotifications(prev => prev.map(n =>
-        //   n._id === notif._id ? { ...n, isRead: true } : n
-        // ));
+        setNotifications(prev => prev.map(n =>
+          n._id === notif._id ? { ...n, isRead: true } : n
+        ));
       }
 
       setShowNotifications(false);
@@ -412,6 +385,61 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const unreadCount = unreadNotifications.length;
   // const totalCount = notifications.length;
 
+  const openProfileModal = () => {
+    setEditName(userName);
+    setEditEmail(userEmail);
+    setEditContact(authUser?.contact || '');
+    setEditPassword('');
+    setEditImageFile(null);
+    setEditImagePreview(userProfileImage ? (userProfileImage.startsWith('http') ? userProfileImage : `${baseUrl.getImageUrl}/images/ResellerProfileImages/${userProfileImage}`) : '');
+    setShowProfileModal(true);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editName || !editEmail) {
+      toast.error('Name and Email are required');
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      const token = getAuthToken();
+      const formData = new FormData();
+      formData.append('fullName', editName);
+      formData.append('email', editEmail);
+      if (editContact) formData.append('contact', editContact);
+      if (editPassword) formData.append('password', editPassword);
+      if (editImageFile) {
+        formData.append('profileImage', editImageFile);
+      }
+
+      const res = await axios.put(`${baseUrl.updateReseller}/${authUser._id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Profile updated successfully!');
+      setShowProfileModal(false);
+
+      const updatedUser = res.data.data;
+      if (updatedUser) {
+        setUserName(updatedUser.fullName || '');
+        setUserEmail(updatedUser.email || '');
+        if (updatedUser.profileImage) {
+          setUserProfileImage(updatedUser.profileImage);
+          setImageError(false);
+        }
+      }
+    } catch (error: any) {
+      console.error('Failed to update profile:', error);
+      toast.error(error?.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-white border-b border-gray-200 px-4 md:px-6 backdrop-blur-sm">
       <div className="flex items-center gap-2 md:gap-4">
@@ -429,7 +457,11 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       </div>
       <div className="flex items-center gap-1 md:gap-3">
         {/* User Profile */}
-        <div className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200">
+        <div 
+          onClick={openProfileModal}
+          className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-all duration-200"
+          title="Edit Profile"
+        >
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-gray-800">{userName}</span>
             {userEmail && <span className="text-xs text-gray-500">{userEmail}</span>}
@@ -450,7 +482,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
         {/* Alerts / Notifications */}
         <div className="relative" ref={dropdownRef}>
-          {/* <button
+          <button
             onClick={() => {
               if (!showNotifications) {
                 fetchNotifications();
@@ -465,28 +497,36 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
-          </button> */}
+          </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-lg bg-white shadow-xl overflow-hidden z-50">
-              <div className="px-4 py-3 border-b border-gray-100 bg-[#3B82F6] flex justify-between items-center">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              {/* Dropdown Header matching user screenshot */}
+              <div className="px-4 py-3.5 border-b border-gray-100 bg-white flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white">Notifications</h3>
-                  {/* Counter badge on the right side of the header */}
-                  <span className="bg-white text-primary text-xs font-medium px-2 py-0.5 rounded-full">
-                    {unreadCount}
-                  </span>
+                  <h3 className="text-base font-bold text-gray-900">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center shadow-sm">
+                      {unreadCount}
+                    </span>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  {/* Permission status indicator and request button */}
-                  {notificationPermission !== 'granted' && (
+                <div className="flex items-center gap-3">
+                  {unreadCount > 0 && (
                     <button
-                      // onClick={requestNotificationPermission}
-                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer bg-blue-50 px-2 py-1 rounded"
+                      onClick={markAllAsRead}
+                      disabled={markingAllRead}
+                      className="text-xs font-semibold text-blue-500 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
                     >
-                      {notificationPermission === 'denied' ? 'Enable Notifications' : 'Allow Notifications'}
+                      {markingAllRead ? 'Marking...' : 'Mark all read'}
                     </button>
                   )}
+                  <button
+                    onClick={() => setShowNotifications(false)}
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors p-1 hover:bg-gray-50 rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
 
@@ -499,57 +539,61 @@ export default function Header({ toggleSidebar }: HeaderProps) {
                 </div>
               )}
 
-              <div className="max-h-[70vh] overflow-y-auto">
-                {unreadNotifications.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-sm text-gray-500">
-                    {/* {totalCount === 0 ? 'No notifications' : 'No new notifications'} */}
+              {/* Scrollable Container with off-white background */}
+              <div className="max-h-[60vh] overflow-y-auto bg-gray-50/60 p-2">
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-gray-500 bg-white rounded-xl border border-gray-100 m-1">
+                    No notifications
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100 max-h-[30vh] overflow-y-auto">
-                    {unreadNotifications.map(notif => (
+                  <div className="space-y-2">
+                    {notifications.map(notif => (
                       <div
                         key={notif._id}
                         onClick={() => handleNotificationClick(notif)}
-                        className="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors bg-blue-50/30 group relative"
+                        className={`relative rounded-xl border border-gray-100 flex items-start gap-3 cursor-pointer p-4 transition-all duration-200 hover:shadow-md bg-white`}
                       >
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="text-sm font-semibold text-gray-900 pr-6">
+                        {/* Left Icon (Green Bell in Light Green Circle) */}
+                        <div className="flex-shrink-0 h-9 w-9 rounded-full bg-green-100/50 flex items-center justify-center text-green-600">
+                          <Bell className="h-4.5 w-4.5 fill-green-100" />
+                        </div>
+
+                        {/* Middle Text Section */}
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h4 className="text-sm font-bold text-gray-900">
                             {notif.title}
                           </h4>
-                          <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
-                            {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : 'Just now'}
-                          </span>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {notif.message}
+                          </p>
+                          <p className="text-[10px] text-gray-400 mt-2">
+                            {notif.createdAt
+                              ? new Date(notif.createdAt).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: false,
+                                }).replace(/, /g, ' ')
+                              : 'Just now'}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-800 line-clamp-2 pr-6">
-                          {notif.message}
-                        </p>
 
-                        <button
-                          onClick={(e) => markAsReadSingle(e, notif._id)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-blue-500 hover:text-blue-700 bg-white shadow-sm rounded-full p-1 transition-all"
-                          title="Mark as read"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
+                        {/* Right side indicators (Unread blue dot and indicator bar) */}
+                        {!notif.isRead && (
+                          <>
+                            {/* Blue unread dot */}
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex h-2 w-2 rounded-full bg-blue-500" />
+                            {/* Right-side gradient vertical bar */}
+                            <div className="absolute right-0 top-0 bottom-0 w-1 rounded-r-xl bg-gradient-to-b from-[#8B5CF6] to-[#3B82F6]" />
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
-              {/* Full width Mark all as read button at the bottom */}
-              {unreadCount > 0 && (
-                <div className="border-t border-gray-100">
-                  <button
-                    onClick={markAllAsRead}
-                    disabled={markingAllRead}
-                    className="w-full px-4 py-3 text-sm bg-[#3B82F6] text-white font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <CheckCheck className="w-4 h-4" />
-                    {markingAllRead ? 'Marking all as read...' : `Mark all as read (${unreadCount})`}
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -561,6 +605,126 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           <LogOut className="h-5 w-5" />
         </button>
       </div>
+
+      {showProfileModal && typeof window !== 'undefined' && document.body && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 hover:bg-gray-50 rounded-full cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              {/* Profile Image Uploader */}
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative group cursor-pointer">
+                  {editImagePreview ? (
+                    <img
+                      src={editImagePreview}
+                      alt="Preview"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-blue-500 shadow-md transition-all group-hover:brightness-75"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl border-2 border-blue-500 shadow-md transition-all group-hover:brightness-75">
+                      {editName ? editName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer text-white text-xs font-semibold">
+                    Change
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setEditImageFile(file);
+                          setEditImagePreview(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                <span className="text-[10px] text-gray-400 mt-1.5">Click to upload photo</span>
+              </div>
+
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                  placeholder="Enter full name"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              {/* Contact */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Contact Number</label>
+                <input
+                  type="text"
+                  value={editContact}
+                  onChange={(e) => setEditContact(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                  placeholder="Enter contact number"
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">New Password (optional)</label>
+                <input
+                  type="password"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                  placeholder="Leave blank to keep current"
+                />
+              </div>
+
+              {/* Form Buttons */}
+              <div className="flex justify-end gap-3 mt-6 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }

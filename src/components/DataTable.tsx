@@ -29,6 +29,8 @@ interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
   searchable?: boolean;
+  searchQuery?: string;
+  searchPlaceholder?: string;
   pagination?: boolean;
   currentPage?: number;
   totalPages?: number;
@@ -72,6 +74,8 @@ export default function DataTable<T extends Record<string, any>>({
   data,
   columns,
   searchable = true,
+  searchQuery = '',
+  searchPlaceholder = 'Search anything...',
   pagination = true,
   currentPage = 1,
   totalPages = 1,
@@ -94,13 +98,19 @@ export default function DataTable<T extends Record<string, any>>({
   onRefresh,
   onExport,
   extraActions,
+  headerActions,
   expandableContent,
   selectable = false,
   selectedRows = [],
   onSelectionChange,
   isRowSelectable = () => true,
 }: DataTableProps<T>) {
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(searchQuery);
+
+  useEffect(() => {
+    setSearchValue(searchQuery);
+  }, [searchQuery]);
+
   const [showFilters, setShowFilters] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
@@ -183,14 +193,10 @@ export default function DataTable<T extends Record<string, any>>({
             {subtitle && (
               <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
             )}
-            {totalRecords > 0 && (
-              <p className="text-xs text-gray-400 mt-2">
-                Showing {data.length} of {totalRecords} entries
-              </p>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {headerActions}
             {onRefresh && (
               <button
                 onClick={onRefresh}
@@ -216,7 +222,7 @@ export default function DataTable<T extends Record<string, any>>({
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
                 <input
                   type="search"
-                  placeholder="Search anything..."
+                  placeholder={searchPlaceholder}
                   value={searchValue}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="w-full sm:w-80 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-100 hover:border-gray-300"
@@ -235,7 +241,7 @@ export default function DataTable<T extends Record<string, any>>({
             {addButton && (
               <button
                 onClick={addButton.onClick}
-                className="inline-flex items-center gap-2 rounded-md bg-[#3B82F6] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
+                className="inline-flex items-center gap-2 rounded-md bg-[#3B82F6] px-6 py-1 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 active:scale-95"
               >
                 {addButton.icon || <span className="text-lg">+</span>}
                 {addButton.label}

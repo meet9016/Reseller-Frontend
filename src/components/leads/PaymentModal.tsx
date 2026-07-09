@@ -123,6 +123,7 @@ export default function PaymentModal({ isOpen, onClose, lead, onSuccess }: Payme
       });
 
       onSuccess();
+      onClose();
       // Switch to view mode to show saved details
       setMode('view');
     } catch (error: any) {

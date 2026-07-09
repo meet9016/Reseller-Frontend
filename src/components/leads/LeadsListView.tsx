@@ -84,6 +84,7 @@ interface Props {
     handlePageChange: (page: number) => void;
     handleRowsPerPageChange: (rows: number) => void;
   };
+  onSearchChange?: (value: string) => void;
 }
 
 function mapLead(item: any): TableLead {
@@ -126,6 +127,7 @@ export default function LeadsListView({
   externalLeads,
   loading: loadingProp,
   pagination, // Receive pagination from parent
+  onSearchChange,
 }: Props) {
   const router = useRouter();
   const [leads, setLeads] = useState<TableLead[]>([]);
@@ -369,7 +371,8 @@ export default function LeadsListView({
         data={leads}
         columns={columns}
         loading={loading}
-        searchable={false}
+        searchable={true}
+        searchPlaceholder="Search leads..."
         pagination
         currentPage={pagination?.currentPage || 1}
         totalPages={pagination?.totalPages || 1}
@@ -377,6 +380,8 @@ export default function LeadsListView({
         pageSize={pagination?.rowsPerPage || 10}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        searchQuery={filters.search}
+        onSearch={onSearchChange}
         actions
         onView={handleView}
         onEdit={permissions?.update ? handleEdit : undefined}

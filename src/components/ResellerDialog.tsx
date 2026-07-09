@@ -37,7 +37,7 @@ const createValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .matches(EMAIL_REGEX, 'Invalid email format'),
+    .matches(EMAIL_REGEX, 'Invalid email domain'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
@@ -60,7 +60,7 @@ const updateValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .matches(EMAIL_REGEX, 'Invalid email format'),
+    .matches(EMAIL_REGEX, 'Invalid email domain'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),

@@ -104,82 +104,16 @@ textarea[disabled] {
   color: #9ca3af;
 }
 
-/* Global Scrollbar Styling */
+/* Global Scrollbar Hiding */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
-/* Webkit (Chrome, Safari, Edge, Opera) Scrollbar Styling */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border-radius: 10px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 10px;
-  border: 2px solid var(--scrollbar-track);
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-*::-webkit-scrollbar-corner {
-  background: var(--scrollbar-track);
-}
-
-/* Firefox Scrollbar Styling (already set with scrollbar-color above) */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-}
-
-/* Specific container scrollbar overrides if needed */
-.overflow-auto,
-.overflow-y-auto,
-.overflow-x-auto,
-.scrollbar-custom {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-}
-
-.overflow-auto::-webkit-scrollbar,
-.overflow-y-auto::-webkit-scrollbar,
-.overflow-x-auto::-webkit-scrollbar,
-.scrollbar-custom::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.overflow-auto::-webkit-scrollbar-track,
-.overflow-y-auto::-webkit-scrollbar-track,
-.overflow-x-auto::-webkit-scrollbar-track,
-.scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border-radius: 10px;
-}
-
-.overflow-auto::-webkit-scrollbar-thumb,
-.overflow-y-auto::-webkit-scrollbar-thumb,
-.overflow-x-auto::-webkit-scrollbar-thumb,
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 10px;
-  border: 2px solid var(--scrollbar-track);
-}
-
-.overflow-auto::-webkit-scrollbar-thumb:hover,
-.overflow-y-auto::-webkit-scrollbar-thumb:hover,
-.overflow-x-auto::-webkit-scrollbar-thumb:hover,
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+  display: none; /* Chrome/Safari/Webkit */
+  width: 0;
+  height: 0;
 }
 
 /* Global Table Scroll Utility */

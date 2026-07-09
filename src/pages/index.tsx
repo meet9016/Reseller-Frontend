@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import type { ComponentType } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,13 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ComposedChart,
+  Bar,
+  BarChart,
+  Line,
 } from "recharts";
 import {
   Users,
@@ -19,6 +26,7 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Clock,
   AlertCircle,
   User,
@@ -37,6 +45,7 @@ import {
   MessageSquare,
   PieChartIcon,
   RefreshCw,
+  IndianRupee,
 } from "lucide-react";
 import axios from "axios";
 import { baseUrl, getAuthToken } from "@/config";
@@ -57,7 +66,12 @@ interface LeadSummary {
   totalLeads: number;
   currentMonthLeads: number;
   totalRevenue: number;
+  totalPaid?: number;
+  totalPending?: number;
+  totalReseller?: number;
   statusWiseCounts: StatusCount[];
+  chartType?: "weekly" | "monthly";
+  chartData?: any[];
 }
 
 interface SummaryCard {
@@ -81,12 +95,63 @@ const ITEMS_PER_PAGE = 5;
 export default function Dashboard() {
   const router = useRouter();
 
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [activeRange, setActiveRange] = useState<string>("custom");
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
+  const [statusChartMode, setStatusChartMode] = useState<"pie" | "graph">("pie")
+
+  // Sync selectedYear with date filters
+  useEffect(() => {
+    if (fromDate) {
+      const year = new Date(fromDate).getFullYear();
+      if (!isNaN(year)) {
+        setSelectedYear(year);
+      }
+    } else {
+      setSelectedYear(new Date().getFullYear());
+    }
+  }, [fromDate]);
+
+  // Click outside to close year dropdown
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
+        setYearDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleYearSelect = (year: number) => {
+    setSelectedYear(year);
+    setYearDropdownOpen(false);
+
+    // Set custom date range to show that entire year's records
+    const start = `${year}-01-01`;
+    const end = `${year}-12-31`;
+    setFromDate(start);
+    setToDate(end);
+    setActiveRange('custom');
+  };
+
   const [summary, setSummary] = useState<LeadSummary | null>(null);
   const [leadsBySource, setLeadsBySource] = useState<
     { name: string; value: number; fill: string }[]
   >([]);
   const [staffPerformance, setStaffPerformance] = useState<
     { name: string; converted: number; pending: number; lost: number }[]
+  >([]);
+  const [resellerRevenue, setResellerRevenue] = useState<
+    { name: string; revenue: number; leadCount: number }[]
   >([]);
 
   // Upcoming Follow-ups (paginated)
@@ -118,20 +183,19 @@ export default function Dashboard() {
   const [permissions, setPermissions] = useState<{ readAll: boolean; readOwn: boolean }>({ readAll: false, readOwn: false });
   const [user, setUser] = useState<any>(null);
   const [greeting, setGreeting] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+
 
   const token =
     typeof window !== "undefined" ? getAuthToken() : null;
 
-  const isReseller = user?.role?.roleName?.toLowerCase() === 'reseller';
+  const isReseller = (!permissions.readAll && permissions.readOwn) || user?.role?.roleName?.toLowerCase() === 'reseller';
 
   const { user: authUser, permissions: rawPerms } = useSelector((state: any) => state.auth);
 
   // Fetch user info and permissions
   useEffect(() => {
     if (!token) return;
-    
+
     setUser(authUser);
     const lp = rawPerms?.lead || {};
     setPermissions({
@@ -178,6 +242,23 @@ export default function Dashboard() {
     }
   };
 
+  const statusColorPalette = [
+    "#1D4ED8", // blue-700
+    "#3B82F6", // blue-500 (brand)
+    "#60A5FA", // blue-400
+    "#93C5FD", // blue-300
+    "#2563EB", // blue-600
+    "#BFDBFE", // blue-200
+    "#1E40AF", // blue-800
+    "#DBEAFE", // blue-100
+  ];
+
+  const statusWiseData = (summary?.statusWiseCounts || []).map((s, idx) => ({
+    name: s.statusName,
+    value: s.count,
+    fill: statusColorPalette[idx % statusColorPalette.length],
+  }));
+
   const fetchLeadSummary = async () => {
     if (!token) return;
     try {
@@ -188,6 +269,7 @@ export default function Dashboard() {
         params: {
           from: fromDate || undefined,
           to: toDate || undefined,
+          rangeType: activeRange || undefined,
         }
       });
       setSummary(res.data.data);
@@ -225,6 +307,22 @@ export default function Dashboard() {
       setLeadsBySource(chartData);
     } catch (err) {
       console.error("Leads by source error:", err);
+    }
+  };
+
+  const fetchResellerRevenue = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(baseUrl.resellerRevenue, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          from: fromDate || undefined,
+          to: toDate || undefined,
+        }
+      });
+      setResellerRevenue(res.data.data || []);
+    } catch (err) {
+      console.error("Reseller revenue error:", err);
     }
   };
 
@@ -346,6 +444,7 @@ export default function Dashboard() {
       if (permissions.readAll) {
         fetchLeadsBySource();
         fetchStaffPerformance();
+        fetchResellerRevenue();
       }
     }
   }, [token, permissions, fromDate, toDate]);
@@ -365,19 +464,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Color palette for statuses
-  const statusColorPalette = [
-    "#4e0158ff", // blue-500 - New
-    "#146a05ff", // emerald-500 - Contacted
-    "#674307ff", // amber-500 - Follow-Up
-    "#936fe8ff", // violet-500 - Interested
-    "#037184ff", // cyan-500 - Qualified
-    "#43464bff", // gray-500 - Not Interested
-    "#971f1fff", // red-500 - Lost
-    "#557a1fff", // lime-500 - Won
-    "#83194eff", // pink-500
-    "#b3520cff", // orange-500
-  ];
+
 
   const summaryCards: any[] = summary
     ? [
@@ -385,8 +472,8 @@ export default function Dashboard() {
         key: "total",
         label: "Total Leads",
         value: summary.totalLeads,
-        trend: 12.5,
-        tone: "up",
+        trend: 0,
+        tone: "neutral",
         Icon: Users,
         iconBg: "bg-blue-500/10",
         iconColor: "text-blue-500",
@@ -396,70 +483,350 @@ export default function Dashboard() {
         description: "Leads in selected range"
       },
       {
-        key: "month",
-        label: "New Leads",
-        value: summary.currentMonthLeads,
-        trend: 8.2,
-        tone: "up",
-        Icon: TrendingUp,
-        iconBg: "bg-emerald-500/10",
-        iconColor: "text-emerald-500",
-        type: "month",
-        subtitle: "This Month",
-        fill: "#10B981",
-        name: "New Leads",
-        description: "Leads this month"
-      },
-      {
-        key: "followups",
-        label: "Follow-ups",
-        value: upcomingFollowups.length,
-        trend: 0,
-        tone: "neutral",
-        Icon: PhoneCall,
-        iconBg: "bg-orange-500/10",
-        iconColor: "text-orange-500",
-        type: "custom",
-        fill: "#F59E0B",
-        name: "Follow-ups",
-        description: "Scheduled follow-ups"
-      },
-      {
-        key: "tasks",
-        label: "Tasks",
-        value: todayTasks.length,
-        trend: 0,
-        tone: "neutral",
-        Icon: CheckCircle2,
-        iconBg: "bg-purple-500/10",
-        iconColor: "text-purple-500",
-        type: "custom",
-        fill: "#8B5CF6",
-        name: "Tasks",
-        description: "Tasks for today"
-      },
-      {
         key: "revenue",
         label: "Total Revenue",
-        value: `₹${(summary.totalRevenue || 0).toLocaleString()}`,
-        trend: 15.4,
-        tone: "up",
+        value: `₹${(summary.totalRevenue || 0).toLocaleString('en-IN')}`,
+        trend: 0,
+        tone: "neutral",
         Icon: Activity,
         iconBg: "bg-amber-500/10",
         iconColor: "text-amber-500",
         type: "revenue",
         fill: "#F59E0B",
-        name: "Revenue",
-        description: "Total from won leads"
+        name: "Total Revenue",
+        description: "Total lead revenue"
+      },
+      {
+        key: "paid",
+        label: "Total Paid",
+        value: `₹${(summary.totalPaid || 0).toLocaleString('en-IN')}`,
+        trend: 0,
+        tone: "neutral",
+        Icon: CheckCircle2,
+        iconBg: "bg-emerald-500/10",
+        iconColor: "text-emerald-500",
+        type: "paid",
+        fill: "#10B981",
+        name: "Total Paid",
+        description: "Paid commissions"
+      },
+      {
+        key: "pending",
+        label: "Total Pending Amount",
+        value: `₹${(summary.totalPending || 0).toLocaleString('en-IN')}`,
+        trend: 0,
+        tone: "neutral",
+        Icon: Clock,
+        iconBg: "bg-orange-500/10",
+        iconColor: "text-orange-500",
+        type: "pending",
+        fill: "#EF4444",
+        name: "Pending Amount",
+        description: "Pending commissions"
+      },
+      {
+        key: "reseller",
+        label: "Total Reseller",
+        value: summary.totalReseller || 0,
+        trend: 0,
+        tone: "neutral",
+        Icon: User,
+        iconBg: "bg-purple-500/10",
+        iconColor: "text-purple-500",
+        type: "resellers",
+        fill: "#8B5CF6",
+        name: "Total Resellers",
+        description: "Resellers registered"
       }
-    ]
+    ].filter((card) => card.key !== "total" || isReseller)
     : [];
 
-  const statusChartData = summary?.statusWiseCounts?.map((s, idx) => ({
-    name: s.statusName,
-    value: s.count,
-    fill: statusColorPalette[idx % statusColorPalette.length]
-  })) || [];
+  const monthlyRevenueData = (() => {
+    // 1. Daily Hourly baseline
+    if (summary?.chartType === "daily") {
+      const slots = [
+        "12 AM - 4 AM",
+        "4 AM - 8 AM",
+        "8 AM - 12 PM",
+        "12 PM - 4 PM",
+        "4 PM - 8 PM",
+        "8 PM - 12 AM"
+      ];
+
+      const todayStr = (() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      })();
+
+      const isToday = fromDate === todayStr;
+      let activeSlots = slots;
+      if (isToday) {
+        const currentHour = new Date().getHours();
+        const maxSlotIndex = Math.floor(currentHour / 4);
+        activeSlots = slots.slice(0, maxSlotIndex + 1);
+      }
+
+      const data = activeSlots.map(s => ({
+        name: s,
+        revenue: 0,
+        commission: 0
+      }));
+
+      if (summary.chartData) {
+        summary.chartData.forEach(item => {
+          const match = data.find(d => d.name === item.name);
+          if (match) {
+            match.revenue = item.revenue;
+            match.commission = item.commission || 0;
+          }
+        });
+      }
+      return data;
+    }
+
+    // 2. Weekly baseline
+    if (summary?.chartType === "weekly") {
+      let queryYear = new Date().getFullYear();
+      let queryMonth = new Date().getMonth() + 1;
+      if (fromDate) {
+        const parsedDate = new Date(fromDate);
+        if (!isNaN(parsedDate.getTime())) {
+          queryYear = parsedDate.getFullYear();
+          queryMonth = parsedDate.getMonth() + 1;
+        }
+      }
+
+      const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+      const weeks = [
+        "Week 1 (1-7)",
+        "Week 2 (8-14)",
+        "Week 3 (15-21)",
+        "Week 4 (22-28)",
+        `Week 5 (29-${lastDay})`
+      ];
+
+      const now = new Date();
+      const isCurrentMonth = queryYear === now.getFullYear() && queryMonth === (now.getMonth() + 1);
+      let activeWeeks = weeks;
+      if (isCurrentMonth) {
+        const currentDay = now.getDate();
+        let maxWeekIndex = 4;
+        if (currentDay <= 7) maxWeekIndex = 0;
+        else if (currentDay <= 14) maxWeekIndex = 1;
+        else if (currentDay <= 21) maxWeekIndex = 2;
+        else if (currentDay <= 28) maxWeekIndex = 3;
+
+        activeWeeks = weeks.slice(0, maxWeekIndex + 1);
+      }
+
+      const data = activeWeeks.map(w => ({
+        name: w,
+        revenue: 0,
+        commission: 0
+      }));
+
+      if (summary.chartData) {
+        summary.chartData.forEach(item => {
+          const match = data.find(d => d.name.substring(0, 6) === item.name.substring(0, 6));
+          if (match) {
+            match.revenue = item.revenue;
+            match.commission = item.commission || 0;
+          }
+        });
+      }
+      return data;
+    }
+
+    // 3. Monthly baseline
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const currentYear = selectedYear || new Date().getFullYear();
+
+    // Check if the currentYear is the actual calendar year
+    const actualYear = new Date().getFullYear();
+    const actualMonth = new Date().getMonth() + 1; // 1-indexed (July = 7)
+    const isCurrentYear = currentYear === actualYear;
+
+    let activeMonths = months;
+    if (isCurrentYear) {
+      activeMonths = months.slice(0, actualMonth);
+    }
+
+    const data = activeMonths.map((monthName, idx) => ({
+      name: monthName,
+      revenue: 0,
+      commission: 0,
+      monthNum: idx + 1,
+      year: currentYear
+    }));
+
+    if (summary?.chartData && summary.chartType === "monthly") {
+      summary.chartData.forEach(item => {
+        const match = data.find(d => d.monthNum === item.month && d.year === item.year);
+        if (match) {
+          match.revenue = item.revenue;
+          match.commission = item.commission || 0;
+        } else if (item.year && item.month) {
+          data.push({
+            name: `${months[item.month - 1]} ${item.year}`,
+            revenue: item.revenue,
+            commission: item.commission || 0,
+            monthNum: item.month,
+            year: item.year
+          });
+        }
+      });
+    }
+
+    return data.sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNum - b.monthNum;
+    });
+  })();
+
+  // Total Leads Trend data (reseller-only chart)
+  // NOTE: reads `leadCount` from summary.chartData items (same period-buckets used for revenue).
+  // Backend should include a `leadCount` field alongside `revenue` in chartData for this to populate.
+  const monthlyLeadsData = (() => {
+    // 1. Daily Hourly baseline
+    if (summary?.chartType === "daily") {
+      const slots = [
+        "12 AM - 4 AM",
+        "4 AM - 8 AM",
+        "8 AM - 12 PM",
+        "12 PM - 4 PM",
+        "4 PM - 8 PM",
+        "8 PM - 12 AM"
+      ];
+
+      const todayStr = (() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      })();
+
+      const isToday = fromDate === todayStr;
+      let activeSlots = slots;
+      if (isToday) {
+        const currentHour = new Date().getHours();
+        const maxSlotIndex = Math.floor(currentHour / 4);
+        activeSlots = slots.slice(0, maxSlotIndex + 1);
+      }
+
+      const data = activeSlots.map(s => ({
+        name: s,
+        leads: 0
+      }));
+
+      if (summary.chartData) {
+        summary.chartData.forEach((item: any) => {
+          const match = data.find(d => d.name === item.name);
+          if (match) match.leads = item.leadCount || 0;
+        });
+      }
+      return data;
+    }
+
+    // 2. Weekly baseline
+    if (summary?.chartType === "weekly") {
+      let queryYear = new Date().getFullYear();
+      let queryMonth = new Date().getMonth() + 1;
+      if (fromDate) {
+        const parsedDate = new Date(fromDate);
+        if (!isNaN(parsedDate.getTime())) {
+          queryYear = parsedDate.getFullYear();
+          queryMonth = parsedDate.getMonth() + 1;
+        }
+      }
+
+      const lastDay = new Date(queryYear, queryMonth, 0).getDate();
+      const weeks = [
+        "Week 1 (1-7)",
+        "Week 2 (8-14)",
+        "Week 3 (15-21)",
+        "Week 4 (22-28)",
+        `Week 5 (29-${lastDay})`
+      ];
+
+      const now = new Date();
+      const isCurrentMonth = queryYear === now.getFullYear() && queryMonth === (now.getMonth() + 1);
+      let activeWeeks = weeks;
+      if (isCurrentMonth) {
+        const currentDay = now.getDate();
+        let maxWeekIndex = 4;
+        if (currentDay <= 7) maxWeekIndex = 0;
+        else if (currentDay <= 14) maxWeekIndex = 1;
+        else if (currentDay <= 21) maxWeekIndex = 2;
+        else if (currentDay <= 28) maxWeekIndex = 3;
+
+        activeWeeks = weeks.slice(0, maxWeekIndex + 1);
+      }
+
+      const data = activeWeeks.map(w => ({
+        name: w,
+        leads: 0
+      }));
+
+      if (summary.chartData) {
+        summary.chartData.forEach((item: any) => {
+          const match = data.find(d => d.name.substring(0, 6) === item.name.substring(0, 6));
+          if (match) match.leads = item.leadCount || 0;
+        });
+      }
+      return data;
+    }
+
+    // 3. Monthly baseline
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const currentYear = selectedYear || new Date().getFullYear();
+
+    const actualYear = new Date().getFullYear();
+    const actualMonth = new Date().getMonth() + 1;
+    const isCurrentYear = currentYear === actualYear;
+
+    let activeMonths = months;
+    if (isCurrentYear) {
+      activeMonths = months.slice(0, actualMonth);
+    }
+
+    const data = activeMonths.map((monthName, idx) => ({
+      name: monthName,
+      leads: 0,
+      monthNum: idx + 1,
+      year: currentYear
+    }));
+
+    if (summary?.chartData && summary.chartType === "monthly") {
+      summary.chartData.forEach((item: any) => {
+        const match = data.find(d => d.monthNum === item.month && d.year === item.year);
+        if (match) {
+          match.leads = item.leadCount || 0;
+        } else if (item.year && item.month) {
+          data.push({
+            name: `${months[item.month - 1]} ${item.year}`,
+            leads: item.leadCount || 0,
+            monthNum: item.month,
+            year: item.year
+          });
+        }
+      });
+    }
+
+    return data.sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNum - b.monthNum;
+    });
+  })();
 
   const handleQuickFilter = (range: string) => {
     const now = new Date();
@@ -468,27 +835,41 @@ export default function Dashboard() {
 
     switch (range) {
       case 'today':
-        break;
-      case 'yesterday':
-        start.setDate(now.getDate() - 1);
-        end.setDate(now.getDate() - 1);
-        break;
-      case '7days':
-        start.setDate(now.getDate() - 7);
-        break;
-      case '30days':
-        start.setDate(now.getDate() - 30);
+        start = new Date();
+        end = new Date();
+        setActiveRange('today');
         break;
       case 'month':
         start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        setActiveRange('month');
         break;
+      case 'prev_month':
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 0);
+        setActiveRange('prev_month');
+        break;
+      case 'year':
+        start = new Date(now.getFullYear(), 0, 1);
+        end = new Date(now.getFullYear(), 12, 0);
+        setActiveRange('year');
+        break;
+      case 'custom':
+        setActiveRange('custom');
+        return;
       case 'reset':
         setFromDate("");
         setToDate("");
+        setActiveRange('custom');
         return;
     }
 
-    const format = (d: Date) => d.toISOString().split("T")[0];
+    const format = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
     setFromDate(format(start));
     setToDate(format(end));
   };
@@ -499,27 +880,14 @@ export default function Dashboard() {
       return;
     }
 
-    if (card.type === "month") {
-      const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      const format = (d: Date) => d.toISOString().split("T")[0];
-
-      const params = new URLSearchParams({
-        from: format(start),
-        to: format(end),
-      });
-
-      router.push(`/leads?${params.toString()}`);
+    if (card.type === "revenue" || card.type === "paid" || card.type === "pending") {
+      router.push("/settlements");
       return;
     }
 
-    if (card.type === "status" && card.statusId) {
-      const params = new URLSearchParams({
-        status: String(card.statusId),
-      });
-      router.push(`/leads?${params.toString()}`);
+    if (card.type === "resellers" && !isReseller) {
+      router.push("/resellers");
+      return;
     }
   };
 
@@ -721,48 +1089,84 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f8fafc]">
-      <div className="p-6 space-y-8 max-w-[1600px] mx-auto w-full">
+    <div className="flex flex-col min-h-screen">
+      <div className="space-y-8 max-w-[1600px] mx-auto w-full">
 
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-              {greeting}, {user?.fullName?.split(' ')[0] || 'User'} ! 
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+              {greeting}, {user?.fullName?.split(' ')[0] || 'User'}! 👋
             </h2>
             <p className="text-gray-500 mt-1 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-500" />
+              <Activity className="h-4 w-4 text-[#3B82F6]" />
               Here's what's happening with your projects today.
             </p>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 px-1 bg-white text-[9px] font-bold text-blue-500 uppercase tracking-widest z-10">From</label>
-                  <DatePicker
-                    value={fromDate}
-                    onChange={(val) => setFromDate(val)}
-                    placeholder="From date"
-                  />
-                </div>
-                <div className="relative">
-                  <label className="absolute -top-2 left-3 px-1 bg-white text-[9px] font-bold text-blue-500 uppercase tracking-widest z-10">To</label>
-                  <DatePicker
-                    value={toDate}
-                    onChange={(val) => setToDate(val)}
-                    placeholder="To date"
-                  />
-                </div>
+            <div className="flex items-center gap-3 bg-white p-2 rounded-full border border-gray-200 shadow-sm">
+              {/* Quick Filter Buttons inside a capsule */}
+              <div className="flex items-center gap-0.5  rounded-full p-1">
+                {[
+                  { id: 'today', label: 'Today' },
+                  { id: 'month', label: 'This Month' },
+                  { id: 'prev_month', label: 'Previous Month' },
+                  { id: 'year', label: 'This Year' },
+                  { id: 'custom', label: 'Custom' },
+                ].map((btn) => (
+                  <button
+                    key={btn.id}
+                    onClick={() => handleQuickFilter(btn.id)}
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${activeRange === btn.id
+                      ? 'bg-[#3B82F6] text-white shadow-sm'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
               </div>
-              <button
-                onClick={() => handleQuickFilter('reset')}
-                className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all rounded-xl"
-                title="Reset Filter"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
+
+              {/* Custom Date Pickers - Only shown when activeRange is 'custom' */}
+              {activeRange === 'custom' && (
+                <>
+                  {/* Separator line */}
+                  <div className="h-6 w-px bg-gray-200"></div>
+
+                  <div className="flex items-center gap-3 pr-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
+                    <div className="relative">
+                      <label className="absolute -top-2 left-3 px-1 bg-white text-[8px] font-bold text-[#3B82F6] uppercase tracking-wider z-10">From Date</label>
+                      <DatePicker
+                        value={fromDate}
+                        onChange={(val) => {
+                          setFromDate(val);
+                          setActiveRange('custom');
+                        }}
+                        placeholder="From date"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="absolute -top-2 left-3 px-1 bg-white text-[8px] font-bold text-[#3B82F6] uppercase tracking-wider z-10">To Date</label>
+                      <DatePicker
+                        value={toDate}
+                        onChange={(val) => {
+                          setToDate(val);
+                          setActiveRange('custom');
+                        }}
+                        placeholder="To date"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleQuickFilter('reset')}
+                      className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-[#3B82F6] transition-all rounded-full"
+                      title="Reset Filter"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -773,121 +1177,307 @@ export default function Dashboard() {
             <div
               key={card.key}
               onClick={() => handleCardClick(card)}
-              className="group relative overflow-hidden bg-white p-6 rounded-2xl border border-gray-200 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer"
+              className="bg-white p-4 rounded-3xl border border-gray-200/80 flex items-center gap-4 transition-all duration-300"
             >
-              <div className="flex items-start justify-between">
-                <div className={`p-3 rounded-xl ${card.iconBg} ${card.iconColor} transition-transform duration-300 group-hover:scale-110`}>
-                  <card.Icon className="h-6 w-6" />
-                </div>
-                {card.trend !== undefined && card.trend !== 0 && (
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${card.tone === 'up' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
-                    }`}>
-                    {card.tone === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {card.trend}%
-                  </div>
-                )}
+              <div className={`p-3 rounded-xl ${card.iconBg} ${card.iconColor} transition-transform duration-300 group-hover:scale-110 flex-shrink-0`}>
+                <card.Icon className="h-6 w-6" />
               </div>
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-500">{card.label}</h3>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-2xl font-bold text-gray-900">{card.value}</span>
-                  {card.subtitle && <span className="text-xs text-gray-400">{card.subtitle}</span>}
-                </div>
-                <p className="text-xs text-gray-400 mt-2">{card.description}</p>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[14px] text-gray-500 tracking-wider truncate">{card.label}</span>
+                <span className="text-2xl text-gray-900">{card.value}</span>
               </div>
               {/* Decorative background element */}
-              <div className={`absolute -right-4 -bottom-4 h-24 w-24 rounded-full ${card.iconBg} opacity-0 group-hover:opacity-10 transition-opacity blur-3xl`}></div>
+              <div className={`absolute -right-4 -bottom-4 h-20 w-20 rounded-full ${card.iconBg} opacity-0 group-hover:opacity-10 transition-opacity blur-2xl`}></div>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Lead Statistics - Pie Chart */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-8">
+          {/* Total Revenue Trend - Bar/Line Composed Chart */}
+          <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow relative">
+            <div className="flex items-start justify-between mb-8">
               <div>
-                <h3 className="text-xl font-bold text-gray-900">Lead Status Overview</h3>
-                <p className="text-sm text-gray-500 mt-1">Performance by status categories</p>
+                <h3 className="text-xl font-bold text-gray-900">Total Revenue</h3>
+                <p className="text-lg font-medium text-gray-500 mt-1">
+                  ₹{(summary?.totalRevenue || 0).toLocaleString('en-IN')}
+                </p>
               </div>
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <PieChartIcon className="h-5 w-5 text-gray-400" />
+
+              {/* Year Dropdown Selector */}
+              <div className="relative" ref={yearDropdownRef}>
+                <button
+                  onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
+                  className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all"
+                >
+                  {selectedYear}
+                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {yearDropdownOpen && (
+                  <div className="absolute right-0 mt-1.5 w-28 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {[2026, 2025, 2024].map((yr) => (
+                      <button
+                        key={yr}
+                        onClick={() => handleYearSelect(yr)}
+                        className={`w-full text-left px-4 py-2 text-sm font-semibold transition-colors
+                          ${selectedYear === yr
+                            ? 'bg-[#3B82F6] text-white'
+                            : 'text-gray-700 hover:bg-gray-50'}`}
+                      >
+                        {yr}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              <div className="h-[280px]">
+            <div className="h-[280px]">
+              {isMounted && (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={statusChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={8}
-                      dataKey="value"
-                      nameKey="name"
-                    >
-                      {statusChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={2} />
-                      ))}
-                    </Pie>
+                  <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorBarRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#93C5FD" />
+                        <stop offset="100%" stopColor="#3B82F6" />
+                      </linearGradient>
+                      <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
+                      </marker>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(val) => {
+                        if (val >= 1000) return `${Math.round(val / 1000)}K`;
+                        return String(val);
+                      }}
+                      width={45}
+                    />
                     <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           return (
                             <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                              <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
-                              <p className="text-sm text-blue-600 font-semibold">{payload[0].value} Leads</p>
+                              <p className="text-xs font-semibold text-gray-400">
+                                {payload[0].payload.name} {payload[0].payload.year ? payload[0].payload.year : ""}
+                              </p>
+                              <p className="text-sm text-[#3B82F6] font-bold mt-1">
+                                ₹{Number(payload[0].value).toLocaleString('en-IN')}
+                              </p>
                             </div>
                           );
                         }
                         return null;
                       }}
                     />
-                  </PieChart>
+                    <Bar dataKey="revenue" fill="url(#colorBarRevenue)" radius={[6, 6, 0, 0]} maxBarSize={30} />
+                    <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4, fill: '#3B82F6', stroke: '#3B82F6' }} activeDot={{ r: 6 }} markerEnd="url(#arrow)" />
+                  </ComposedChart>
                 </ResponsiveContainer>
-              </div>
-
-              <div className="space-y-3">
-                {statusChartData.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-50 bg-gray-50/50 hover:bg-gray-100/50 transition-colors cursor-default">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
-                    <span className="text-sm font-semibold text-gray-700 flex-1">{s.name}</span>
-                    <span className="text-sm font-bold text-gray-900 bg-white px-2 py-0.5 rounded-lg border border-gray-100">{s.value}</span>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Leads by Source - Pie Chart */}
-          {leadsBySource.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-8">
+          {/* Total Paid Breakdown - Donut Pie Chart (2nd column) */}
+          {summary && (
+            <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Leads by Source</h3>
-                  <p className="text-sm text-gray-500 mt-1">Traffic and acquisition channels</p>
+                  <h3 className="text-xl font-bold text-gray-900">Total Paid Breakdown</h3>
+                  <p className="text-sm text-gray-500 mt-1">Payment collection overview</p>
                 </div>
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-gray-400" />
+                <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                  <IndianRupee className="h-5 w-5" style={{ color: '#3B82F6' }} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                {/* Donut Chart */}
                 <div className="h-[280px]">
+                  {isMounted && (() => {
+                    const paid = summary.totalPaid || 0;
+                    const pending = summary.totalPending || 0;
+                    const total = summary.totalRevenue || 0;
+                    const other = Math.max(0, total - paid - pending);
+                    const pieData = [
+                      { name: "Paid", value: paid, fill: "#3B82F6" },
+                      { name: "Pending", value: pending, fill: "#93C5FD" },
+                    ].filter(d => d.value > 0);
+                    if (pieData.length === 0) return (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">No payment data</div>
+                    );
+                    return (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={110}
+                            paddingAngle={4}
+                            dataKey="value"
+                            nameKey="name"
+                          >
+                            {pieData.map((entry, index) => (
+                              <Cell key={`paid-cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={3} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                    <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
+                                    <p className="text-sm font-semibold mt-1" style={{ color: (payload[0].payload as any).fill }}>
+                                      ₹{Number(payload[0].value).toLocaleString('en-IN')}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                </div>
+
+                {/* Legend with progress bars */}
+                <div className="space-y-4">
+                  {[
+                    { label: "Paid", value: summary.totalPaid || 0, color: "#3B82F6", bg: "#EFF6FF" },
+                    { label: "Pending", value: summary.totalPending || 0, color: "#93C5FD", bg: "#EFF6FF" },
+                  ].filter(d => d.value > 0).map((item, i) => {
+                    return (
+                      <div key={i} className="flex items-center gap-4 p-4 rounded-2xl" style={{ backgroundColor: item.bg }}>
+                        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                          <p className="text-sm font-bold mt-0.5" style={{ color: item.color }}>₹{Number(item.value).toLocaleString('en-IN')}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+
+        {/* Top 10 Resellers by Revenue - Horizontal Bar Chart */}
+        {resellerRevenue && resellerRevenue.length > 0 && (
+          <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Top Resellers by Revenue</h3>
+                <p className="text-sm text-gray-500 mt-1">Top 10 resellers ranked by total paid revenue</p>
+              </div>
+              <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                <TrendingUp className="h-5 w-5" style={{ color: '#3B82F6' }} />
+              </div>
+            </div>
+
+            <div className="h-[420px]">
+              {isMounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                    data={resellerRevenue}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 90 }}
+                  >
+                    <defs>
+                      <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" />
+                        <stop offset="100%" stopColor="#93C5FD" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="name"
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={0}
+                      tick={(props: any) => {
+                        const { x, y, payload } = props;
+                        const name: string = payload.value || '';
+                        const maxLen = 12;
+                        const display = name.length > maxLen ? name.slice(0, maxLen) + '…' : name;
+                        return (
+                          <g transform={`translate(${x},${y})`}>
+                            <text
+                              x={0}
+                              y={0}
+                              dy={14}
+                              textAnchor="middle"
+                              fill="#374151"
+                              fontSize={11}
+                              fontWeight={500}
+                            >
+                              {display}
+                            </text>
+                          </g>
+                        );
+                      }}
+                    />
+                    <YAxis
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                      width={45}
+                      tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const d = payload[0].payload;
+                          return (
+                            <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                              <p className="text-sm font-bold text-gray-900">{d.name}</p>
+                              <p className="text-sm font-semibold mt-1" style={{ color: '#3B82F6' }}>
+                                ₹{Number(d.revenue).toLocaleString('en-IN')}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-0.5">{d.leadCount} leads</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Leads by Source - Pie Chart (full row) */}
+        {leadsBySource.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Leads by Source</h3>
+                <p className="text-sm text-gray-500 mt-1">Traffic and acquisition channels</p>
+              </div>
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <BarChart3 className="h-5 w-5 text-gray-400" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div className="h-[280px]">
+                {isMounted && (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={leadsBySource}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={8}
-                        dataKey="value"
-                        nameKey="name"
-                      >
+                      <Pie data={leadsBySource} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value" nameKey="name">
                         {leadsBySource.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={2} />
                         ))}
@@ -907,71 +1497,173 @@ export default function Dashboard() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-
-                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                  {leadsBySource.map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
-                      <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
-                      <span className="text-sm font-bold text-gray-900">{s.value}</span>
-                    </div>
-                  ))}
-                </div>
+                )}
+              </div>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                {leadsBySource.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
+                    <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
+                    <span className="text-sm font-bold text-gray-900">{s.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Follow-ups and Tasks Section */}
-        {isReseller && <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="h-full min-h-[450px]">
-            {renderFollowupTable(
-              "All Follow-ups",
-              allFollowups,
-              allLoading,
-              allPage,
-              allTotalPages,
-              (p) => {
-                if (p >= 1 && p <= allTotalPages) fetchAllFollowups(p);
-              },
-              "Follow up Date",
-            )}
           </div>
+        )}
 
-          {/* <div className="h-full min-h-[450px]">
-            {renderFollowupTable(
-              "Upcoming Follow-ups",
-              upcomingFollowups,
-              upcomingLoading,
-              upcomingPage,
-              upcomingTotalPages,
-              (p) => {
-                if (p >= 1 && p <= upcomingTotalPages) fetchUpcomingFollowups(p);
-              },
-              "Follow up Date",
-            )}
-          </div> */}
 
-          <div className="h-full min-h-[450px]">
-            {renderFollowupTable(
-              "Overdue Follow-ups",
-              dueFollowups,
-              dueLoading,
-              duePage,
-              dueTotalPages,
-              (p) => {
-                if (p >= 1 && p <= dueTotalPages) fetchDueFollowups(p);
-              },
-              "Due Date",
-            )}
+        {/* Lead Status Overview & Sales vs Commission - Only for Reseller */}
+        {isReseller && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {summary && summary.statusWiseCounts && summary.statusWiseCounts.length > 0 && (
+          <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Lead Status Overview</h3>
+                <p className="text-sm text-gray-500 mt-1">Performance by status categories</p>
+              </div>
+              <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                <PieChartIcon className="h-5 w-5" style={{ color: '#3B82F6' }} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div className="h-[280px]">
+                {isMounted && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statusWiseData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={110}
+                        paddingAngle={4}
+                        dataKey="value"
+                        nameKey="name"
+                      >
+                        {statusWiseData.map((entry, index) => (
+                          <Cell key={`status-cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={3} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
+                                <p className="text-sm font-semibold mt-1" style={{ color: (payload[0].payload as any).fill }}>
+                                  {payload[0].value} Leads
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                {statusWiseData.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-gray-50 bg-gray-50/50 p-3 hover:bg-gray-100/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.fill }} />
+                      <span className="text-sm font-bold text-slate-600">{s.name}</span>
+                    </div>
+                    <span
+                      className="rounded-lg border px-2 py-0.5 text-sm font-bold"
+                      style={{ color: s.fill, borderColor: s.fill + "40", backgroundColor: s.fill + "10" }}
+                    >
+                      {s.value} Leads
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+        )}
 
-          <div className="h-full min-h-[450px]">
-            {renderTodayTasksTable(todayTasks, tasksLoading)}
+            <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Sales & Commission</h3>
+                  <p className="text-sm text-gray-500 mt-1">Total revenue vs commission earned</p>
+                </div>
+                <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                  <IndianRupee className="h-5 w-5" style={{ color: '#3B82F6' }} />
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-6 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#93C5FD' }}></span>
+                  <span className="text-xs font-semibold text-gray-600">Sales</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#1067b9ff' }}></span>
+                  <span className="text-xs font-semibold text-gray-600">Commission</span>
+                </div>
+              </div>
+              
+              <div className="h-[260px]">
+                {isMounted && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis
+                        stroke="#94a3b8"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
+                        width={45}
+                      />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const d = payload[0].payload;
+                            return (
+                              <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                <p className="text-xs font-semibold text-gray-400">
+                                  {d.name} {d.year ? d.year : ""}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#93C5FD' }}></span>
+                                  <p className="text-sm text-[#3B82F6] font-bold">
+                                    Sales: ₹{Number(d.revenue).toLocaleString('en-IN')}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#1067b9ff' }}></span>
+                                  <p className="text-sm text-[#1067b9ff] font-bold">
+                                    Commission: ₹{Number(d.commission).toLocaleString('en-IN')}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar dataKey="revenue" fill="#93C5FD" radius={[4, 4, 0, 0]} maxBarSize={30} name="Sales" />
+                      <Bar dataKey="commission" fill="#1067b9ff" radius={[4, 4, 0, 0]} maxBarSize={30} name="Commission" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
           </div>
-        </div>}
-
+        )}
 
       </div>
 

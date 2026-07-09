@@ -9,9 +9,21 @@ import { toast } from 'react-toastify';
 
 interface SettlementLeadsListProps {
   resellerId: string;
+  onSuccess?: () => void;
+  selectedLeads: any[];
+  onSelectionChange: (selected: any[]) => void;
+  activeTab: 'unsettled' | 'settled';
+  setActiveTab: (tab: 'unsettled' | 'settled') => void;
 }
 
-export default function SettlementLeadsList({ resellerId }: SettlementLeadsListProps) {
+export default function SettlementLeadsList({
+  resellerId,
+  onSuccess,
+  selectedLeads,
+  onSelectionChange,
+  activeTab,
+  setActiveTab
+}: SettlementLeadsListProps) {
   const [leads, setLeads] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -21,8 +33,8 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [totalRecords, setTotalRecords] = useState(0);
 
-  const [selectedLeads, setSelectedLeads] = useState<any[]>([]);
-  const [settling, setSettling] = useState(false);
+  const [unsettledCount, setUnsettledCount] = useState(0);
+  const [settledCount, setSettledCount] = useState(0);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLTableRowElement | null>(null);
@@ -30,51 +42,39 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedLeads(leads);
+      // Add all leads from this list that are not already in selectedLeads
+      const newSelections = [...selectedLeads];
+      leads.forEach(lead => {
+        if (!newSelections.some(l => l.id === lead.id)) {
+          newSelections.push(lead);
+        }
+      });
+      onSelectionChange(newSelections);
     } else {
-      setSelectedLeads([]);
+      // Remove all leads of this list from selectedLeads
+      const leadIds = leads.map(l => l.id);
+      onSelectionChange(selectedLeads.filter(l => !leadIds.includes(l.id)));
     }
   };
 
   const handleSelectLead = (lead: any, checked: boolean) => {
     if (checked) {
-      setSelectedLeads((prev) => [...prev, lead]);
+      onSelectionChange([...selectedLeads, lead]);
     } else {
-      setSelectedLeads((prev) => prev.filter((l) => l.id !== lead.id));
+      onSelectionChange(selectedLeads.filter((l) => l.id !== lead.id));
     }
   };
 
-  const handleSettleLeads = async () => {
-    if (selectedLeads.length === 0) return;
-    setSettling(true);
-    try {
-      const leadIds = selectedLeads.map(l => l.id);
-      await axios.post(
-        baseUrl.settleLeads,
-        { leadIds },
-        { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-      );
-      toast.success('Leads settled successfully!');
-      setSelectedLeads([]);
-      setPage(1);
-      fetchLeads(1, search, month, year, true);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || 'Failed to settle leads');
-    } finally {
-      setSettling(false);
-    }
-  };
-
-  const totalSettlementAmount = selectedLeads.reduce((sum, lead) => {
+  const totalSettlementAmount = selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).reduce((sum, lead) => {
     return sum + (Number(lead.commissionAmount) || 0);
   }, 0);
 
-  const fetchLeads = async (currentPage: number, currentSearch: string, currentMonth: string, currentYear: string, reset: boolean) => {
+  const fetchLeads = async (currentPage: number, currentSearch: string, currentMonth: string, currentYear: string, currentTab: 'unsettled' | 'settled', reset: boolean) => {
     if (loading) return;
     setLoading(true);
     try {
       const token = getAuthToken();
-      let queryUrl = `${baseUrl.resellerLeadSettlements}?resellerId=${resellerId}&page=${currentPage}&limit=10`;
+      let queryUrl = `${baseUrl.resellerLeadSettlements}?resellerId=${resellerId}&page=${currentPage}&limit=10&settled=${currentTab === 'settled'}`;
       if (currentSearch) queryUrl += `&search=${encodeURIComponent(currentSearch)}`;
       if (currentMonth) {
         queryUrl += `&month=${currentMonth}`;
@@ -85,11 +85,13 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
-      const { data, totalPages, totalRecords: total } = res.data.data;
+      const { data, totalPages, totalRecords: total, unsettledCount: uCount, settledCount: sCount } = res.data.data;
 
       setLeads((prev) => reset ? data : [...prev, ...data]);
       setHasMore(currentPage < totalPages);
       setTotalRecords(total);
+      if (uCount !== undefined) setUnsettledCount(uCount);
+      if (sCount !== undefined) setSettledCount(sCount);
     } catch (error) {
       console.error('Error fetching leads:', error);
     } finally {
@@ -101,13 +103,13 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
   useEffect(() => {
     setPage(1);
     setHasMore(true);
-    fetchLeads(1, search, month, year, true);
-  }, [search, month, year]);
+    fetchLeads(1, search, month, year, activeTab, true);
+  }, [search, month, year, activeTab]);
 
   // Fetch more when page changes
   useEffect(() => {
     if (page > 1) {
-      fetchLeads(page, search, month, year, false);
+      fetchLeads(page, search, month, year, activeTab, false);
     }
   }, [page]);
 
@@ -163,8 +165,14 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
     <div className="bg-white p-6 w-full rounded-b-lg border-t border-gray-100 shadow-inner">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-800">Paid Leads ({totalRecords})</h3>
-          <p className="text-sm text-gray-500">Leads that have been paid and are awaiting settlement</p>
+          <h3 className="text-lg font-bold text-gray-800">
+            {activeTab === 'unsettled' ? 'Paid Leads' : 'Settled Leads'} ({totalRecords})
+          </h3>
+          <p className="text-sm text-gray-500">
+            {activeTab === 'unsettled'
+              ? 'Leads that have been paid and are awaiting settlement'
+              : 'Leads that have been successfully settled and paid out'}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none">
@@ -204,23 +212,46 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
         </div>
       </div>
 
-      {selectedLeads.length > 0 && (
+      {/* Tabs navigation */}
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          onClick={() => {
+            onSelectionChange([]);
+            setActiveTab('unsettled');
+          }}
+          className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
+            activeTab === 'unsettled'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Awaiting Settlement ({unsettledCount})
+        </button>
+        <button
+          onClick={() => {
+            onSelectionChange([]);
+            setActiveTab('settled');
+          }}
+          className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
+            activeTab === 'settled'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Settled Leads ({settledCount})
+        </button>
+      </div>
+
+      {selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
           <div>
             <h3 className="text-blue-800 font-semibold text-sm">
-              {selectedLeads.length} Lead{selectedLeads.length > 1 ? 's' : ''} Selected
+              {selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length} Lead{selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length > 1 ? 's' : ''} Selected
             </h3>
             <p className="text-blue-600 text-xs mt-1">
               Total Commission: <span className="font-bold text-sm">₹{totalSettlementAmount.toLocaleString('en-IN')}</span>
             </p>
           </div>
-          <button
-            onClick={handleSettleLeads}
-            disabled={settling}
-            className="px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {settling ? 'Processing...' : 'Settle Leads'}
-          </button>
         </div>
       )}
 
@@ -228,14 +259,16 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
         <table className="min-w-full divide-y divide-gray-200 relative">
           <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
             <tr>
-              <th className="px-6 py-3 text-left w-12">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                  onChange={handleSelectAll}
-                  checked={leads.length > 0 && selectedLeads.length === leads.length}
-                />
-              </th>
+              {activeTab === 'unsettled' && (
+                <th className="px-6 py-3 text-left w-12">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    onChange={handleSelectAll}
+                    checked={leads.length > 0 && leads.every(lead => selectedLeads.some(l => l.id === lead.id))}
+                  />
+                </th>
+              )}
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead Details</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Mode</th>
@@ -246,7 +279,7 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
           <tbody className="bg-white divide-y divide-gray-200">
             {leads.length === 0 && !loading && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
+                <td colSpan={activeTab === 'unsettled' ? 6 : 5} className="px-6 py-8 text-center text-gray-500 text-sm">
                   No paid leads found matching your criteria.
                 </td>
               </tr>
@@ -256,14 +289,16 @@ export default function SettlementLeadsList({ resellerId }: SettlementLeadsListP
               const isSelected = selectedLeads.some((l) => l.id === lead.id);
               return (
                 <tr key={lead.id || index} ref={isLast ? lastElementRef : null} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                      checked={isSelected}
-                      onChange={(e) => handleSelectLead(lead, e.target.checked)}
-                    />
-                  </td>
+                  {activeTab === 'unsettled' && (
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectLead(lead, e.target.checked)}
+                      />
+                    </td>
+                  )}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{lead.customerName}</div>
                     {lead.paymentDate && (
