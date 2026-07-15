@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { io } from 'socket.io-client';
 import Swal from 'sweetalert2';
+import ResellerDialog from '@/components/ResellerDialog';
 import { toast } from 'react-toastify';
 
 interface Notification {
@@ -27,6 +28,29 @@ interface HeaderProps {
   toggleSidebar: () => void;
 }
 
+interface ResellerDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+  initialData?: Reseller | null;
+}
+
+interface Reseller {
+  id: string;
+  image?: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  status: string;
+  role: string;
+  roleName?: string;
+  address?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  commissionRate: string;
+}
+
 export default function Header({ toggleSidebar }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -38,7 +62,14 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const [userRole, setUserRole] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userProfileImage, setUserProfileImage] = useState<string>('');
+  const [currentUserData, setCurrentUserData] = useState<any>(null);
   const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editingReseller, setEditingReseller] = useState<Reseller | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +100,76 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
     return ""
   }
+    const token = getAuthToken();
+    if (!token) return;
+
+  const handleSubmit = async (values: any) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const payload = new FormData();
+      payload.append('fullName', values.fullName);
+      payload.append('email', values.email);
+      payload.append('phone', values.phone);
+      if (values.role) {
+        payload.append('role', values.role);
+      }
+      payload.append('status', values.status);
+      payload.append('commissionRate', values.commissionRate);
+
+      if (values.password.trim()) {
+        payload.append('password', values.password);
+      }
+
+      if (selectedFile) {
+        payload.append('profileImage', selectedFile);
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token || getAuthToken()}`
+      };
+
+      await axios.put(`${baseUrl.updateReseller}/${editingReseller?.id}`, payload, { headers })
+
+      toast.success( 'Profile updated successfully');
+      setIsFormOpen(false);
+      setEditingReseller(null);
+      fetchProfile();
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Something went wrong';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchProfile = useCallback(async () => {
+
+
+    setIsLoading(true);
+    try {
+      const params = {
+
+      };
+
+      const res = await axios?.get(baseUrl?.myProfile, {
+        params,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      setUserName(res.data.data.fullName || 'User');
+      setUserEmail(res.data.data.email || '');
+      setUserProfileImage(res.data.data.profileImage || '');
+      setCurrentUserData(res.data.data);
+    } catch (err) {
+      console.error('Failed to fetch Profile:', err);
+
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -79,6 +180,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         });
       }
     }
+    fetchProfile()
   }, []);
 
   // Request notification permission with user interaction
@@ -87,6 +189,18 @@ export default function Header({ toggleSidebar }: HeaderProps) {
       try {
         const permission = await Notification.requestPermission();
         setNotificationPermission(permission);
+
+        if (permission === 'granted') {
+          console.log('Notification permission granted');
+          // Show a test notification to confirm it's working
+          new Notification('Notifications Enabled', {
+            body: 'You will now receive notifications for new tasks and leads.',
+            icon: '/favicon.ico'
+          });
+        } else if (permission === 'denied') {
+          console.log('Notification permission denied');
+          // You can show a toast or tooltip here to inform the user
+        }
       } catch (error) {
         console.error('Error requesting notification permission:', error);
       }
@@ -152,10 +266,8 @@ export default function Header({ toggleSidebar }: HeaderProps) {
 
     const staffData = authUser;
     if (!staffData) return;
-    setUserName(staffData.fullName || 'User');
     setUserRole(authRole || '');
-    setUserEmail(staffData.email || '');
-    setUserProfileImage(staffData.profileImage || staffData.avatar || staffData.image || '');
+
     const currentUserId = staffData._id;
     if (!currentUserId) return;
 
@@ -461,6 +573,26 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           onClick={openProfileModal}
           className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-all duration-200"
           title="Edit Profile"
+          // className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200 cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors"
+          // title="Edit Profile"
+          // onClick={() => {
+          //   if (currentUserData) {
+          //     setEditingReseller({
+          //       id: currentUserData._id,
+          //       fullName: currentUserData.fullName,
+          //       email: currentUserData.email,
+          //       phone: currentUserData.phone || '',
+          //       role: currentUserData.role || '',
+          //       status: currentUserData.status || 'active',
+          //       commissionRate: currentUserData.commissionRate || '0',
+          //       image: currentUserData.profileImage || '',
+          //       city: currentUserData.city || '',
+          //       state: currentUserData.state || '',
+          //       pincode: currentUserData.pincode || '',
+          //     });
+          //     setIsFormOpen(true);
+          //   }
+          // }}
         >
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-gray-800">{userName}</span>
@@ -604,6 +736,24 @@ export default function Header({ toggleSidebar }: HeaderProps) {
         >
           <LogOut className="h-5 w-5" />
         </button>
+        <ResellerDialog
+          isOpen={isFormOpen}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingReseller(null);
+          }}
+          onSubmit={handleSubmit}
+          initialData={editingReseller ? {
+            _id: editingReseller.id,
+            fullName: editingReseller.fullName,
+            email: editingReseller.email,
+            phone: editingReseller.phone,
+            role: editingReseller.role,
+            status: editingReseller.status,
+            profileImage: editingReseller.image,
+            commissionRate: editingReseller.commissionRate,
+          } : null}
+        />
       </div>
 
       {showProfileModal && typeof window !== 'undefined' && document.body && createPortal(
