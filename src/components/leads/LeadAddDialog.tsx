@@ -50,14 +50,15 @@ export default function LeadAddDialog({
         setStatuses(statusRes.data?.data || statusRes.data || []);
         setSources(sourceRes.data?.data || sourceRes.data || []);
         
-        const reqs = reqRes.data?.data?.requiredLeads || [];
+        let reqs = reqRes.data?.data?.requiredLeads || [];
+        reqs = reqs.filter((r: string) => r !== 'customerEmail');
         if (!reqs.includes('customerContact')) reqs.push('customerContact');
         if (!reqs.includes('paymentAmount')) reqs.push('paymentAmount');
         setRequiredFields(reqs);
 
         const schemaShape: any = {
           customerName: Yup.string().trim(),
-          customerEmail: Yup.string().trim().email('Invalid email format').matches(/@gmail\.com$/, 'Email must be a @gmail.com address'),
+          customerEmail: Yup.string().trim(),
           customerContact: Yup.string().trim().test('is-10-digits', 'Customer Contact must be exactly 10 digits', val => !val || /^[0-9]{10}$/.test(val)),
           companyName: Yup.string().trim(),
           paymentAmount: Yup.number().transform((value, originalValue) => originalValue === '' ? undefined : value).typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),
@@ -238,6 +239,7 @@ export default function LeadAddDialog({
               onBlur={formik.handleBlur}
               error={getFieldError('customerName')}
               required={requiredFields.includes('customerName')}
+              maxLength={50}
             />
             <FormInput
               label="Customer Email"
@@ -284,6 +286,7 @@ export default function LeadAddDialog({
               error={getFieldError('paymentAmount')}
               icon={<span className="text-gray-700 font-medium text-lg">₹</span>}
               required={requiredFields.includes('paymentAmount')}
+              maxLength={6}
             />
             <FormSelect
               label="Lead Status"

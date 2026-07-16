@@ -26,6 +26,7 @@ interface FormInputProps {
   min?: number | string;
   max?: number | string;
   step?: number | string;
+  maxLength?: number;
 }
 
 const FormInput: React.FC<FormInputProps> = ({
@@ -53,6 +54,7 @@ const FormInput: React.FC<FormInputProps> = ({
   min,
   max,
   step,
+  maxLength,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -355,6 +357,7 @@ const FormInput: React.FC<FormInputProps> = ({
             min={min}
             max={max}
             step={step}
+            maxLength={maxLength}
             className={getInputClasses()}
           />
         )}
