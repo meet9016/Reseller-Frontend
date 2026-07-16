@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEffect, useState } from 'react';
 import {
   FiChevronLeft,
@@ -14,7 +14,8 @@ import {
   FiMoreVertical,
   FiRefreshCw,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiCheck
 } from 'react-icons/fi';
 
 export interface Column<T> {
@@ -42,6 +43,7 @@ interface DataTableProps<T> {
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onRowClick?: (row: T) => void;
   canEdit?: (row: T) => boolean;
   canDelete?: (row: T) => boolean;
   loading?: boolean;
@@ -87,6 +89,7 @@ export default function DataTable<T extends Record<string, any>>({
   onView,
   onEdit,
   onDelete,
+  onRowClick,
   canEdit,
   canDelete,
   loading = false,
@@ -114,6 +117,18 @@ export default function DataTable<T extends Record<string, any>>({
   const [showFilters, setShowFilters] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const [pageSizeOpen, setPageSizeOpen] = useState(false);
+  const pageSizeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pageSizeRef.current && !pageSizeRef.current.contains(event.target as Node)) {
+        setPageSizeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleRow = (index: number) => {
     setExpandedRows(prev => ({ ...prev, [index]: !prev[index] }));
@@ -252,9 +267,9 @@ export default function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Table - Modern Design */}
-      <div className="border-t border-gray-100 overflow-x-auto">
-        <table className="w-full divide-y divide-gray-100">
-          <thead className="bg-gray-100">
+      <div className="border-t border-gray-100 overflow-x-auto max-h-[550px] overflow-y-auto custom-scrollbar">
+        <table className="min-w-full divide-y divide-gray-100 relative">
+          <thead className="bg-gray-50 sticky top-0 z-20 shadow-sm">
             <tr>
               {selectable && (
                 <th className="px-6 py-4 text-left w-12">
@@ -325,6 +340,7 @@ export default function DataTable<T extends Record<string, any>>({
               data.map((row, index) => (
                 <React.Fragment key={index}>
                   <tr
+                    onClick={() => onRowClick && onRowClick(row)}
                     onMouseEnter={() => setHoveredRow(index)}
                     onMouseLeave={() => setHoveredRow(null)}
                     className={`
@@ -333,6 +349,7 @@ export default function DataTable<T extends Record<string, any>>({
                       ${hoveredRow === index ? 'bg-blue-50/30' : ''}
                       ${!expandedRows[index] ? 'border-b border-gray-50 last:border-0' : 'border-b-0'}
                       ${selectedRows.includes(row) ? 'bg-blue-50/50' : ''}
+                      ${onRowClick ? 'cursor-pointer' : ''}
                     `}
                   >
                     {selectable && (
@@ -470,15 +487,37 @@ export default function DataTable<T extends Record<string, any>>({
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="font-medium text-gray-600">Rows</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                  className="cursor-pointer rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm font-medium text-gray-700 transition-all focus:border-primary-500 focus:outline-none"
-                >
-                  {[10, 25, 50, 100].map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={pageSizeRef}>
+                  <button
+                    onClick={() => setPageSizeOpen(!pageSizeOpen)}
+                    className="flex items-center justify-between w-[70px] bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:border-[#3B82F6] hover:ring-1 hover:ring-[#3B82F6]/50 focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]"
+                  >
+                    <span>{pageSize}</span>
+                    <FiChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${pageSizeOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {pageSizeOpen && (
+                    <div className="absolute bottom-full left-0 mb-1 w-[80px] bg-white border border-gray-100 rounded-lg shadow-xl z-50 py-1 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
+                      {[10, 25, 50, 100].map((s) => (
+                        <div
+                          key={s}
+                          onClick={() => {
+                            onPageSizeChange(s);
+                            setPageSizeOpen(false);
+                          }}
+                          className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition-colors ${
+                            pageSize === s 
+                              ? 'bg-blue-50 text-blue-700 font-bold' 
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span>{s}</span>
+                          {pageSize === s && <FiCheck className="h-4 w-4 text-blue-600" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <span className="text-gray-500 text-xs md:text-sm">
                 Showing <span className="font-medium text-gray-700">{(currentPage - 1) * pageSize + 1}</span> to{' '}

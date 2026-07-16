@@ -12,6 +12,8 @@ type Filters = {
   staff?: string;
   from?: string;
   to?: string;
+  paymentStatus?: string;
+  reseller?: string;
 };
 
 export function useLeadsData(
@@ -168,6 +170,8 @@ export function useLeadsData(
           search: f.search || undefined,
           status: f.status || undefined,
           staff: f.staff || undefined,
+          reseller: f.reseller || undefined,
+          paymentStatus: f.paymentStatus || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
           page,
@@ -198,6 +202,8 @@ export function useLeadsData(
           search: f.search || undefined,
           status: f.status || undefined,
           staff: f.staff || undefined,
+          reseller: f.reseller || undefined,
+          paymentStatus: f.paymentStatus || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
           page,
@@ -229,6 +235,8 @@ export function useLeadsData(
           search: f.search || undefined,
           status: f.status || undefined,
           staff: f.staff || undefined,
+          reseller: f.reseller || undefined,
+          paymentStatus: f.paymentStatus || undefined,
           from: f.from || undefined,
           to: f.to || undefined,
           page,

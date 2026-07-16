@@ -257,23 +257,23 @@ export default function SettlementLeadsList({
 
       <div className="overflow-x-auto rounded-xl border border-gray-200 max-h-[400px] overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-200 relative">
-          <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+          <thead className="bg-white sticky top-0 z-10 shadow-sm">
             <tr>
               {activeTab === 'unsettled' && (
-                <th className="px-6 py-3 text-left w-12">
+                <th className="px-6 py-4 text-center w-12 border-b border-gray-100">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     onChange={handleSelectAll}
                     checked={leads.length > 0 && leads.every(lead => selectedLeads.some(l => l.id === lead.id))}
                   />
                 </th>
               )}
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead Details</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Mode</th>
-              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Amount</th>
-              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Commission</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-b border-gray-100">Lead Details</th>
+              <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-b border-gray-100">Status</th>
+              <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-b border-gray-100">Payment Mode</th>
+              <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-b border-gray-100">Payment Amount</th>
+              <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-b border-gray-100">Commission</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -290,33 +290,33 @@ export default function SettlementLeadsList({
               return (
                 <tr key={lead.id || index} ref={isLast ? lastElementRef : null} className="hover:bg-gray-50 transition-colors">
                   {activeTab === 'unsettled' && (
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       <input
                         type="checkbox"
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                         checked={isSelected}
                         onChange={(e) => handleSelectLead(lead, e.target.checked)}
                       />
                     </td>
                   )}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{lead.customerName}</div>
+                    <div className="font-semibold text-gray-900">{lead.customerName}</div>
                     {lead.paymentDate && (
-                      <div className="text-xs text-gray-500 mt-1">Paid on: {new Date(lead.paymentDate).toLocaleDateString()}</div>
+                      <div className="text-xs text-gray-500 mt-1 font-medium">Paid on: {new Date(lead.paymentDate).toLocaleDateString()}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
                       {lead.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-medium text-center">
                     {lead.paymentMode}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-emerald-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-emerald-600">
                     ₹{lead.paymentAmount?.toLocaleString('en-IN') || 0}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-extrabold text-gray-900">
                     ₹{lead.commissionAmount?.toLocaleString('en-IN') || 0}
                   </td>
                 </tr>

@@ -1132,34 +1132,33 @@ export default function Dashboard() {
               {activeRange === 'custom' && (
                 <>
                   {/* Separator line */}
-                  <div className="h-6 w-px bg-gray-200"></div>
+                  <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
-                  <div className="flex items-center gap-3 pr-1.5 animate-in fade-in slide-in-from-left-2 duration-200">
-                    <div className="relative">
-                      <label className="absolute -top-2 left-3 px-1 bg-white text-[8px] font-bold text-[#3B82F6] uppercase tracking-wider z-10">From Date</label>
+                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                    <div className="w-[130px]">
                       <DatePicker
                         value={fromDate}
                         onChange={(val) => {
                           setFromDate(val);
                           setActiveRange('custom');
                         }}
-                        placeholder="From date"
+                        placeholder="Start Date"
                       />
                     </div>
-                    <div className="relative">
-                      <label className="absolute -top-2 left-3 px-1 bg-white text-[8px] font-bold text-[#3B82F6] uppercase tracking-wider z-10">To Date</label>
+                    <span className="text-gray-400 font-medium">-</span>
+                    <div className="w-[130px]">
                       <DatePicker
                         value={toDate}
                         onChange={(val) => {
                           setToDate(val);
                           setActiveRange('custom');
                         }}
-                        placeholder="To date"
+                        placeholder="End Date"
                       />
                     </div>
                     <button
                       onClick={() => handleQuickFilter('reset')}
-                      className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-[#3B82F6] transition-all rounded-full"
+                      className="p-1.5 ml-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-[#3B82F6] transition-all rounded-md shadow-sm"
                       title="Reset Filter"
                     >
                       <RefreshCw className="h-4 w-4" />

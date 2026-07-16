@@ -6,7 +6,7 @@ import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { toast } from 'react-toastify';
 import { IndianRupee, ReceiptText, Users, Percent, Banknote } from 'lucide-react';
-import SettlementLeadsList from '@/components/leads/SettlementLeadsList';
+import { useRouter } from 'next/router';
 
 interface Settlement {
   _id: string; // Reseller ID
@@ -32,6 +32,7 @@ interface LeadSettlement {
 }
 
 export function SettlementsContent() {
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [settlementsData, setSettlementsData] = useState<Settlement[]>([]);
   const [resellerLeadsData, setResellerLeadsData] = useState<LeadSettlement[]>([]);
@@ -446,44 +447,10 @@ export function SettlementsContent() {
               data={filteredSettlements}
               columns={columns}
               loading={isLoading}
-              title="Reseller Settlements"
-              subtitle="Manage commissions and record payments for your resellers."
               searchable
               searchQuery={searchQuery}
               onSearch={(val) => setSearchQuery(val)}
-              headerActions={
-                <div className="flex items-center gap-2">
-                  {globalSelectedLeads.length > 0 && (
-                    <select
-                      value={globalSettlementMethod}
-                      onChange={(e) => setGlobalSettlementMethod(e.target.value)}
-                      className="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white text-gray-700 focus:outline-none cursor-pointer outline-none transition-shadow"
-                    >
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="UPI">UPI</option>
-                      <option value="GPay">GPay</option>
-                      <option value="Cash">Cash</option>
-                    </select>
-                  )}
-                  <button
-                    onClick={handleGlobalSettleLeads}
-                    disabled={globalSelectedLeads.length === 0 || isSettlingLeads}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
-                  >
-                    {isSettlingLeads ? 'Processing...' : 'Settle Selected'}
-                  </button>
-                </div>
-              }
-              expandableContent={(row) => (
-                <SettlementLeadsList
-                  resellerId={row._id}
-                  onSuccess={fetchSettlements}
-                  selectedLeads={globalSelectedLeads}
-                  onSelectionChange={setGlobalSelectedLeads}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                />
-              )}
+              onRowClick={(row) => router.push(`/settlements/${row._id}`)}
             />
         )}
       </div>

@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
 import * as XLSX from 'xlsx';
+import FormSelect from '@/components/ui/FormSelect';
+import DatePicker from '@/components/ui/DatePicker';
 
 // Define the transaction interface based on the SettlementTransaction model
 interface SettlementTransaction {
@@ -34,7 +36,21 @@ export default function LedgerPage() {
   const [selectedMethod, setSelectedMethod] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
 
-  const fetchTransactions = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Debounce search query to avoid too many requests
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const fetchTransactions = async (page = currentPage) => {
     setLoading(true);
     try {
       const token = getAuthToken();
@@ -44,21 +60,25 @@ export default function LedgerPage() {
       const userId = user?._id;
 
       const reqId = roleName === 'admin' ? 'all' : userId;
+      
+      const params: any = { page, limit: pageSize };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (selectedMonth) params.month = selectedMonth;
+      if (selectedYear) params.year = selectedYear;
+      if (selectedReseller) params.reseller = selectedReseller;
+      if (selectedMethod) params.method = selectedMethod;
+      if (selectedDate) params.date = selectedDate;
+
       const res = await axios.get(`${baseUrl.getBaseUrl}settlement/history/${reqId}`, {
         headers: { Authorization: `Bearer ${token}` },
+        params
       });
 
-      let data = res.data.data || [];
-
-      // Apply filters manually if the API doesn't support them
-      if (selectedMonth && selectedYear) {
-        data = data.filter((tx: any) => {
-          const date = new Date(tx.createdAt);
-          return date.getMonth() + 1 === parseInt(selectedMonth) && date.getFullYear() === parseInt(selectedYear);
-        });
-      }
-
-      setTransactions(data);
+      const p = res.data.pagination || {};
+      setTransactions(res.data.data || []);
+      setCurrentPage(p.currentPage || 1);
+      setTotalPages(p.totalPages || 1);
+      setTotalRecords(p.totalRecords || res.data.data?.length || 0);
     } catch (error) {
       console.error("Error fetching ledger:", error);
       toast.error("Failed to load ledger data");
@@ -68,8 +88,8 @@ export default function LedgerPage() {
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, [selectedMonth, selectedYear]);
+    fetchTransactions(1);
+  }, [selectedMonth, selectedYear, selectedReseller, selectedMethod, selectedDate, debouncedSearch, pageSize]);
 
   const handleExport = () => {
     const exportData = transactions.map(tx => ({
@@ -133,38 +153,9 @@ export default function LedgerPage() {
     }
   ];
 
-  const filteredTransactions = transactions.filter((tx) => {
-    // Search Query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = tx.reseller?.fullName?.toLowerCase().includes(query) ||
-        tx.paymentMethod?.toLowerCase().includes(query) ||
-        tx.referenceId?.toLowerCase().includes(query) ||
-        tx.status?.toLowerCase().includes(query) ||
-        tx.note?.toLowerCase().includes(query);
-      if (!matchesSearch) return false;
-    }
-
-    // Reseller Filter
-    if (selectedReseller && tx.reseller?._id !== selectedReseller) return false;
-
-    // Payment Method Filter
-    if (selectedMethod && tx.paymentMethod !== selectedMethod) return false;
-
-    // Date Filter
-    if (selectedDate) {
-      const txDate = new Date(tx.createdAt).toISOString().split('T')[0];
-      if (txDate !== selectedDate) return false;
-    }
-
-    return true;
-  });
-
   const uniqueResellers = Array.from(
     new Map(transactions.filter(t => t.reseller).map(t => [t.reseller._id, t.reseller])).values()
   );
-
-  const totalFilteredAmount = filteredTransactions.reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -175,84 +166,106 @@ export default function LedgerPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Ledger</h1>
-          <p className="text-sm text-gray-500 mt-1">View and download your settlement transactions.</p>
-          <div className="mt-2 text-sm font-semibold text-gray-700">
-            Total Amount: <span className="text-emerald-600 font-bold ml-1 flex inline-flex items-center">₹{totalFilteredAmount.toLocaleString('en-IN')}</span>
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedMonth}
-            onChange={e => setSelectedMonth(e.target.value)}
-            className="border-gray-300  rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="">All Months</option>
-            <option value="1">January</option>
-            <option value="2">February</option>
-            <option value="3">March</option>
-            <option value="4">April</option>
-            <option value="5">May</option>
-            <option value="6">June</option>
-            <option value="7">July</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
+          <div className="w-[140px]">
+            <FormSelect
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              options={[
+                { value: "", label: "All Months" },
+                { value: "1", label: "January" },
+                { value: "2", label: "February" },
+                { value: "3", label: "March" },
+                { value: "4", label: "April" },
+                { value: "5", label: "May" },
+                { value: "6", label: "June" },
+                { value: "7", label: "July" },
+                { value: "8", label: "August" },
+                { value: "9", label: "September" },
+                { value: "10", label: "October" },
+                { value: "11", label: "November" },
+                { value: "12", label: "December" },
+              ]}
+              placeholder="All Months"
+            />
+          </div>
 
-          <select
-            value={selectedYear}
-            onChange={e => setSelectedYear(e.target.value)}
-            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-          </select>
+          <div className="w-[100px]">
+            <FormSelect
+              value={selectedYear}
+              onChange={setSelectedYear}
+              options={[
+                { value: "2024", label: "2024" },
+                { value: "2025", label: "2025" },
+                { value: "2026", label: "2026" },
+              ]}
+              placeholder="Year"
+            />
+          </div>
 
-          <select
-            value={selectedReseller}
-            onChange={e => setSelectedReseller(e.target.value)}
-            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="">All Resellers</option>
-            {uniqueResellers.map((r: any) => (
-              <option key={r._id} value={r._id}>{r.fullName}</option>
-            ))}
-          </select>
+          {role?.toLowerCase() === 'admin' && (
+            <div className="w-[160px]">
+              <FormSelect
+                value={selectedReseller}
+                onChange={setSelectedReseller}
+                options={[
+                  { value: "", label: "All Resellers" },
+                  ...uniqueResellers.map((r: any) => ({ value: r._id, label: r.fullName }))
+                ]}
+                placeholder="All Resellers"
+              />
+            </div>
+          )}
 
-          <select
-            value={selectedMethod}
-            onChange={e => setSelectedMethod(e.target.value)}
-            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="">All Methods</option>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="UPI">UPI</option>
-            <option value="Cash">Cash</option>
-          </select>
+          <div className="w-[140px]">
+            <FormSelect
+              value={selectedMethod}
+              onChange={setSelectedMethod}
+              options={[
+                { value: "", label: "All Methods" },
+                { value: "Bank Transfer", label: "Bank Transfer" },
+                { value: "UPI", label: "UPI" },
+                { value: "Cash", label: "Cash" },
+              ]}
+              placeholder="All Methods"
+            />
+          </div>
 
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="border-gray-300 p-2 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
+          <div className="w-[150px]">
+            <DatePicker
+              value={selectedDate}
+              onChange={setSelectedDate}
+              placeholder="Select date"
+            />
+          </div>
         </div>
       </div>
 
-      <DataTable
-        data={filteredTransactions}
-        columns={columns}
-        loading={loading}
-        onRefresh={fetchTransactions}
-        onExport={handleExport}
-        searchable={true}
-        onSearch={(val) => setSearchQuery(val)}
-        title="Transactions"
-      />
+      <div className="max-h-[500px] overflow-y-auto overflow-x-hidden border border-gray-200 rounded-lg shadow-sm">
+        <DataTable
+          data={transactions}
+          columns={columns}
+          loading={loading}
+          onRefresh={() => fetchTransactions(currentPage)}
+          onExport={handleExport}
+          searchable={true}
+          searchQuery={searchQuery}
+          onSearch={(val) => setSearchQuery(val)}
+          title="Transactions"
+          pagination={true}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalRecords={totalRecords}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          onPageChange={(page) => fetchTransactions(page)}
+        />
+      </div>
     </div>
   );
 }

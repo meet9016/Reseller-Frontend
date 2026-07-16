@@ -74,7 +74,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     menuItems.push({ icon: Handshake, label: "Resellers", path: "/resellers" });
   }
   if (userRole) {
-    menuItems.push({ icon: IndianRupee, label: "Settlements", path: "/settlements" });
+    if (userRole.toLowerCase() === 'admin') {
+      menuItems.push({ icon: IndianRupee, label: "Settlements", path: "/settlements" });
+    }
     menuItems.push({ icon: CheckSquare, label: "Ledger", path: "/ledger" });
   }
 
