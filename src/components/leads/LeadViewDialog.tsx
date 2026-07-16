@@ -8,6 +8,7 @@ import { ApiLead, ApiStatus } from './types';
 import { Eye, Download, FileText, Image, File, FileSpreadsheet, Search, Trash2 } from 'lucide-react';
 import { formatContactNumber } from "@/utills/utill";
 import { getFileIcon } from '@/utills/utill';
+import { formatIndianCurrency } from '@/utills/formatters';
 import DatePicker from '@/components/ui/DatePicker';
 import TimePicker from '@/components/ui/TimePicker';
 
@@ -246,7 +247,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <InfoCard label="Phone" value={formatContactNumber((lead as any).customerContact || lead.contact)} />
               <InfoCard label="Email" value={(lead as any).customerEmail || lead.email} />
-              <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? `₹${(lead as any).paymentAmount.toLocaleString()}` : undefined} />
+              <InfoCard label="Payment Amount" value={(lead as any).paymentAmount ? formatIndianCurrency((lead as any).paymentAmount) : undefined} />
 
               <InfoCard label="Last Follow-Up" value={lead.lastFollowUp} />
               <InfoCard label="Active" value={lead.isActive ? 'Yes' : 'No'} />
@@ -514,7 +515,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
                 <div className="mb-2 text-sm font-semibold text-green-700">Won Information</div>
                 <div className="space-y-1 text-sm text-green-800">
                   <div>Won Date: {lead.wonDate ? new Date(lead.wonDate).toLocaleDateString() : 'N/A'}</div>
-                  <div>Amount: {lead.amount ? `₹${lead.amount.toLocaleString()}` : 'Not specified'}</div>
+                  <div>Amount: {lead.amount ? formatIndianCurrency(lead.amount) : 'Not specified'}</div>
                 </div>
               </div>
             )}

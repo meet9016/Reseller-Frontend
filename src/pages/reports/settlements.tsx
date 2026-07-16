@@ -7,7 +7,7 @@ import DataTable, { Column } from '@/components/DataTable';
 import DatePicker from '@/components/ui/DatePicker';
 import { RefreshCw, Download, IndianRupee } from 'lucide-react';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utills/exportHelper';
 
 interface ReportSettlement {
   _id: string;
@@ -62,19 +62,25 @@ export default function SettlementsReport() {
     fetchData();
   }, [fetchData]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const exportData = data.map(item => ({
-      'Reseller Name': item.resellerName || '-',
-      'Email': item.resellerEmail || '-',
-      'Leads Count': item.totalLeadsCount || 0,
-      'Total Amount': item.totalLeadsAmount || 0,
-      'Total Commission': item.totalCommission || 0,
+      resellerName: item.resellerName || '-',
+      email: item.resellerEmail || '-',
+      leadsCount: item.totalLeadsCount || 0,
+      totalAmount: item.totalLeadsAmount || 0,
+      totalCommission: item.totalCommission || 0,
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Settlements_Report");
-    XLSX.writeFile(wb, `Settlements_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const columns = [
+      { header: 'Reseller Name', key: 'resellerName', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Leads Count', key: 'leadsCount', width: 15 },
+      { header: 'Total Amount', key: 'totalAmount', width: 20 },
+      { header: 'Total Commission', key: 'totalCommission', width: 20 },
+    ];
+
+    const fileName = `Settlements_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    await exportToExcel(fileName, 'Settlements', columns, exportData);
   };
 
   const columns: Column<ReportSettlement>[] = [

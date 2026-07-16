@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { io } from 'socket.io-client';
 import Swal from 'sweetalert2';
+import DeleteDialog from './DeleteDialog';
 import ResellerDialog from '@/components/ResellerDialog';
 import { toast } from 'react-toastify';
 
@@ -56,6 +57,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const [currentDate, setCurrentDate] = useState('');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const [userName, setUserName] = useState<string>('');
@@ -87,6 +89,7 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   const isLoginPage = pathName === "/login";
 
   const getLabel = () => {
+    if (pathName === "/ledger") return "Ledger"
     if (pathName === "/") return "Dashboard"
     if (pathName === "/leads") return "Leads"
     if (pathName === "/leads/list") return "Leads List"
@@ -94,7 +97,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
     if (pathName === "/setup") return "Setup"
     if (pathName === "/tasks") return "Tasks"
     if (pathName === "/resellers") return "Reseller List"
-    if (pathName === "/ledger") return "Ledger"
     if (pathName === "/settlements") return "Settlements"
     if (pathName === "/reports/leads") return "Leads Report"
     if (pathName === "/reports/settlements") return "Settlements Report"
@@ -454,44 +456,13 @@ export default function Header({ toggleSidebar }: HeaderProps) {
   };
 
   const handleLogout = () => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You will be logged out of your account",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, logout',
-      cancelButtonText: 'Cancel',
-      background: '#fff',
-      backdrop: true,
-      allowOutsideClick: false,
-      allowEscapeKey: true,
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: 'Logging out...',
-          text: 'Please wait',
-          icon: 'info',
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-        Swal.fire({
-          title: 'Logged Out!',
-          text: 'You have been successfully logged out',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        }).then(() => {
-          clearAuthToken();
-          router.replace("/login");
-        });
-      }
-    });
+    setIsLogoutModalOpen(true);
+  };
+
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    clearAuthToken();
+    router.replace('/login');
   };
 
   // Calculate unread notifications count
@@ -575,26 +546,6 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           onClick={openProfileModal}
           className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200 cursor-pointer hover:opacity-80 transition-all duration-200"
           title="Edit Profile"
-          // className="hidden md:flex items-center gap-3 mr-2 pr-4 border-r border-gray-200 cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors"
-          // title="Edit Profile"
-          // onClick={() => {
-          //   if (currentUserData) {
-          //     setEditingReseller({
-          //       id: currentUserData._id,
-          //       fullName: currentUserData.fullName,
-          //       email: currentUserData.email,
-          //       phone: currentUserData.phone || '',
-          //       role: currentUserData.role || '',
-          //       status: currentUserData.status || 'active',
-          //       commissionRate: currentUserData.commissionRate || '0',
-          //       image: currentUserData.profileImage || '',
-          //       city: currentUserData.city || '',
-          //       state: currentUserData.state || '',
-          //       pincode: currentUserData.pincode || '',
-          //     });
-          //     setIsFormOpen(true);
-          //   }
-          // }}
         >
           <div className="flex flex-col items-end">
             <span className="text-sm font-bold text-gray-800">{userName}</span>
@@ -757,6 +708,33 @@ export default function Header({ toggleSidebar }: HeaderProps) {
           } : null}
         />
       </div>
+
+      {isLogoutModalOpen && typeof window !== 'undefined' && document.body && createPortal(
+        <DeleteDialog
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          title="Confirm Logout"
+          footer={
+            <>
+              <button
+                onClick={() => setIsLogoutModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          }
+        >
+          <p className="text-gray-600">You will be logged out of your account. Are you sure you want to proceed?</p>
+        </DeleteDialog>,
+        document.body
+      )}
 
       {showProfileModal && typeof window !== 'undefined' && document.body && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">

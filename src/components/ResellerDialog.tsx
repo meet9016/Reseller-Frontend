@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { EMAIL_REGEX } from '@/utills/emailRegex';
+
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { toast } from 'react-toastify';
@@ -37,7 +37,8 @@ const createValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .matches(EMAIL_REGEX, 'Invalid email domain'),
+    .email('Invalid email format')
+    .matches(/@gmail\.com$/, 'Email must be a @gmail.com address'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
@@ -46,12 +47,7 @@ const createValidationSchema = Yup.object({
     .min(6, 'Password must be at least 6 characters'),
   // role: Yup.string().required('Role is required'),
   status: Yup.string().required('Status is required'),
-  commissionRate: Yup.number()
-    .typeError('Commission must be a number')
-    .integer('Commission must be an integer')
-    .min(0, 'Commission cannot be less than 0')
-    .max(100, 'Commission cannot exceed 100')
-    .required('Commission percentage is required'),
+  commissionRate: Yup.string().nullable().optional(),
 });
 
 const updateValidationSchema = Yup.object({
@@ -60,19 +56,19 @@ const updateValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .matches(EMAIL_REGEX, 'Invalid email domain'),
+    .email('Invalid email format')
+    .matches(/@gmail\.com$/, 'Email must be a @gmail.com address'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
-  password: Yup.string().notRequired().min(6, 'Password must be at least 6 characters'),
+  password: Yup.string().test(
+    'min-length',
+    'Password must be at least 6 characters',
+    val => !val || val.length >= 6
+  ),
   // role: Yup.string().required('Role is required'),
   status: Yup.string().required('Status is required'),
-  commissionRate: Yup.number()
-    .typeError('Commission must be a number')
-    .integer('Commission must be an integer')
-    .min(0, 'Commission cannot be less than 0')
-    .max(100, 'Commission cannot exceed 100')
-    .required('Commission percentage is required'),
+  commissionRate: Yup.string().nullable().optional(),
 });
 
 export default function ResellerDialog({
@@ -134,7 +130,7 @@ export default function ResellerDialog({
       formik.setValues({
         fullName: initialData.fullName || '',
         email: initialData.email || '',
-        phone: initialData.phone || '',
+        phone: initialData.phone ? String(initialData.phone).replace(/\D/g, '').slice(0, 10) : '',
         password: '',
         role: initialData.role || '',
         status: initialData.status || 'active',
@@ -252,8 +248,8 @@ export default function ResellerDialog({
             Cancel
           </button>
           <button
-            type="submit"
-            form="reseller-form"
+            type="button"
+            onClick={() => formik.submitForm()}
             className="px-6 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             disabled={loading}
           >
@@ -360,8 +356,7 @@ export default function ResellerDialog({
                   }}
                   onBlur={formik.handleBlur}
                   error={formik.touched.commissionRate && formik.errors.commissionRate ? formik.errors.commissionRate : undefined}
-                  required
-                  placeholder="e.g. 10"
+                  placeholder="e.g. 10 (Optional)"
                 />
 
                 {/* <div className="md:col-span-2">

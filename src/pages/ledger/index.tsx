@@ -5,7 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utills/exportHelper';
 import FormSelect from '@/components/ui/FormSelect';
 import DatePicker from '@/components/ui/DatePicker';
 
@@ -91,30 +91,34 @@ export default function LedgerPage() {
     fetchTransactions(1);
   }, [selectedMonth, selectedYear, selectedReseller, selectedMethod, selectedDate, debouncedSearch, pageSize]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const exportData = transactions.map(tx => ({
-      'Date': new Date(tx.createdAt).toLocaleDateString(),
-      'Reseller': tx.reseller?.fullName || '-',
-      'Amount': tx.amount,
-      'Method': tx.paymentMethod,
-      'Reference ID': tx.referenceId || '-',
-      'Status': tx.status,
-      'Note': tx.note || '-',
-      'Leads Settled': tx.leads?.length || 0
+      date: new Date(tx.createdAt).toLocaleDateString(),
+      reseller: tx.reseller?.fullName || '-',
+      amount: tx.amount,
+      method: tx.paymentMethod,
+      referenceId: tx.referenceId || '-',
+      status: tx.status,
+      note: tx.note || '-',
+      leadsSettled: tx.leads?.length || 0
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Ledger");
-    XLSX.writeFile(wb, `Ledger_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const columns = [
+      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Reseller', key: 'reseller', width: 25 },
+      { header: 'Amount', key: 'amount', width: 15 },
+      { header: 'Method', key: 'method', width: 15 },
+      { header: 'Reference ID', key: 'referenceId', width: 25 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Note', key: 'note', width: 30 },
+      { header: 'Leads Settled', key: 'leadsSettled', width: 15 },
+    ];
+
+    const fileName = `Ledger_${new Date().toISOString().split('T')[0]}.xlsx`;
+    await exportToExcel(fileName, 'Ledger', columns, exportData);
   };
 
   const columns: Column<SettlementTransaction>[] = [
-    {
-      key: 'createdAt',
-      label: 'Date',
-      render: (v) => new Date(v).toLocaleDateString()
-    },
     {
       key: 'reseller',
       label: 'Reseller Name',
@@ -128,6 +132,19 @@ export default function LedgerPage() {
     {
       key: 'paymentMethod',
       label: 'Payment Method',
+      render: (v) => {
+        let colorClass = 'bg-gray-100 text-gray-800';
+        if (v === 'UPI') colorClass = 'bg-blue-100 text-blue-800';
+        else if (v === 'Cash') colorClass = 'bg-emerald-100 text-emerald-800';
+        else if (v === 'Gpay' || v === 'GPay' || v === 'Google Pay') colorClass = 'bg-purple-100 text-purple-800';
+        else if (v === 'Bank Transfer') colorClass = 'bg-indigo-100 text-indigo-800';
+
+        return (
+          <span className={`px-2 py-1 rounded-md text-xs font-medium ${colorClass}`}>
+            {v || '-'}
+          </span>
+        );
+      }
     },
     {
       key: 'referenceId',
@@ -150,6 +167,11 @@ export default function LedgerPage() {
       key: 'note',
       label: 'Note',
       render: (v) => v || '-'
+    },
+    {
+      key: 'createdAt',
+      label: 'Date',
+      render: (v) => new Date(v).toLocaleDateString()
     }
   ];
 

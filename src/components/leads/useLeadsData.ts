@@ -52,7 +52,7 @@ export function useLeadsData(
   const [wonTotalPages, setWonTotalPages] = useState(1);
   const [wonTotalItems, setWonTotalItems] = useState(0);
 
-  const LIMIT = 10;
+  const [limit, setLimit] = useState(10);
 
   const getHeaders = () => ({ Authorization: `Bearer ${getAuthToken()}` });
 
@@ -175,14 +175,14 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit: LIMIT,
+          limit,
         },
       });
       const arr = res.data?.data || [];
       const p = res.data?.pagination || {};
       setLeadsList(arr);
       setListTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setListTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / LIMIT) : 1));
+      setListTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
     } catch (e) {
       console.error('fetchLeadsList error:', e);
       setLeadsList([]);
@@ -207,7 +207,7 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit: LIMIT,
+          limit,
         },
       });
       const raw = res.data?.data;
@@ -215,7 +215,7 @@ export function useLeadsData(
       const p = res.data?.pagination || {};
       setLostLeads(arr);
       setLostTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setLostTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / LIMIT) : 1));
+      setLostTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
     } catch (e) {
       console.error('fetchLostLeads error:', e);
       setLostLeads([]);
@@ -240,7 +240,7 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit: LIMIT,
+          limit,
         },
       });
       const raw = res.data?.data;
@@ -248,7 +248,7 @@ export function useLeadsData(
       const p = res.data?.pagination || {};
       setWonLeads(arr);
       setWonTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setWonTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / LIMIT) : 1));
+      setWonTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
     } catch (e) {
       console.error('fetchWonLeads error:', e);
       setWonLeads([]);
@@ -378,13 +378,15 @@ export function useLeadsData(
     if (kanbanSubView === 'won') fetchWonLeads(activeTab, filters, wonPage);
   }, [kanbanSubView]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 5. List page change
+  // 5. List page or limit change
   const prevListPage = useRef(listPage);
+  const prevLimit = useRef(limit);
   useEffect(() => {
-    if (prevListPage.current === listPage) return;
+    if (prevListPage.current === listPage && prevLimit.current === limit) return;
     prevListPage.current = listPage;
+    prevLimit.current = limit;
     if (viewMode === 'list') fetchLeadsList(activeTab, filters, listPage);
-  }, [listPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [listPage, limit]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 6. Lost page change
   const prevLostPage = useRef(lostPage);
@@ -426,35 +428,35 @@ export function useLeadsData(
 
     listPagination: {
       currentPage: listPage,
-      rowsPerPage: LIMIT,
+      rowsPerPage: limit,
       totalPages: listTotalPages,
       totalItems: listTotalItems,
       handlePageChange: (p: number) => setListPage(p),
-      handleRowsPerPageChange: (_: number) => setListPage(1),
+      handleRowsPerPageChange: (newLimit: number) => { setLimit(newLimit); setListPage(1); },
     },
     lostPagination: {
       currentPage: lostPage,
-      rowsPerPage: LIMIT,
+      rowsPerPage: limit,
       totalPages: lostTotalPages,
       totalItems: lostTotalItems,
       handlePageChange: (p: number) => setLostPage(p),
-      handleRowsPerPageChange: (_: number) => setLostPage(1),
+      handleRowsPerPageChange: (newLimit: number) => { setLimit(newLimit); setLostPage(1); },
     },
     wonPagination: {
       currentPage: wonPage,
-      rowsPerPage: LIMIT,
+      rowsPerPage: limit,
       totalPages: wonTotalPages,
       totalItems: wonTotalItems,
       handlePageChange: (p: number) => setWonPage(p),
-      handleRowsPerPageChange: (_: number) => setWonPage(1),
+      handleRowsPerPageChange: (newLimit: number) => { setLimit(newLimit); setWonPage(1); },
     },
     pagination: {
       currentPage: listPage,
-      rowsPerPage: LIMIT,
+      rowsPerPage: limit,
       totalPages: listTotalPages,
       totalItems: listTotalItems,
       handlePageChange: (p: number) => setListPage(p),
-      handleRowsPerPageChange: (_: number) => setListPage(1),
+      handleRowsPerPageChange: (newLimit: number) => { setLimit(newLimit); setListPage(1); },
     },
   };
 }

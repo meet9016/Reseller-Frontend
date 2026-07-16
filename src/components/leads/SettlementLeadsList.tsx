@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { FiSearch, FiCalendar } from 'react-icons/fi';
-import { IndianRupee } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { formatIndianCurrency } from '@/utills/formatters';
 import { toast } from 'react-toastify';
 
 interface SettlementLeadsListProps {
@@ -249,7 +250,7 @@ export default function SettlementLeadsList({
               {selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length} Lead{selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length > 1 ? 's' : ''} Selected
             </h3>
             <p className="text-blue-600 text-xs mt-1">
-              Total Commission: <span className="font-bold text-sm">₹{totalSettlementAmount.toLocaleString('en-IN')}</span>
+              Total Commission: <span className="font-bold text-sm">{formatIndianCurrency(totalSettlementAmount)}</span>
             </p>
           </div>
         </div>
@@ -314,10 +315,10 @@ export default function SettlementLeadsList({
                     {lead.paymentMode}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-emerald-600">
-                    ₹{lead.paymentAmount?.toLocaleString('en-IN') || 0}
+                    {formatIndianCurrency(lead.paymentAmount || 0)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-extrabold text-gray-900">
-                    ₹{lead.commissionAmount?.toLocaleString('en-IN') || 0}
+                    {formatIndianCurrency(lead.commissionAmount || 0)}
                   </td>
                 </tr>
               );

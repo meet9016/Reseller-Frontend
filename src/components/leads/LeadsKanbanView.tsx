@@ -7,6 +7,7 @@ import { formatContactNumber } from "@/utills/utill";
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { baseUrl, getAuthToken } from '@/config';
+import { formatIndianCurrency } from '@/utills/formatters';
 import { ApiLead } from './types';
 import { RefreshCw } from 'lucide-react';
 import DataTable, { Column } from '@/components/DataTable';
@@ -275,9 +276,9 @@ export default function LeadsKanbanView({
     const lostLeadsColumns: Column<ApiLead>[] = [
         { key: 'fullName', label: 'LEAD NAME', render: (v, row) => (<div><div className="font-semibold text-gray-900">{row.customerName || v}</div><span className="text-xs text-red-500">• Lost</span></div>) },
         { key: 'companyName', label: 'COMPANY', render: (v) => <span className="text-sm">{v || '-'}</span> },
-        { key: 'address', label: 'LOCATION', render: (v) => <span className="text-sm">{v || '-'}</span> },
+        { key: 'address', label: 'LOCATION', render: (v, row) => <span className="text-sm">{v || row.city || '-'}</span> },
         { key: 'contact', label: 'CONTACT', render: (v, row) => <ContactCell phone={row.customerContact || v} email={row.customerEmail || row.email} /> },
-        { key: 'lostDate', label: 'LOST DATE', render: (v) => (v ? new Date(v).toLocaleDateString() : 'N/A') },
+        { key: 'lostDate', label: 'LOST DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString() : 'N/A' } },
         { key: 'assignedTo', label: 'ASSIGNED TO', render: (v) => v?.fullName || '-' },
         { key: 'lostReason', label: 'REASON', render: (v) => v || 'Not specified' },
     ];
@@ -285,11 +286,11 @@ export default function LeadsKanbanView({
     const wonLeadsColumns: Column<ApiLead>[] = [
         { key: 'fullName', label: 'LEAD NAME', render: (v, row) => <span className="font-semibold text-gray-900">{row.customerName || v}</span> },
         { key: 'companyName', label: 'COMPANY', render: (v) => <span className="text-sm">{v || '-'}</span> },
-        { key: 'address', label: 'LOCATION', render: (v) => <span className="text-sm">{v || '-'}</span> },
+        { key: 'address', label: 'LOCATION', render: (v, row) => <span className="text-sm">{v || row.city || '-'}</span> },
         { key: 'contact', label: 'CONTACT', render: (v, row) => <ContactCell phone={row.customerContact || v} email={row.customerEmail || row.email} /> },
-        { key: 'wonDate', label: 'WON DATE', render: (v) => (v ? new Date(v).toLocaleDateString() : 'N/A') },
+        { key: 'wonDate', label: 'WON DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString() : 'N/A' } },
         { key: 'assignedTo', label: 'ASSIGNED TO', render: (v) => v?.fullName || '-' },
-        { key: 'paymentAmount', label: 'AMOUNT', render: (v) => (v ? `₹${v.toLocaleString()}` : '-') },
+        { key: 'paymentAmount', label: 'AMOUNT', render: (v) => (v ? formatIndianCurrency(v) : '-') },
     ];
 
     return (

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Phone, Mail, Trash2 } from 'lucide-react';
+import { formatIndianCurrency } from '@/utills/formatters';
 import { formatContactNumber } from "@/utills/utill";
 import { baseUrl, getAuthToken } from '@/config';
 import { ApiStatus, ApiUser, ApiLead } from './types';
@@ -207,12 +208,12 @@ export default function LeadsListView({
     {
       key: 'paymentAmount',
       label: 'AMOUNT',
-      render: (v) => (v ? <span className="font-bold text-emerald-600">₹{v.toLocaleString()}</span> : <span className="text-gray-400">-</span>)
+      render: (v) => (v ? <span className="font-bold text-emerald-600">{formatIndianCurrency(v)}</span> : <span className="text-gray-400">-</span>)
     },
     {
       key: 'commissionAmount',
       label: 'COMMISSION',
-      render: (v) => (v && Number(v) > 0 ? <span className="font-bold text-blue-600">₹{Number(v).toLocaleString('en-IN')}</span> : <span className="text-gray-400">-</span>)
+      render: (v) => (v && Number(v) > 0 ? <span className="font-bold text-blue-600">{formatIndianCurrency(v)}</span> : <span className="text-gray-400">-</span>)
     },
   ];
 

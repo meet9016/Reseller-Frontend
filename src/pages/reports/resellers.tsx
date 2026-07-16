@@ -5,7 +5,7 @@ import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
 import { RefreshCw, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utills/exportHelper';
 
 interface ReportReseller {
   _id: string;
@@ -52,21 +52,29 @@ export default function ResellersReport() {
     if (isMounted) fetchData();
   }, [fetchData, isMounted]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const exportData = data.map(item => ({
-      'Reseller Name': item.fullName || '-',
-      'Email': item.email || '-',
-      'Phone': item.phone || '-',
-      'Role': item.role?.roleName || '-',
-      'Status': item.status || '-',
-      'Commission Rate (%)': item.commissionRate || 0,
-      'Joined Date': new Date(item.createdAt).toLocaleDateString(),
+      fullName: item.fullName || '-',
+      email: item.email || '-',
+      phone: item.phone || '-',
+      role: item.role?.roleName || '-',
+      status: item.status || '-',
+      commissionRate: item.commissionRate || 0,
+      joinedDate: new Date(item.createdAt).toLocaleDateString(),
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Resellers_Report");
-    XLSX.writeFile(wb, `Resellers_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const columns = [
+      { header: 'Reseller Name', key: 'fullName', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Phone', key: 'phone', width: 18 },
+      { header: 'Role', key: 'role', width: 15 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Commission Rate (%)', key: 'commissionRate', width: 22 },
+      { header: 'Joined Date', key: 'joinedDate', width: 20 },
+    ];
+
+    const fileName = `Resellers_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    await exportToExcel(fileName, 'Resellers', columns, exportData);
   };
 
   const columns: Column<ReportReseller>[] = [

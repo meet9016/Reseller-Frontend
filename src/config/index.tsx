@@ -69,6 +69,7 @@ export const baseUrl = {
   settingsRequiredFields: `${API}settings/required-fields`,
   settingsLeadFields: `${API}settings/lead-fields`,
   settleLeads: `${API}settlement/settle-leads`,
+  exportGeneric: `${API}export`,
   getBaseUrl: API,
   getImageUrl: (process.env.NEXT_PUBLIC_IMAGE_URL || "").replace(/\/+$/, ""),
 };

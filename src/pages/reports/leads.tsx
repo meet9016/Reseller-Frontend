@@ -7,7 +7,7 @@ import DataTable, { Column } from '@/components/DataTable';
 import DatePicker from '@/components/ui/DatePicker';
 import { RefreshCw, Download, IndianRupee } from 'lucide-react';
 import toast from 'react-hot-toast';
-import * as XLSX from 'xlsx';
+import { exportToExcel } from '@/utills/exportHelper';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { FormSelect } from '@/components/ui/FormSelect';
@@ -89,22 +89,31 @@ export default function LeadsReport() {
     }
   }, [fetchData, user]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const exportData = data.map(item => ({
-      'Date': new Date(item.createdAt).toLocaleDateString('en-IN'),
-      'Customer Name': item.customerName || '-',
-      'Email': item.customerEmail || '-',
-      'Product': item.product || '-',
-      'Status': item.leadStatus?.name || '-',
-      'Reseller': item.assignedTo?.fullName || '-',
-      'Amount': item.paymentAmount || 0,
-      'Commission': item.commissionAmount || 0,
+      date: new Date(item.createdAt).toLocaleDateString('en-IN'),
+      customerName: item.customerName || '-',
+      email: item.customerEmail || '-',
+      product: item.product || '-',
+      status: item.leadStatus?.name || '-',
+      reseller: item.assignedTo?.fullName || '-',
+      amount: item.paymentAmount || 0,
+      commission: item.commissionAmount || 0,
     }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Leads_Report");
-    XLSX.writeFile(wb, `Leads_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const columns = [
+      { header: 'Date', key: 'date', width: 15 },
+      { header: 'Customer Name', key: 'customerName', width: 25 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Product', key: 'product', width: 20 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Reseller', key: 'reseller', width: 25 },
+      { header: 'Amount', key: 'amount', width: 15 },
+      { header: 'Commission', key: 'commission', width: 15 },
+    ];
+
+    const fileName = `Leads_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    await exportToExcel(fileName, 'Leads', columns, exportData);
   };
 
   const columns: Column<ReportLead>[] = [

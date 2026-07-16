@@ -58,7 +58,11 @@ const normalizeRole = (r: BackendRole): Role => {
 
   const normalizedPerms: Record<string, ReturnType<typeof normalizeCaps>> = {};
   for (const f of features) {
-    normalizedPerms[f] = normalizeCaps(srcPerms[f]);
+    if (f === 'staff') {
+      normalizedPerms[f] = normalizeCaps(srcPerms['reseller']);
+    } else {
+      normalizedPerms[f] = normalizeCaps(srcPerms[f]);
+    }
   }
 
   return {
@@ -87,7 +91,7 @@ const toBackendRole = (r: Role): BackendRole => {
   const lead = serializeCaps(r.permissions?.lead);
   const task = serializeCaps(r.permissions?.task);
   const taskStatus = serializeCaps(r.permissions?.taskStatus);
-  const staff = serializeCaps(r.permissions?.staff);
+  const reseller = serializeCaps(r.permissions?.staff);
   const role = serializeCaps(r.permissions?.role);
   const leadStatus = serializeCaps(r.permissions?.leadStatus);
   const leadSource = serializeCaps(r.permissions?.leadSource);
@@ -101,7 +105,7 @@ const toBackendRole = (r: Role): BackendRole => {
       lead, 
       task, 
       taskStatus,
-      staff, 
+      reseller, 
       role, 
       leadStatus, 
       leadSource,

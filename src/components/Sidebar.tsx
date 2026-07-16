@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { baseUrl, clearAuthToken, getAuthToken } from "@/config";
 import Swal from 'sweetalert2';
+import DeleteDialog from './DeleteDialog';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { role: userRole, permissions: rawPerms } = useSelector((state: any) => state.auth);
 
@@ -136,47 +138,13 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   };
 
   const handleLogout = () => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You will be logged out of your account",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, logout',
-      cancelButtonText: 'Cancel',
-      background: '#fff',
-      backdrop: true,
-      allowOutsideClick: false,
-      allowEscapeKey: true,
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Show loading state
-        Swal.fire({
-          title: 'Logging out...',
-          text: 'Please wait',
-          icon: 'info',
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
+    setIsLogoutModalOpen(true);
+  };
 
-        // Show success message
-        Swal.fire({
-          title: 'Logged Out!',
-          text: 'You have been successfully logged out',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-        }).then(() => {
-          clearAuthToken();
-          router.replace("/login");
-        });
-      }
-    });
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    clearAuthToken();
+    router.replace("/login");
   };
 
   const handleNavigation = (path?: string) => {
@@ -308,6 +276,30 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
         </div>
       </aside>
+
+      <DeleteDialog
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        title="Confirm Logout"
+        footer={
+          <>
+            <button
+              onClick={() => setIsLogoutModalOpen(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmLogout}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-600">You will be logged out of your account. Are you sure you want to proceed?</p>
+      </DeleteDialog>
     </>
   );
 }

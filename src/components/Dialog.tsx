@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FiX } from 'react-icons/fi';
+import { createPortal } from 'react-dom';
 
 interface DialogProps {
   isOpen: boolean;
@@ -26,6 +27,11 @@ export default function Dialog({
     lg: 'md:w-1/2 md:max-w-[50vw]',
     xl: 'md:w-2/3 md:max-w-[75vw]',
   };
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -38,9 +44,11 @@ export default function Dialog({
     };
   }, [isOpen]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex justify-end ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+      className={`fixed inset-0 z-[100] flex justify-end ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
     >
       {/* Backdrop */}
@@ -82,7 +90,8 @@ export default function Dialog({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -99,6 +108,12 @@ export function CenterDialog({
   onClose,
   children,
 }: CenterDialogProps) {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -111,9 +126,11 @@ export function CenterDialog({
     };
   }, [isOpen]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+      className={`fixed inset-0 z-[100] flex items-center justify-center ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
     >
       {/* Backdrop */}
@@ -135,6 +152,7 @@ export function CenterDialog({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
