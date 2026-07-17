@@ -37,7 +37,7 @@ const createValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .email('Invalid email format'),
+    .matches(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, 'Invalid email format'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
@@ -55,7 +55,7 @@ const updateValidationSchema = Yup.object({
     .min(2, 'Full name must be at least 2 characters'),
   email: Yup.string()
     .required('Email is required')
-    .email('Invalid email format'),
+    .matches(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i, 'Invalid email format'),
   phone: Yup.string()
     .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
@@ -76,8 +76,8 @@ export default function ResellerDialog({
   initialData,
 }: ResellerDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const previewImageRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roles, setRoles] = useState<{ _id: string; roleName: string }[]>([]);
@@ -101,10 +101,11 @@ export default function ResellerDialog({
       role: '',
       status: 'active',
       commissionRate: '',
+      profileImage: null as File | null,
     },
     validationSchema: isUpdate ? updateValidationSchema : createValidationSchema,
-    validateOnChange: false,
-    validateOnBlur: false,
+    validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: async (values) => {
       await handleSubmit(values);
     },
@@ -113,35 +114,40 @@ export default function ResellerDialog({
 
   useEffect(() => {
     if (error) setError(null);
-  }, [formik.values, selectedFile]);
+  }, [formik.values]);
 
   const resetForm = () => {
     formik.resetForm();
-    setSelectedFile(null);
     setPreviewImage(null);
     setShowPassword(false);
     setError(null);
   };
 
-  useEffect(() => {
-    if (initialData?._id) {
-      formik.setValues({
-        fullName: initialData.fullName || '',
-        email: initialData.email || '',
-        phone: initialData.phone ? String(initialData.phone).replace(/\D/g, '').slice(0, 10) : '',
-        password: '',
-        role: initialData.role || '',
-        status: initialData.status || 'active',
-        commissionRate: (initialData as any).commissionRate || '',
-      });
+  const prevInitialDataId = useRef<string | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-      if (initialData.profileImage) {
-        setPreviewImage(
-          `${baseUrl.getImageUrl}/images/ResellerProfileImages/${initialData.profileImage}`
-        );
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initialData?._id) {
+      if (prevInitialDataId.current !== initialData._id) {
+        prevInitialDataId.current = initialData._id;
+        formik.setValues({
+          fullName: initialData.fullName || '',
+          email: initialData.email || '',
+          phone: initialData.phone ? String(initialData.phone).replace(/\D/g, '').slice(0, 10) : '',
+          password: '',
+          role: initialData.role || '',
+          status: initialData.status || 'active',
+          commissionRate: (initialData as any).commissionRate || '',
+          profileImage: null,
+        });
+        setPreviewImage(initialData.profileImage || null);
       }
     } else {
-      resetForm();
+      if (prevInitialDataId.current !== undefined) {
+        prevInitialDataId.current = undefined;
+        resetForm();
+      }
     }
   }, [initialData, isOpen]);
 
@@ -172,9 +178,11 @@ export default function ResellerDialog({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Only JPEG, PNG, JPG, and GIF images are allowed');
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const hasValidExtension = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+    
+    if (!file.type.startsWith('image/') && !hasValidExtension) {
+      toast.error('Please select a valid image file (JPG, PNG, GIF, WEBP)');
       return;
     }
 
@@ -183,8 +191,13 @@ export default function ResellerDialog({
       return;
     }
 
-    setSelectedFile(file);
-    setPreviewImage(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      previewImageRef.current = reader.result as string;
+      setPreviewImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    formik.setFieldValue('profileImage', file);
   };
 
   const handleSubmit = async (values: any) => {
@@ -206,8 +219,8 @@ export default function ResellerDialog({
         payload.append('password', values.password);
       }
 
-      if (selectedFile) {
-        payload.append('profileImage', selectedFile);
+      if (values.profileImage) {
+        payload.append('profileImage', values.profileImage);
       }
 
       const headers = {
@@ -385,34 +398,41 @@ export default function ResellerDialog({
               </div>
 
               <div className="flex flex-col items-center gap-4">
-                <div className="relative w-28 h-28 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 overflow-hidden cursor-pointer group hover:border-blue-400 transition-colors"
+                >
                   {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                    />
+                    <>
+                      <img
+                        key={previewImage.slice(-20)}
+                        src={previewImage}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => console.log('IMG ERROR', e)}
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <FiCamera className="w-6 h-6 text-white" />
+                      </div>
+                    </>
                   ) : (
-                    <div className="flex flex-col items-center text-gray-400">
-                      <FiCamera className="w-8 h-8" />
+                    <div className="flex flex-col items-center text-gray-400 group-hover:text-blue-500 transition-colors">
+                      <FiCamera className="w-8 h-8 mb-1" />
+                      <span className="text-xs font-medium">Upload</span>
                     </div>
                   )}
-                </div>
-
-                <label
-                  htmlFor="profile-image-upload"
-                  className="px-4 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 font-medium text-sm hover:bg-blue-100 cursor-pointer transition-colors text-center inline-flex items-center gap-1.5"
-                >
-                  <FiCamera className="w-4 h-4" />
-                  Upload Image
                   <input
-                    id="profile-image-upload"
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                </label>
+                </div>
+                
+                <p className="text-xs text-gray-500 text-center px-4">
+                  Allowed formats: JPG, PNG, GIF, WEBP.<br/> Max size: 5MB.
+                </p>
               </div>
             </div>
 
