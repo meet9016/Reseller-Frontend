@@ -34,24 +34,10 @@ export default function LeadsReport() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
-  const [status, setStatus] = useState('');
-  const [statuses, setStatuses] = useState<{ _id: string; name: string }[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const fetchStatuses = async () => {
-      try {
-        const token = getAuthToken();
-        const res = await axios.get(baseUrl.leadStatuses, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStatuses(res.data?.data || res.data || []);
-      } catch (err) {
-        console.error('Failed to fetch statuses:', err);
-      }
-    };
-    fetchStatuses();
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -60,11 +46,10 @@ export default function LeadsReport() {
       const token = getAuthToken();
       if (!token) return;
 
-      const params: any = { limit: 1000, report: 'true' };
+      const params: any = { limit: 1000, report: 'true', onlyWon: 'true' };
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       if (paymentStatus) params.paymentStatus = paymentStatus;
-      if (status) params.status = status;
 
       const userRole = role?.toLowerCase() || user?.role?.roleName?.toLowerCase() || '';
       const url = userRole === 'admin' ? baseUrl.getAllLeads : baseUrl.myLeads;
@@ -81,7 +66,7 @@ export default function LeadsReport() {
     } finally {
       setIsLoading(false);
     }
-  }, [fromDate, toDate, paymentStatus, status, user, role]);
+  }, [fromDate, toDate, paymentStatus, user, role]);
 
   useEffect(() => {
     if (user) {
@@ -224,22 +209,12 @@ export default function LeadsReport() {
                   ]}
                 />
               </div>
-              <div className="w-[150px]">
-                <FormSelect
-                  value={status}
-                  onChange={setStatus}
-                  options={[
-                    { value: '', label: 'All Statuses' },
-                    ...statuses.map(s => ({ value: s._id, label: s.name }))
-                  ]}
-                />
-              </div>
+
               <button
                 onClick={() => {
                   setFromDate('');
                   setToDate('');
                   setPaymentStatus('');
-                  setStatus('');
                 }}
                 className="p-2 ml-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-all rounded-md shadow-sm"
                 title="Reset Filters"
