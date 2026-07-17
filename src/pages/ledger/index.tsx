@@ -146,11 +146,11 @@ export default function LedgerPage() {
         );
       }
     },
-    {
-      key: 'referenceId',
-      label: 'Ref ID',
-      render: (v) => v || '-'
-    },
+    // {
+    //   key: 'referenceId',
+    //   label: 'Ref ID',
+    //   render: (v) => v || '-'
+    // },
     {
       key: 'status',
       label: 'Status',

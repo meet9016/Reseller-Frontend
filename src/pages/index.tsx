@@ -190,7 +190,7 @@ export default function Dashboard() {
 
   const isReseller = (!permissions.readAll && permissions.readOwn) || user?.role?.roleName?.toLowerCase() === 'reseller';
 
-  const { user: authUser, permissions: rawPerms } = useSelector((state: any) => state.auth);
+  const { user: authUser, permissions: rawPerms, role: userRole } = useSelector((state: any) => state.auth);
 
   // Fetch user info and permissions
   useEffect(() => {
@@ -538,7 +538,12 @@ export default function Dashboard() {
         name: "Total Resellers",
         description: "Resellers registered"
       }
-    ].filter((card) => card.key !== "total" || isReseller)
+    ].filter((card) => {
+      if (card.key === "reseller") {
+        return userRole?.toLowerCase() === "admin";
+      }
+      return true;
+    })
     : [];
 
   const monthlyRevenueData = (() => {
@@ -1203,7 +1208,7 @@ export default function Dashboard() {
               </div>
 
               {/* Year Dropdown Selector */}
-              <div className="relative" ref={yearDropdownRef}>
+              <div className="relative z-50" ref={yearDropdownRef}>
                 <button
                   onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
                   className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all"

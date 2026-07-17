@@ -149,7 +149,7 @@ export default function SettlementsReport() {
           </div>
 
           <div className="bg-white p-4 rounded-t-lg border-b border-gray-100 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <div className="w-[150px]">
                 <DatePicker
                   value={fromDate}
@@ -175,7 +175,7 @@ export default function SettlementsReport() {
               >
                 <RefreshCw className="h-4 w-4" />
               </button>
-            </div>
+            </div> */}
 
             <button
               onClick={handleExport}

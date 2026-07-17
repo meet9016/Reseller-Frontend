@@ -89,12 +89,12 @@ export function useLeadsData(
   // Keep latest values in a ref so callbacks always read fresh values
   const stateRef = useRef({
     activeTab, filters, viewMode, kanbanSubView,
-    listPage, lostPage, wonPage,
+    listPage, lostPage, wonPage, limit,
   });
   useEffect(() => {
     stateRef.current = {
       activeTab, filters, viewMode, kanbanSubView,
-      listPage, lostPage, wonPage,
+      listPage, lostPage, wonPage, limit,
     };
   });
 
@@ -175,14 +175,14 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit,
+          limit: stateRef.current.limit,
         },
       });
       const arr = res.data?.data || [];
       const p = res.data?.pagination || {};
       setLeadsList(arr);
       setListTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setListTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
+      setListTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / stateRef.current.limit) : 1));
     } catch (e) {
       console.error('fetchLeadsList error:', e);
       setLeadsList([]);
@@ -207,7 +207,7 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit,
+          limit: stateRef.current.limit,
         },
       });
       const raw = res.data?.data;
@@ -215,7 +215,7 @@ export function useLeadsData(
       const p = res.data?.pagination || {};
       setLostLeads(arr);
       setLostTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setLostTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
+      setLostTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / stateRef.current.limit) : 1));
     } catch (e) {
       console.error('fetchLostLeads error:', e);
       setLostLeads([]);
@@ -240,7 +240,7 @@ export function useLeadsData(
           from: f.from || undefined,
           to: f.to || undefined,
           page,
-          limit,
+          limit: stateRef.current.limit,
         },
       });
       const raw = res.data?.data;
@@ -248,7 +248,7 @@ export function useLeadsData(
       const p = res.data?.pagination || {};
       setWonLeads(arr);
       setWonTotalItems(p.totalRecords ?? p.total ?? p.count ?? arr.length);
-      setWonTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / limit) : 1));
+      setWonTotalPages(p.totalPages ?? (p.totalRecords ? Math.ceil(p.totalRecords / stateRef.current.limit) : 1));
     } catch (e) {
       console.error('fetchWonLeads error:', e);
       setWonLeads([]);
