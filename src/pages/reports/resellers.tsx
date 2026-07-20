@@ -93,15 +93,7 @@ export default function ResellersReport() {
       label: 'PHONE',
       render: (value) => <span className="text-gray-700">{value}</span>,
     },
-    {
-      key: 'role',
-      label: 'ROLE',
-      render: (value: any) => (
-        <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-medium capitalize">
-          {value?.roleName || '-'}
-        </span>
-      ),
-    },
+
     {
       key: 'commissionRate',
       label: 'COMMISSION RATE',

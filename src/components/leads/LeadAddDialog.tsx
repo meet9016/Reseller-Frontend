@@ -57,10 +57,19 @@ export default function LeadAddDialog({
         setRequiredFields(reqs);
 
         const schemaShape: any = {
-          customerName: Yup.string().trim(),
-          customerEmail: Yup.string().email('Invalid email format').matches(EMAIL_REGEX, 'Invalid email format').trim(),
-          customerContact: Yup.string().trim().test('is-10-digits', 'Customer Contact must be exactly 10 digits', val => !val || /^[0-9]{10}$/.test(val)),
-          companyName: Yup.string().trim(),
+          customerName: Yup.string()
+            .max(50, 'Max 50 characters')
+            .test('req', 'Customer name is required', val => !requiredFields.includes('customerName') || !!val),
+          customerEmail: Yup.string()
+            .email('Invalid email address')
+            .test('req', 'Email is required', val => !requiredFields.includes('customerEmail') || !!val),
+          customerContact: Yup.string()
+            .matches(/^[6-9]\d{9}$/, 'Must be a valid 10-digit Indian phone number')
+            .test('req', 'Contact is required', val => !requiredFields.includes('customerContact') || !!val),
+          companyName: Yup.string()
+            .test('req', 'Company name is required', val => !requiredFields.includes('companyName') || !!val),
+          address: Yup.string()
+            .test('req', 'Location is required', val => !requiredFields.includes('address') || !!val),
           paymentAmount: Yup.number().transform((value, originalValue) => originalValue === '' ? undefined : value).typeError('Payment Amount must be a number').min(0, 'Payment Amount cannot be negative'),
           leadStatus: Yup.string(),
           leadSource: Yup.string(),
@@ -99,6 +108,7 @@ export default function LeadAddDialog({
       customerEmail: '',
       customerContact: '',
       companyName: '',
+      address: '',
       paymentAmount: '',
       leadStatus: '',
       leadSource: '',
@@ -117,6 +127,7 @@ export default function LeadAddDialog({
           customerEmail: values.customerEmail.trim().toLowerCase(),
           customerContact: values.customerContact.trim(),
           companyName: values.companyName?.trim() || "",
+          address: values.address?.trim() || "",
           paymentAmount: Number(values.paymentAmount) || 0,
           leadStatus: values.leadStatus,
           leadSource: values.leadSource,
@@ -165,6 +176,7 @@ export default function LeadAddDialog({
           customerEmail: (initialData as any).customerEmail || initialData.email || '',
           customerContact: (initialData as any).customerContact || (initialData as any).customerContact || initialData.contact || '',
           companyName: initialData.companyName || '',
+          address: (initialData as any).address || '',
           paymentAmount: (initialData as any).paymentAmount != null ? String((initialData as any).paymentAmount) : '',
           leadStatus: typeof initialData.leadStatus === 'object' ? initialData.leadStatus?._id || '' : (initialData.leadStatus || ''),
           leadSource: typeof (initialData as any).leadSource === 'object' ? (initialData as any).leadSource?._id || '' : ((initialData as any).leadSource || (initialData as any).source || ''),
@@ -273,6 +285,15 @@ export default function LeadAddDialog({
               onBlur={formik.handleBlur}
               error={getFieldError('companyName')}
               required={requiredFields.includes('companyName')}
+            />
+            <FormInput
+              label="Location"
+              name="address"
+              value={formik.values.address}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={getFieldError('address')}
+              required={requiredFields.includes('address')}
             />
             <FormInput
               label="Payment Amount"

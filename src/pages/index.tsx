@@ -134,16 +134,10 @@ export default function Dashboard() {
   const handleYearSelect = (year: number) => {
     setSelectedYear(year);
     setYearDropdownOpen(false);
-
-    // Set custom date range to show that entire year's records
-    const start = `${year}-01-01`;
-    const end = `${year}-12-31`;
-    setFromDate(start);
-    setToDate(end);
-    setActiveRange('custom');
   };
 
   const [summary, setSummary] = useState<LeadSummary | null>(null);
+  const [revenueChart, setRevenueChart] = useState<any[]>([]);
   const [leadsBySource, setLeadsBySource] = useState<
     { name: string; value: number; fill: string }[]
   >([]);
@@ -259,90 +253,88 @@ export default function Dashboard() {
     fill: statusColorPalette[idx % statusColorPalette.length],
   }));
 
-  const fetchLeadSummary = async () => {
+  const colorPalette = [
+    "#3B82F6", // blue-500
+    "#10B981", // emerald-500
+    "#F59E0B", // amber-500
+    "#EF4444", // red-500
+    "#8B5CF6", // violet-500
+    "#EC4899", // pink-500
+    "#06B6D4", // cyan-500
+    "#84CC16", // lime-500
+    "#F97316", // orange-500
+    "#6366F1", // indigo-500
+  ];
+
+  const fetchDashboardData = async () => {
     if (!token) return;
     try {
-      const isMyOnly = !permissions.readAll && permissions.readOwn;
-      const url = isMyOnly ? baseUrl.myLeadCountSummary : baseUrl.leadCountSummary;
-      const res = await axios.get(url, {
+      const res = await axios.get(baseUrl.dashboardData, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           from: fromDate || undefined,
           to: toDate || undefined,
-          rangeType: activeRange || undefined,
+          filter: activeRange === 'yearly' ? 'year' : activeRange === 'weekly' ? 'week' : 'month',
         }
       });
-      setSummary(res.data.data);
+      const data = res.data;
+      if (!data || !data.counts) return;
+
+      // Update Summary
+      setSummary({
+        totalLeads: data.counts?.total || 0,
+        currentMonthLeads: data.counts?.currentMonthLeads || 0,
+        totalRevenue: data.counts?.totalRevenue || 0,
+        totalPaid: data.counts?.totalPaid || 0,
+        totalPending: data.counts?.totalPending || 0,
+        totalReseller: data.counts?.totalReseller || 0,
+        statusWiseCounts: data.charts?.donutChart || [],
+      });
+      
+      // Fetch Revenue Chart Data
+      fetchRevenueChartData(selectedYear);
+
+      if (permissions.readAll) {
+        // Update Leads By Source
+        const sourceData = (data.charts?.leadsBySource ?? []).map((item: any, idx: number) => ({
+          name: item.name,
+          value: item.count || 0,
+          fill: colorPalette[idx % colorPalette.length],
+        }));
+        setLeadsBySource(sourceData);
+
+        // Update Staff Performance
+        setStaffPerformance(data.charts?.staffPerformance || []);
+
+        // Update Reseller Revenue
+        setResellerRevenue(data.charts?.resellerRevenue || []);
+      }
     } catch (err) {
-      console.error("Lead summary error:", err);
+      console.error("Dashboard data error:", err);
     }
   };
 
-  const fetchLeadsBySource = async () => {
+  const fetchRevenueChartData = async (year: number) => {
     if (!token) return;
     try {
-      const res = await axios.get(baseUrl.leadSources, {
+      const res = await axios.get(baseUrl.revenueChartData, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { year }
       });
-
-      const colorPalette = [
-        "#3B82F6", // blue-500
-        "#10B981", // emerald-500
-        "#F59E0B", // amber-500
-        "#EF4444", // red-500
-        "#8B5CF6", // violet-500
-        "#EC4899", // pink-500
-        "#06B6D4", // cyan-500
-        "#84CC16", // lime-500
-        "#F97316", // orange-500
-        "#6366F1", // indigo-500
-      ];
-
-      const chartData = (res.data.data ?? []).map((item: any, idx: number) => ({
-        name: item.name,
-        value: item.count || 0,
-        fill: colorPalette[idx % colorPalette.length],
-      }));
-
-      setLeadsBySource(chartData);
+      if (res.data?.data) {
+        setRevenueChart(res.data.data);
+      }
     } catch (err) {
-      console.error("Leads by source error:", err);
+      console.error("Revenue chart error:", err);
     }
   };
 
-  const fetchResellerRevenue = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(baseUrl.resellerRevenue, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          from: fromDate || undefined,
-          to: toDate || undefined,
-        }
-      });
-      setResellerRevenue(res.data.data || []);
-    } catch (err) {
-      console.error("Reseller revenue error:", err);
+  // When year changes, only fetch the chart
+  useEffect(() => {
+    if (token) {
+      fetchRevenueChartData(selectedYear);
     }
-  };
-
-  const fetchStaffPerformance = async () => {
-    if (!token) return;
-    try {
-      const res = await axios.get(baseUrl.getAllStaff, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const chartData = (res.data.data ?? []).map((staff: any) => ({
-        name: staff.fullName || "Unknown",
-        converted: staff.status?.toLowerCase() === "active" ? 1 : 0,
-        pending: staff.status?.toLowerCase() === "inactive" ? 1 : 0,
-        lost: 0,
-      }));
-      setStaffPerformance(chartData);
-    } catch (err) {
-      console.error("Staff performance error:", err);
-    }
-  };
+  }, [selectedYear]);
 
   const fetchUpcomingFollowups = async (page: number) => {
     if (!token) return;
@@ -434,20 +426,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (token) {
-      fetchLeadSummary();
+      fetchDashboardData();
+    }
+  }, [token, permissions, fromDate, toDate, activeRange]);
+
+  useEffect(() => {
+    if (token) {
       fetchUpcomingFollowups(1);
       fetchDueFollowups(1);
       fetchAllFollowups(1);
       fetchTodayTasks();
-
-      // Only fetch staff stats if they have readAll
-      if (permissions.readAll) {
-        fetchLeadsBySource();
-        fetchStaffPerformance();
-        fetchResellerRevenue();
-      }
     }
-  }, [token, permissions, fromDate, toDate]);
+  }, [token, permissions]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -650,48 +640,27 @@ export default function Dashboard() {
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
-    const currentYear = selectedYear || new Date().getFullYear();
-
-    // Check if the currentYear is the actual calendar year
-    const actualYear = new Date().getFullYear();
-    const actualMonth = new Date().getMonth() + 1; // 1-indexed (July = 7)
-    const isCurrentYear = currentYear === actualYear;
-
-    let activeMonths = months;
-    if (isCurrentYear) {
-      activeMonths = months.slice(0, actualMonth);
-    }
-
-    const data = activeMonths.map((monthName, idx) => ({
+    
+    // Convert revenueChart data (from API) into the monthly array
+    const data = months.map((monthName, idx) => ({
       name: monthName,
       revenue: 0,
       commission: 0,
       monthNum: idx + 1,
-      year: currentYear
+      year: selectedYear
     }));
 
-    if (summary?.chartData && summary.chartType === "monthly") {
-      summary.chartData.forEach(item => {
-        const match = data.find(d => d.monthNum === item.month && d.year === item.year);
+    if (revenueChart && revenueChart.length > 0) {
+      revenueChart.forEach(item => {
+        const match = data.find(d => d.monthNum === item.month);
         if (match) {
           match.revenue = item.revenue;
           match.commission = item.commission || 0;
-        } else if (item.year && item.month) {
-          data.push({
-            name: `${months[item.month - 1]} ${item.year}`,
-            revenue: item.revenue,
-            commission: item.commission || 0,
-            monthNum: item.month,
-            year: item.year
-          });
         }
       });
     }
 
-    return data.sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return a.monthNum - b.monthNum;
-    });
+    return data;
   })();
 
   // Total Leads Trend data (reseller-only chart)
@@ -885,7 +854,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (card.type === "revenue" || card.type === "paid" || card.type === "pending") {
+    if (card.type === "revenue") {
       router.push("/settlements");
       return;
     }
@@ -1238,27 +1207,32 @@ export default function Dashboard() {
             <div className="h-[280px]">
               {isMounted && (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <ComposedChart layout="vertical" data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="colorBarRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorBarRevenue" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="#93C5FD" />
                         <stop offset="100%" stopColor="#3B82F6" />
                       </linearGradient>
-                      <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B82F6" />
-                      </marker>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                    <YAxis
-                      stroke="#94a3b8"
-                      fontSize={11}
-                      tickLine={false}
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      type="number"
+                      stroke="#94a3b8" 
+                      fontSize={11} 
+                      tickLine={false} 
                       axisLine={false}
                       tickFormatter={(val) => {
                         if (val >= 1000) return `${Math.round(val / 1000)}K`;
                         return String(val);
                       }}
+                    />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
                       width={45}
                     />
                     <Tooltip
@@ -1278,8 +1252,7 @@ export default function Dashboard() {
                         return null;
                       }}
                     />
-                    <Bar dataKey="revenue" fill="url(#colorBarRevenue)" radius={[6, 6, 0, 0]} maxBarSize={30} />
-                    <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} dot={{ r: 4, fill: '#3B82F6', stroke: '#3B82F6' }} activeDot={{ r: 6 }} markerEnd="url(#arrow)" />
+                    <Bar dataKey="revenue" fill="url(#colorBarRevenue)" radius={[0, 6, 6, 0]} barSize={20} />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}

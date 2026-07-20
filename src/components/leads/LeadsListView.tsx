@@ -194,7 +194,6 @@ export default function LeadsListView({
     },
     { key: 'status', label: 'STATUS' },
 
-    { key: 'priority', label: 'PRIORITY' },
     { key: 'lastFollowUp', label: 'LAST FOLLOW-UP' },
     {
       key: 'paymentStatus',
@@ -343,6 +342,7 @@ export default function LeadsListView({
         searchable={true}
         searchPlaceholder="Search leads..."
         pagination
+        serverSidePagination={true}
         currentPage={pagination?.currentPage || 1}
         totalPages={pagination?.totalPages || 1}
         totalRecords={pagination?.totalItems || 0}

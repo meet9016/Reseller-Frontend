@@ -37,6 +37,11 @@ export default function LeadsReport() {
   const [paymentStatus, setPaymentStatus] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -47,7 +52,7 @@ export default function LeadsReport() {
       const token = getAuthToken();
       if (!token) return;
 
-      const params: any = { limit: 1000, report: 'true', onlyWon: 'true' };
+      const params: any = { limit, page, report: 'true', onlyWon: 'true' };
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       if (paymentStatus) params.paymentStatus = paymentStatus;
@@ -61,13 +66,15 @@ export default function LeadsReport() {
       });
 
       setData(res.data?.data || []);
+      setTotalRecords(res.data?.count || res.data?.data?.length || 0);
+      setTotalPages(res.data?.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch leads report:', error);
       toast.error('Failed to load report data');
     } finally {
       setIsLoading(false);
     }
-  }, [fromDate, toDate, paymentStatus, user, role]);
+  }, [fromDate, toDate, paymentStatus, user, role, page, limit]);
 
   useEffect(() => {
     if (user) {
@@ -263,6 +270,16 @@ export default function LeadsReport() {
             searchable
             searchQuery={searchQuery}
             onSearch={(val) => setSearchQuery(val)}
+            serverSidePagination={true}
+            currentPage={page}
+            pageSize={limit}
+            totalRecords={totalRecords}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            onPageSizeChange={(newSize) => {
+              setLimit(newSize);
+              setPage(1);
+            }}
           />
         </div>
       </div>

@@ -23,6 +23,8 @@ export const baseUrl = {
   deleteLead: `${API}lead`,
   leadSources: `${API}leadsources`,
   leadStatuses: `${API}leadstatus`,
+  dashboardData: `${API}dashboard`,
+  revenueChartData: `${API}dashboard/revenue`,
   leadCountSummary: `${API}lead/count-summary`,
   myLeadCountSummary: `${API}lead/count-summary/my`,
   getKanbanData: `${API}lead/kanban`,

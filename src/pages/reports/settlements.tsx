@@ -5,7 +5,8 @@ import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
 import DatePicker from '@/components/ui/DatePicker';
-import { RefreshCw, Download, IndianRupee } from 'lucide-react';
+import { RefreshCw, Download, IndianRupee, Filter } from 'lucide-react';
+import FormInput from '@/components/ui/Input';
 import toast from 'react-hot-toast';
 import { exportToExcel } from '@/utills/exportHelper';
 
@@ -28,6 +29,9 @@ export default function SettlementsReport() {
   
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [minCommission, setMinCommission] = useState('');
+  const [maxCommission, setMaxCommission] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -83,6 +87,8 @@ export default function SettlementsReport() {
     await exportToExcel(fileName, 'Settlements', columns, exportData);
   };
 
+  const maxDataCommission = data.length > 0 ? Math.max(...data.map(d => d.totalCommission || 0)) : 100000;
+
   const columns: Column<ReportSettlement>[] = [
     {
       key: 'resellerName',
@@ -119,15 +125,34 @@ export default function SettlementsReport() {
         </div>
       ),
     },
+    {
+      key: 'status',
+      label: 'STATUS',
+      render: (_, row) => {
+        const isPaid = row.totalCommission === 0 || row.status === 'paid';
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isPaid ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+            {isPaid ? 'Paid' : 'Unpaid'}
+          </span>
+        );
+      },
+    }
   ];
 
   const filteredData = data.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.resellerName?.toLowerCase().includes(query) ||
-      item.resellerEmail?.toLowerCase().includes(query)
-    );
+    let match = true;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      match = !!(item.resellerName?.toLowerCase().includes(query) ||
+                 item.resellerEmail?.toLowerCase().includes(query));
+    }
+    if (match && minCommission) {
+      match = item.totalCommission >= Number(minCommission);
+    }
+    if (match && maxCommission) {
+      match = item.totalCommission <= Number(maxCommission);
+    }
+    return match;
   });
 
   if (!isMounted) return null;
@@ -147,33 +172,15 @@ export default function SettlementsReport() {
           </div>
 
           <div className="bg-white p-4 rounded-t-lg border-b border-gray-100 flex flex-wrap items-center justify-end gap-4 shadow-sm">
-            {/* <div className="flex items-center gap-2">
-              <div className="w-[150px]">
-                <DatePicker
-                  value={fromDate}
-                  onChange={(val) => setFromDate(val)}
-                  placeholder="Start Date"
-                />
-              </div>
-              <span className="text-gray-400 font-medium">-</span>
-              <div className="w-[150px]">
-                <DatePicker
-                  value={toDate}
-                  onChange={(val) => setToDate(val)}
-                  placeholder="End Date"
-                />
-              </div>
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => {
-                  setFromDate('');
-                  setToDate('');
-                }}
-                className="p-2 ml-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-all rounded-md shadow-sm"
-                title="Reset Filters"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors border ${showFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
               >
-                <RefreshCw className="h-4 w-4" />
+                <Filter className="h-4 w-4" />
+                Filters
               </button>
-            </div> */}
+            </div>
 
             <button
               onClick={handleExport}
@@ -184,6 +191,55 @@ export default function SettlementsReport() {
               Export to Excel
             </button>
           </div>
+
+          {showFilters && (
+            <div className="bg-gray-50/50 p-4 border-b border-gray-100 flex flex-wrap items-center justify-end gap-4">
+              <div className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                <div className="w-[140px]">
+                  <DatePicker
+                    value={fromDate}
+                    onChange={(val) => setFromDate(val)}
+                    placeholder="Start Date"
+                  />
+                </div>
+                <span className="text-gray-400 font-medium">-</span>
+                <div className="w-[140px]">
+                  <DatePicker
+                    value={toDate}
+                    onChange={(val) => setToDate(val)}
+                    placeholder="End Date"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 w-[180px] px-2">
+                  <div className="flex justify-between text-[11px] text-gray-500 font-semibold uppercase tracking-wider">
+                    <span>Min: {minCommission || 0}</span>
+                    <span>Max: {maxCommission || 'Any'}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={maxDataCommission || 100000}
+                    step={Math.max(1, Math.floor((maxDataCommission || 100000) / 100))}
+                    value={maxCommission || maxDataCommission || 100000}
+                    onChange={(e) => setMaxCommission(e.target.value)}
+                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setFromDate('');
+                    setToDate('');
+                    setMinCommission('');
+                    setMaxCommission('');
+                  }}
+                  className="p-1.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-all rounded-md"
+                  title="Reset Filters"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
 
           <DataTable
             data={filteredData}
