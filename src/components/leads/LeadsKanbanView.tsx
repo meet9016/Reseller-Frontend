@@ -326,6 +326,18 @@ export default function LeadsKanbanView({
     };
 
     const reactivate = async (id: string) => {
+        const result = await Swal.fire({
+            title: 'Reactivate Lead',
+            text: "Are you sure you want to reactivate this lead? It will be moved to the New status.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, reactivate it!'
+        });
+        
+        if (!result.isConfirmed) return;
+
         try {
             await axios.put(`${baseUrl.updateLead}/${id}`, { isLost: false, isWon: false }, { headers: { Authorization: `Bearer ${token()}` } });
             toast.success('Lead reactivated');

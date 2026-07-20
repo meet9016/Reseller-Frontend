@@ -8,6 +8,7 @@ import DataTable, { Column } from '@/components/DataTable';
 import { exportToExcel } from '@/utills/exportHelper';
 import FormSelect from '@/components/ui/FormSelect';
 import DatePicker from '@/components/ui/DatePicker';
+import { Filter, X, Search } from 'lucide-react';
 
 // Define the transaction interface based on the SettlementTransaction model
 interface SettlementTransaction {
@@ -40,6 +41,23 @@ export default function LedgerPage() {
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [tempSelectedMonth, setTempSelectedMonth] = useState('');
+  const [tempSelectedYear, setTempSelectedYear] = useState(new Date().getFullYear().toString());
+  const [tempSelectedReseller, setTempSelectedReseller] = useState('');
+  const [tempSelectedMethod, setTempSelectedMethod] = useState('');
+  const [tempSelectedDate, setTempSelectedDate] = useState('');
+
+  useEffect(() => {
+    if (showFilters) {
+      setTempSelectedMonth(selectedMonth);
+      setTempSelectedYear(selectedYear);
+      setTempSelectedReseller(selectedReseller);
+      setTempSelectedMethod(selectedMethod);
+      setTempSelectedDate(selectedDate);
+    }
+  }, [showFilters, selectedMonth, selectedYear, selectedReseller, selectedMethod, selectedDate]);
 
   // Debounce search query to avoid too many requests
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -180,101 +198,167 @@ export default function LedgerPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-100px)]">
       <Head>
         <title>Ledger | Reseller Panel</title>
       </Head>
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Ledger</h1>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="w-[140px]">
-            <FormSelect
-              value={selectedMonth}
-              onChange={setSelectedMonth}
-              options={[
-                { value: "", label: "All Months" },
-                { value: "1", label: "January" },
-                { value: "2", label: "February" },
-                { value: "3", label: "March" },
-                { value: "4", label: "April" },
-                { value: "5", label: "May" },
-                { value: "6", label: "June" },
-                { value: "7", label: "July" },
-                { value: "8", label: "August" },
-                { value: "9", label: "September" },
-                { value: "10", label: "October" },
-                { value: "11", label: "November" },
-                { value: "12", label: "December" },
-              ]}
-              placeholder="All Months"
-            />
-          </div>
-
-          <div className="w-[100px]">
-            <FormSelect
-              value={selectedYear}
-              onChange={setSelectedYear}
-              options={[
-                { value: "2024", label: "2024" },
-                { value: "2025", label: "2025" },
-                { value: "2026", label: "2026" },
-              ]}
-              placeholder="Year"
-            />
-          </div>
-
-          {role?.toLowerCase() === 'admin' && (
-            <div className="w-[160px]">
-              <FormSelect
-                value={selectedReseller}
-                onChange={setSelectedReseller}
-                options={[
-                  { value: "", label: "All Resellers" },
-                  ...uniqueResellers.map((r: any) => ({ value: r._id, label: r.fullName }))
-                ]}
-                placeholder="All Resellers"
-              />
-            </div>
-          )}
-
-          <div className="w-[140px]">
-            <FormSelect
-              value={selectedMethod}
-              onChange={setSelectedMethod}
-              options={[
-                { value: "", label: "All Methods" },
-                { value: "Bank Transfer", label: "Bank Transfer" },
-                { value: "UPI", label: "UPI" },
-                { value: "Cash", label: "Cash" },
-              ]}
-              placeholder="All Methods"
-            />
-          </div>
-
-          <div className="w-[150px]">
-            <DatePicker
-              value={selectedDate}
-              onChange={setSelectedDate}
-              placeholder="Select date"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-h-[500px] overflow-y-auto overflow-x-hidden border border-gray-200 rounded-lg shadow-sm">
+      <div className="h-full rounded-lg">
         <DataTable
           data={transactions}
           columns={columns}
           loading={loading}
           onRefresh={() => fetchTransactions(currentPage)}
           onExport={handleExport}
-          searchable={true}
-          searchQuery={searchQuery}
-          onSearch={(val) => setSearchQuery(val)}
+          searchable={false}
+          headerActions={
+            <div className="flex items-center gap-3">
+              {/* Search Bar */}
+              <div className="relative w-full sm:w-auto">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                <input
+                  type="search"
+                  placeholder="Search anything..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-64 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-[#00b5ad] focus:outline-none focus:ring-1 focus:ring-[#00b5ad]/20 hover:border-gray-300"
+                />
+              </div>
+
+              {/* Filter Popover */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`inline-flex items-center justify-center h-9 w-9 rounded-md border transition-all ${showFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                >
+                  <Filter className="h-4 w-4" />
+                </button>
+                {showFilters && (
+                  <div className="absolute right-0 top-full mt-2 w-[320px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                      <h3 className="font-semibold text-gray-800 text-sm">Filter Ledger</h3>
+                      <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+                    </div>
+                    <div className="p-4 flex flex-col gap-4">
+                      
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Month & Year</label>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <FormSelect
+                              value={tempSelectedMonth}
+                              onChange={setTempSelectedMonth}
+                              options={[
+                                { value: "", label: "All Months" },
+                                { value: "1", label: "January" },
+                                { value: "2", label: "February" },
+                                { value: "3", label: "March" },
+                                { value: "4", label: "April" },
+                                { value: "5", label: "May" },
+                                { value: "6", label: "June" },
+                                { value: "7", label: "July" },
+                                { value: "8", label: "August" },
+                                { value: "9", label: "September" },
+                                { value: "10", label: "October" },
+                                { value: "11", label: "November" },
+                                { value: "12", label: "December" },
+                              ]}
+                              placeholder="All Months"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <FormSelect
+                              value={tempSelectedYear}
+                              onChange={setTempSelectedYear}
+                              options={[
+                                { value: "2024", label: "2024" },
+                                { value: "2025", label: "2025" },
+                                { value: "2026", label: "2026" },
+                              ]}
+                              placeholder="Year"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {role?.toLowerCase() === 'admin' && (
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reseller</label>
+                          <FormSelect
+                            value={tempSelectedReseller}
+                            onChange={setTempSelectedReseller}
+                            options={[
+                              { value: "", label: "All Resellers" },
+                              ...uniqueResellers.map((r: any) => ({ value: r._id, label: r.fullName }))
+                            ]}
+                            placeholder="All Resellers"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Method</label>
+                        <FormSelect
+                          value={tempSelectedMethod}
+                          onChange={setTempSelectedMethod}
+                          options={[
+                            { value: "", label: "All Methods" },
+                            { value: "Bank Transfer", label: "Bank Transfer" },
+                            { value: "UPI", label: "UPI" },
+                            { value: "Cash", label: "Cash" },
+                          ]}
+                          placeholder="All Methods"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Specific Date</label>
+                        <DatePicker
+                          value={tempSelectedDate}
+                          onChange={setTempSelectedDate}
+                          placeholder="Select date"
+                        />
+                      </div>
+
+                    </div>
+                    <div className="p-3 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+                      <button 
+                        onClick={() => { 
+                          setTempSelectedMonth('');
+                          setTempSelectedYear(new Date().getFullYear().toString());
+                          setTempSelectedReseller('');
+                          setTempSelectedMethod('');
+                          setTempSelectedDate('');
+                          setSelectedMonth('');
+                          setSelectedYear(new Date().getFullYear().toString());
+                          setSelectedReseller('');
+                          setSelectedMethod('');
+                          setSelectedDate('');
+                          setShowFilters(false);
+                        }}
+                        className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedMonth(tempSelectedMonth);
+                          setSelectedYear(tempSelectedYear);
+                          setSelectedReseller(tempSelectedReseller);
+                          setSelectedMethod(tempSelectedMethod);
+                          setSelectedDate(tempSelectedDate);
+                          setShowFilters(false);
+                        }}
+                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#00b5ad] border border-[#00b5ad] rounded-md hover:bg-[#009b94] transition-colors cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          }
           title="Transactions"
           pagination={true}
           currentPage={currentPage}

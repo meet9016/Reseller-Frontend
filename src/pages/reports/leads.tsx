@@ -5,7 +5,7 @@ import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
 import DatePicker from '@/components/ui/DatePicker';
-import { Download, RefreshCw, Filter, IndianRupee } from 'lucide-react';
+import { Download, RefreshCw, Filter, IndianRupee, Search, MoreVertical, X, FileText, File } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { exportToExcel } from '@/utills/exportHelper';
 import { useSelector } from 'react-redux';
@@ -36,6 +36,28 @@ export default function LeadsReport() {
   const [toDate, setToDate] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Temporary state for the filter popover
+  const [tempFromDate, setTempFromDate] = useState('');
+  const [tempToDate, setTempToDate] = useState('');
+  const [tempPaymentStatus, setTempPaymentStatus] = useState('');
+
+  // Sync temp state when opening popover
+  useEffect(() => {
+    if (showFilters) {
+      setTempFromDate(fromDate);
+      setTempToDate(toDate);
+      setTempPaymentStatus(paymentStatus);
+    }
+  }, [showFilters, fromDate, toDate, paymentStatus]);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
@@ -56,6 +78,7 @@ export default function LeadsReport() {
       if (fromDate) params.from = fromDate;
       if (toDate) params.to = toDate;
       if (paymentStatus) params.paymentStatus = paymentStatus;
+      if (debouncedSearch) params.search = debouncedSearch;
 
       const userRole = role?.toLowerCase() || user?.role?.roleName?.toLowerCase() || '';
       const url = userRole === 'admin' ? baseUrl.getAllLeads : baseUrl.myLeads;
@@ -74,7 +97,7 @@ export default function LeadsReport() {
     } finally {
       setIsLoading(false);
     }
-  }, [fromDate, toDate, paymentStatus, user, role, page, limit]);
+  }, [fromDate, toDate, paymentStatus, user, role, page, limit, debouncedSearch]);
 
   useEffect(() => {
     if (user) {
@@ -127,15 +150,6 @@ export default function LeadsReport() {
       render: (value) => <span className="font-medium text-gray-700">{value?.fullName || '-'}</span>,
     },
     {
-      key: 'leadStatus',
-      label: 'STATUS',
-      render: (value) => (
-        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-          {value?.name || '-'}
-        </span>
-      ),
-    },
-    {
       key: 'paymentAmount',
       label: 'AMOUNT',
       render: (value) => (
@@ -171,105 +185,142 @@ export default function LeadsReport() {
     },
   ];
 
-  const filteredData = data.filter(item => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      item.customerName?.toLowerCase().includes(query) ||
-      item.customerEmail?.toLowerCase().includes(query) ||
-      item.product?.toLowerCase().includes(query)
-    );
-  });
+  const filteredData = data;
 
   if (!isMounted) return null;
 
   return (
-    <>
+    <div className="h-[calc(100vh-100px)]">
       <Head>
         <title>Leads Report | Reseller Panel</title>
       </Head>
 
-      <div className="bg-white rounded-lg min-h-screen">
-        <div className="w-full mx-auto">
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-           
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-t-lg border-b border-gray-100 flex flex-wrap items-center justify-end gap-4 shadow-sm">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors border ${showFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-              </button>
-            </div>
-            
-            <button
-              onClick={handleExport}
-              disabled={isLoading || data.length === 0}
-              className="flex items-center gap-2 rounded-md bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors disabled:opacity-50"
-            >
-              <Download className="h-4 w-4" />
-              Export to Excel
-            </button>
-          </div>
-
-          {showFilters && (
-            <div className="bg-gray-50/50 p-4 border-b border-gray-100 flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-[150px]">
-                  <DatePicker
-                    value={fromDate}
-                    onChange={(val) => setFromDate(val)}
-                    placeholder="Start Date"
-                  />
-                </div>
-                <span className="text-gray-400 font-medium">-</span>
-                <div className="w-[150px]">
-                  <DatePicker
-                    value={toDate}
-                    onChange={(val) => setToDate(val)}
-                    placeholder="End Date"
-                  />
-                </div>
-                <div className="w-[150px]">
-                  <FormSelect
-                    value={paymentStatus}
-                    onChange={setPaymentStatus}
-                    options={[
-                      { value: '', label: 'All Payments' },
-                      { value: 'Paid', label: 'Paid' },
-                      { value: 'Unpaid', label: 'Unpaid' },
-                    ]}
-                  />
-                </div>
-
-                <button
-                  onClick={() => {
-                    setFromDate('');
-                    setToDate('');
-                    setPaymentStatus('');
-                  }}
-                  className="p-2 ml-1 bg-white border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-blue-500 transition-all rounded-md shadow-sm"
-                  title="Reset Filters"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
+      <div className="h-full rounded-lg">
           <DataTable
             data={filteredData}
             columns={columns}
             loading={isLoading}
-            searchable
-            searchQuery={searchQuery}
-            onSearch={(val) => setSearchQuery(val)}
+            searchable={false}
+            headerActions={
+              <div className="flex items-center gap-3">
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                  <input
+                    type="search"
+                    placeholder="Search anything..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-64 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-[#00b5ad] focus:outline-none focus:ring-1 focus:ring-[#00b5ad]/20 hover:border-gray-300"
+                  />
+                </div>
+
+                {/* Filter Popover */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-md border transition-all ${showFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    <Filter className="h-4 w-4" />
+                  </button>
+                  {showFilters && (
+                    <div className="absolute right-0 top-full mt-2 w-[320px] bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden">
+                      <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <h3 className="font-semibold text-gray-800 text-sm">Filter Reports</h3>
+                        <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+                      </div>
+                      <div className="p-4 flex flex-col gap-6">
+                        {/* Date Range */}
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Range</label>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <DatePicker value={tempFromDate} onChange={setTempFromDate} placeholder="Start Date" />
+                            </div>
+                            <span className="text-gray-300 font-medium">-</span>
+                            <div className="flex-1">
+                              <DatePicker value={tempToDate} onChange={setTempToDate} placeholder="End Date" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Payment Status */}
+                        <div className="flex flex-col gap-2">
+                          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Status</label>
+                          <FormSelect
+                            value={tempPaymentStatus}
+                            onChange={setTempPaymentStatus}
+                            options={[
+                              { value: '', label: 'All Payments' },
+                              { value: 'Paid', label: 'Paid' },
+                              { value: 'Unpaid', label: 'Unpaid' },
+                            ]}
+                          />
+                        </div>
+                      </div>
+                      <div className="p-3 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+                        <button 
+                          onClick={() => { 
+                            setTempFromDate(''); 
+                            setTempToDate(''); 
+                            setTempPaymentStatus(''); 
+                            setFromDate('');
+                            setToDate('');
+                            setPaymentStatus('');
+                            setShowFilters(false);
+                          }}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                          Clear All
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setFromDate(tempFromDate);
+                            setToDate(tempToDate);
+                            setPaymentStatus(tempPaymentStatus);
+                            setShowFilters(false);
+                          }}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Export Dropdown Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-md border transition-all ${showExportMenu ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                  {showExportMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 overflow-hidden">
+                      <button
+                        onClick={() => { handleExport(); setShowExportMenu(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <FileText className="h-4 w-4 text-emerald-600" /> Export to Excel
+                      </button>
+                      <button
+                        onClick={() => { 
+                          setShowExportMenu(false);
+                          setTimeout(() => window.print(), 100);
+                        }}
+                        disabled={true}
+                        title="Coming soon"
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <File className="h-4 w-4 text-red-600" /> Export to PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            }
             serverSidePagination={true}
             currentPage={page}
             pageSize={limit}
@@ -281,8 +332,7 @@ export default function LeadsReport() {
               setPage(1);
             }}
           />
-        </div>
       </div>
-    </>
+    </div>
   );
 }

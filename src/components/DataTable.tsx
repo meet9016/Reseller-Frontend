@@ -226,9 +226,9 @@ export default function DataTable<T extends Record<string, any>>({
   const currentData = (pagination && !serverSidePagination) ? data.slice((internalPage - 1) * internalPageSize, internalPage * internalPageSize) : data;
 
   return (
-    <div className="rounded-md bg-white border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl">
+    <div className="rounded-md bg-white border border-gray-200 transition-all duration-300 hover:shadow-2xl flex flex-col h-full">
       {/* Header - Premium Design */}
-      <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-200 px-3 py-3">
+      <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-200 px-3 py-3 rounded-t-md">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             {title && (
@@ -298,7 +298,7 @@ export default function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Table - Modern Design */}
-      <div className="border-t border-gray-100 overflow-x-auto max-h-[550px] overflow-y-auto custom-scrollbar">
+      <div className="border-t border-gray-100 overflow-x-auto flex-1 overflow-y-auto custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-100 relative">
           <thead className="bg-gray-50 sticky top-0 z-20 shadow-sm">
             <tr>
@@ -513,7 +513,7 @@ export default function DataTable<T extends Record<string, any>>({
 
       {/* Pagination - Modern Design */}
       {pagination && actualTotalPages > 0 && !loading && data.length > 0 && (
-        <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 md:px-6 py-5">
+        <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 md:px-6 py-5 rounded-b-md">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-2">

@@ -160,9 +160,12 @@ export function ResellersContent() {
         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-sky-900">
           {value ? (
             <img
-              src={value}
+              src={value?.includes('http') ? value : `${baseUrl.getImageUrl}/images/ResellerProfileImages/${value}`}
               alt={row.fullName}
               className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
             <span className="text-xs font-bold text-gray-500">

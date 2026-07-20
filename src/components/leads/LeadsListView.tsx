@@ -86,6 +86,7 @@ interface Props {
     handleRowsPerPageChange: (rows: number) => void;
   };
   onSearchChange?: (value: string) => void;
+  headerActions?: React.ReactNode;
 }
 
 function mapLead(item: any): TableLead {
@@ -127,8 +128,9 @@ export default function LeadsListView({
   filters = {},
   externalLeads,
   loading: loadingProp,
-  pagination, // Receive pagination from parent
+  pagination,
   onSearchChange,
+  headerActions
 }: Props) {
   const router = useRouter();
   const [leads, setLeads] = useState<TableLead[]>([]);
@@ -339,8 +341,8 @@ export default function LeadsListView({
         data={leads}
         columns={columns}
         loading={loading}
-        searchable={true}
-        searchPlaceholder="Search leads..."
+        searchable={false}
+        headerActions={headerActions}
         pagination
         serverSidePagination={true}
         currentPage={pagination?.currentPage || 1}

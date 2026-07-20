@@ -5,7 +5,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { ListCollapse, Plus, Filter, Kanban, Search, Download, Upload } from 'lucide-react';
+import { ListCollapse, Plus, Filter, Kanban, Search, Download, Upload, X } from 'lucide-react';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 
@@ -60,7 +60,28 @@ export default function LeadsPage() {
   const [resellerFilter, setResellerFilter] = useState<string[]>([]);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  
+  // Temporary state for the filter popover
+  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
+  const [tempStaffFilter, setTempStaffFilter] = useState<string[]>([]);
+  const [tempResellerFilter, setTempResellerFilter] = useState<string[]>([]);
+  const [tempPaymentStatusFilter, setTempPaymentStatusFilter] = useState('');
+  const [tempFromDate, setTempFromDate] = useState('');
+  const [tempToDate, setTempToDate] = useState('');
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+
+  // Sync temp state when opening popover
+  useEffect(() => {
+    if (showFilterPopover) {
+      setTempStatusFilter(statusFilter);
+      setTempStaffFilter(staffFilter);
+      setTempResellerFilter(resellerFilter);
+      setTempPaymentStatusFilter(paymentStatusFilter);
+      setTempFromDate(fromDate);
+      setTempToDate(toDate);
+    }
+  }, [showFilterPopover, statusFilter, staffFilter, resellerFilter, paymentStatusFilter, fromDate, toDate]);
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const debouncedSearch = useDebounce(search, 500);
@@ -241,20 +262,154 @@ export default function LeadsPage() {
   const canTransfer = leadPermissions?.transfer !== false;
   const canConvert = leadPermissions?.convert !== false;
 
-  const clearFilters = () => {
+  const handleApplyFilters = () => {
+    setStatusFilter(tempStatusFilter);
+    setStaffFilter(tempStaffFilter);
+    setResellerFilter(tempResellerFilter);
+    setPaymentStatusFilter(tempPaymentStatusFilter);
+    setFromDate(tempFromDate);
+    setToDate(tempToDate);
+    setShowFilterPopover(false);
+  };
+
+  const handleClearFilters = () => {
+    setTempStatusFilter([]);
+    setTempStaffFilter([]);
+    setTempResellerFilter([]);
+    setTempPaymentStatusFilter('');
+    setTempFromDate('');
+    setTempToDate('');
     setStatusFilter([]);
     setStaffFilter([]);
+    setResellerFilter([]);
+    setPaymentStatusFilter('');
     setFromDate('');
     setToDate('');
     setSearch('');
+    setShowFilterPopover(false);
   };
 
   const hasActiveFilters = !!(
-    statusFilter.length > 0 ||
-    staffFilter.length > 0 ||
-    fromDate ||
-    toDate ||
-    search
+    statusFilter.length > 0 || staffFilter.length > 0 || resellerFilter.length > 0 || paymentStatusFilter || fromDate || toDate || search
+  );
+
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Search Bar */}
+      <div className="relative w-full sm:w-auto">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+        <input
+          type="search"
+          placeholder="Search leads..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-64 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]/20 hover:border-gray-300"
+        />
+      </div>
+
+      {/* Filter Popover Button */}
+      <div className="relative">
+        <button
+          onClick={() => setShowFilterPopover(!showFilterPopover)}
+          className={`inline-flex items-center justify-center h-9 w-9 rounded-md border transition-all ${
+            showFilterPopover || hasActiveFilters
+              ? 'bg-blue-50 text-blue-600 border-blue-200'
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Filter className="h-4 w-4" />
+          {hasActiveFilters && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+            </span>
+          )}
+        </button>
+
+        {showFilterPopover && (
+          <div className="absolute right-0 top-full mt-2 w-[320px] bg-white rounded-lg shadow-xl border border-gray-100 z-[100] overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h3 className="text-sm font-semibold text-gray-900">Filter Leads</h3>
+              <button
+                onClick={() => setShowFilterPopover(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {userRole !== 'admin' && (
+                <div className="space-y-1.5">
+                  <FormMultiSelect
+                    label="Lead Status"
+                    value={tempStatusFilter}
+                    onChange={setTempStatusFilter}
+                    options={statuses.map((s) => ({ value: s._id, label: s.name }))}
+                  />
+                </div>
+              )}
+
+              {userRole === 'admin' && (
+                <div className="space-y-1.5">
+                  <FormMultiSelect
+                    label="Reseller"
+                    value={tempResellerFilter}
+                    onChange={setTempResellerFilter}
+                    options={staffMembers.map((s) => ({ value: s._id, label: s.fullName }))}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <FormSelect
+                  label="Payment Status"
+                  value={tempPaymentStatusFilter}
+                  onChange={setTempPaymentStatusFilter}
+                  options={[
+                    { value: "", label: "All Payments" },
+                    { value: "Paid", label: "Paid" },
+                    { value: "Unpaid", label: "Unpaid" }
+                  ]}
+                  placeholder="All Payments"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Range</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <DatePicker
+                    value={tempFromDate}
+                    onChange={setTempFromDate}
+                    placeholder="Start Date"
+                  />
+                  <DatePicker
+                    value={tempToDate}
+                    onChange={setTempToDate}
+                    placeholder="End Date"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={handleApplyFilters}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#3B82F6] rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   // ── Access denied ─────────────────────────────────────────────────────────
@@ -332,79 +487,9 @@ export default function LeadsPage() {
             )}
           </div>
 
-          {/* Search Bar */}
-          {viewMode !== 'list' && (
-            <div className="w-full md:flex-1 md:max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search leads..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          )}
+          {viewMode !== 'list' && headerActions}
 
           <div className="flex flex-wrap items-center gap-2 md:gap-3 md:ml-auto">
-            {/* Tab Toggle (All/My) */}
-            {/* {canReadAll && canReadOwn && (
-              <div className="flex items-center bg-gray-100 p-1 rounded-md">
-                <button
-                  onClick={() => setActiveTab('all')}
-                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${activeTab === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setActiveTab('my')}
-                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${activeTab === 'my' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                  My
-                </button>
-              </div>
-            )} */}
-
-            {/* Advanced Filter Button */}
-            <button
-              onClick={() => setShowFilterDrawer(!showFilterDrawer)}
-              className={`flex items-center justify-center gap-2 px-4 h-10 rounded-md text-sm font-medium transition-all cursor-pointer ${showFilterDrawer || hasActiveFilters
-                ? 'bg-primary-50 text-primary-600 border border-primary-200 hover:bg-primary-100'
-                : 'bg-gray-100 text-gray-700 border border-transparent hover:bg-gray-200'
-                }`}
-            >
-              <Filter className="h-4 w-4" />
-              <span className="hidden sm:inline">Filters</span>
-              {hasActiveFilters && (
-                <span className="h-2 w-2 bg-primary-500 rounded-full"></span>
-              )}
-            </button>
-
-            {/* Excel Export Button */}
-            {/* <button
-              onClick={handleExport}
-              disabled={exporting}
-              title="Export to Excel"
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-xs md:text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all cursor-pointer disabled:opacity-60"
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">{exporting ? '...' : 'Export'}</span>
-            </button> */}
-
-            {/* Bulk Import Button */}
-            {/* {canCreate && (
-              <button
-                onClick={() => setShowBulkImport(true)}
-                title="Bulk Import Leads"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-xs md:text-sm font-medium bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-all cursor-pointer"
-              >
-                <Upload className="h-4 w-4" />
-                <span className="hidden sm:inline">Import</span>
-              </button>
-            )} */}
-
             {/* Desktop View toggle */}
             {userRole !== 'admin' && (
               <div className="hidden md:flex relative items-center bg-gray-100 p-1 rounded-md h-10 w-fit">
@@ -437,99 +522,6 @@ export default function LeadsPage() {
             )}
           </div>
         </div>
-
-        {/* ── Filter Section (Inline Expandable) ────────────────────────────── */}
-        <div
-          className={`grid transition-all duration-300 ease-in-out ${showFilterDrawer
-            ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t border-gray-100'
-            : 'grid-rows-[0fr] opacity-0 overflow-hidden'
-            }`}
-        >
-          <div className="overflow-hidden">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div className="flex flex-wrap items-end gap-4 flex-1 min-w-0">
-                {userRole !== 'admin' && (
-                  <div className="space-y-2 w-full max-w-[250px]">
-                    <FormMultiSelect
-                      label="Lead Status"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e)}
-                      options={statuses.map((s) => ({ value: s._id, label: s.name }))}
-                    />
-                  </div>
-                )}
-
-                {userRole === 'admin' && (
-                  <div className="space-y-2 w-full max-w-[250px]">
-                    <FormMultiSelect
-                      label="Reseller"
-                      value={resellerFilter}
-                      onChange={(e) => setResellerFilter(e)}
-                      options={staffMembers.map((s) => ({ value: s._id, label: s.fullName }))}
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2 w-full max-w-[250px]">
-                  <FormSelect
-                    label="Payment Status"
-                    value={paymentStatusFilter}
-                    onChange={(val) => setPaymentStatusFilter(val)}
-                    options={[
-                      { value: "", label: "All Payments" },
-                      { value: "Paid", label: "Paid" },
-                      { value: "Unpaid", label: "Unpaid" }
-                    ]}
-                    placeholder="All Payments"
-                  />
-                </div>
-
-
-                <div className="space-y-2 w-full max-w-[250px]">
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">From Date</label>
-                  <DatePicker
-                    value={fromDate}
-                    onChange={(val) => setFromDate(val)}
-                    placeholder="Select from date"
-                  />
-                </div>
-
-                <div className="space-y-2 w-full max-w-[250px]">
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">To Date</label>
-                  <DatePicker
-                    value={toDate}
-                    onChange={(val) => setToDate(val)}
-                    placeholder="Select to date"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setSearch('');
-                    setStatusFilter([]);
-                    setStaffFilter([]);
-                    setResellerFilter([]);
-                    setPaymentStatusFilter('');
-                    setFromDate('');
-                    setToDate('');
-                    setShowFilterDrawer(false);
-                  }}
-                  className="px-4 py-1.5 text-xs font-semibold text-gray-500 hover:text-gray-700 transition-all cursor-pointer"
-                >
-                  Clear All
-                </button>
-                <button
-                  onClick={() => setShowFilterDrawer(false)}
-                  className="px-4 py-1.5 text-xs font-bold text-secondary bg-blue-50 hover:bg-blue-100 rounded-md transition-all cursor-pointer"
-                >
-                  Collapse
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
       </div>
 
       {/* ── Main Content ─────────────────────────────────────────────────── */}
@@ -557,6 +549,7 @@ export default function LeadsPage() {
             }}
             pagination={listPagination}
             onSearchChange={setSearch}
+            headerActions={headerActions}
           />
         ) : (
           <LeadsKanbanView

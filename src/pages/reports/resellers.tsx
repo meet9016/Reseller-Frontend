@@ -3,7 +3,7 @@ import Head from 'next/head';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import DataTable, { Column } from '@/components/DataTable';
-import { RefreshCw, Download } from 'lucide-react';
+import { RefreshCw, Download, Search, MoreVertical, FileText, File } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { exportToExcel } from '@/utills/exportHelper';
 
@@ -23,6 +23,14 @@ export default function ResellersReport() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // Debounced search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -36,7 +44,7 @@ export default function ResellersReport() {
 
       const res = await axios.get(baseUrl.getAllResellers, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 1000, search: searchQuery }
+        params: { limit: 1000, search: debouncedSearch }
       });
 
       setData(res.data?.data || []);
@@ -46,7 +54,7 @@ export default function ResellersReport() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery]);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     if (isMounted) fetchData();
@@ -128,40 +136,65 @@ export default function ResellersReport() {
   if (!isMounted) return null;
 
   return (
-    <>
+    <div className="h-[calc(100vh-100px)]">
       <Head>
         <title>Resellers Report | Reseller Panel</title>
       </Head>
 
-      <div className="bg-white rounded-lg min-h-screen">
-        <div className="w-full mx-auto">
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-       
-            </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-t-lg border-b border-gray-100 flex flex-wrap items-center justify-end shadow-sm">
-            <button
-              onClick={handleExport}
-              disabled={isLoading || data.length === 0}
-              className="flex items-center gap-2 rounded-md bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors disabled:opacity-50"
-            >
-              <Download className="h-4 w-4" />
-              Export to Excel
-            </button>
-          </div>
-
+      <div className="h-full rounded-lg">
           <DataTable
             data={data}
             columns={columns}
             loading={isLoading}
-            searchable
-            searchQuery={searchQuery}
-            onSearch={(val) => setSearchQuery(val)}
+            searchable={false}
+            headerActions={
+              <div className="flex items-center gap-3">
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                  <input
+                    type="search"
+                    placeholder="Search anything..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-64 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-[#00b5ad] focus:outline-none focus:ring-1 focus:ring-[#00b5ad]/20 hover:border-gray-300"
+                  />
+                </div>
+
+                {/* Export Dropdown Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-md border transition-all ${showExportMenu ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                  {showExportMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1 overflow-hidden">
+                      <button
+                        onClick={() => { handleExport(); setShowExportMenu(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <FileText className="h-4 w-4 text-emerald-600" /> Export to Excel
+                      </button>
+                      <button
+                        onClick={() => { 
+                          setShowExportMenu(false);
+                          setTimeout(() => window.print(), 100);
+                        }}
+                        disabled={true}
+                        title="Coming soon"
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <File className="h-4 w-4 text-red-600" /> Export to PDF
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            }
           />
-        </div>
       </div>
-    </>
+    </div>
   );
 }

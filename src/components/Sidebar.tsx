@@ -178,23 +178,24 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           {/* Header with Logo */}
           <div className={`flex items-center h-20 px-4 border-b border-white/10 ${isOpen ? 'justify-between' : 'justify-center'}`}>
             <div className={`flex items-center gap-3 ${!isOpen && 'hidden md:flex'}`}>
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-[#3B82F6] shadow-lg">
+              <div 
+                onClick={!isOpen ? toggleSidebar : undefined}
+                className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center font-bold text-[#3B82F6] shadow-lg ${!isOpen ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+              >
                 RP
               </div>
               {isOpen && <span className="text-lg font-semibold text-white tracking-wide">Reseller Panel</span>}
             </div>
 
-            <button
-              onClick={toggleSidebar}
-              className={`p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group ${!isOpen && 'md:block'}`}
-              aria-label="Toggle sidebar"
-            >
-              {isOpen ? (
+            {isOpen && (
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group"
+                aria-label="Close sidebar"
+              >
                 <ChevronLeft className="h-5 w-5 text-white/70 group-hover:text-white transition-all" />
-              ) : (
-                <Menu className="h-6 w-6 text-white/70 group-hover:text-white transition-all" />
-              )}
-            </button>
+              </button>
+            )}
           </div>
 
           {/* Navigation Menu */}

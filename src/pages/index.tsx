@@ -1131,9 +1131,9 @@ export default function Dashboard() {
                       />
                     </div>
                     <button
-                      onClick={() => handleQuickFilter('reset')}
+                      onClick={() => fetchDashboardData()}
                       className="p-1.5 ml-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-[#3B82F6] transition-all rounded-md shadow-sm"
-                      title="Reset Filter"
+                      title="Refresh Dashboard Data"
                     >
                       <RefreshCw className="h-4 w-4" />
                     </button>
@@ -1348,146 +1348,148 @@ export default function Dashboard() {
         </div>
 
 
-        {/* Top 10 Resellers by Revenue - Horizontal Bar Chart */}
-        {resellerRevenue && resellerRevenue.length > 0 && (
-          <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Top Resellers by Revenue</h3>
-                <p className="text-sm text-gray-500 mt-1">Top 10 resellers ranked by total paid revenue</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          {/* Top 10 Resellers by Revenue - Horizontal Bar Chart */}
+          {resellerRevenue && resellerRevenue.length > 0 && (
+            <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Top Resellers by Revenue</h3>
+                  <p className="text-sm text-gray-500 mt-1">Top 10 resellers ranked by total paid revenue</p>
+                </div>
+                <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                  <TrendingUp className="h-5 w-5" style={{ color: '#3B82F6' }} />
+                </div>
               </div>
-              <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
-                <TrendingUp className="h-5 w-5" style={{ color: '#3B82F6' }} />
-              </div>
-            </div>
 
-            <div className="h-[420px]">
-              {isMounted && (
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                    data={resellerRevenue}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 90 }}
-                  >
-                    <defs>
-                      <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3B82F6" />
-                        <stop offset="100%" stopColor="#93C5FD" />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#94a3b8"
-                      fontSize={11}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={0}
-                      tick={(props: any) => {
-                        const { x, y, payload } = props;
-                        const name: string = payload.value || '';
-                        const maxLen = 12;
-                        const display = name.length > maxLen ? name.slice(0, maxLen) + '…' : name;
-                        return (
-                          <g transform={`translate(${x},${y})`}>
-                            <text
-                              x={0}
-                              y={0}
-                              dy={14}
-                              textAnchor="middle"
-                              fill="#374151"
-                              fontSize={11}
-                              fontWeight={500}
-                            >
-                              {display}
-                            </text>
-                          </g>
-                        );
-                      }}
-                    />
-                    <YAxis
-                      stroke="#94a3b8"
-                      fontSize={11}
-                      tickLine={false}
-                      axisLine={false}
-                      width={45}
-                      tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
-                    />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const d = payload[0].payload;
-                          return (
-                            <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                              <p className="text-sm font-bold text-gray-900">{d.name}</p>
-                              <p className="text-sm font-semibold mt-1" style={{ color: '#3B82F6' }}>
-                                ₹{Number(d.revenue).toLocaleString('en-IN')}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-0.5">{d.leadCount} leads</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Leads by Source - Pie Chart (full row) */}
-        {leadsBySource.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Leads by Source</h3>
-                <p className="text-sm text-gray-500 mt-1">Traffic and acquisition channels</p>
-              </div>
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <BarChart3 className="h-5 w-5 text-gray-400" />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              <div className="h-[280px]">
+              <div className="h-[420px] flex-1">
                 {isMounted && (
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={leadsBySource} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value" nameKey="name">
-                        {leadsBySource.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={2} />
-                        ))}
-                      </Pie>
+                      <BarChart
+                      data={resellerRevenue}
+                      margin={{ top: 10, right: 20, left: 10, bottom: 90 }}
+                    >
+                      <defs>
+                        <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3B82F6" />
+                          <stop offset="100%" stopColor="#93C5FD" />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#94a3b8"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        interval={0}
+                        tick={(props: any) => {
+                          const { x, y, payload } = props;
+                          const name: string = payload.value || '';
+                          const maxLen = 12;
+                          const display = name.length > maxLen ? name.slice(0, maxLen) + '…' : name;
+                          return (
+                            <g transform={`translate(${x},${y})`}>
+                              <text
+                                x={0}
+                                y={0}
+                                dy={14}
+                                textAnchor="middle"
+                                fill="#374151"
+                                fontSize={11}
+                                fontWeight={500}
+                              >
+                                {display}
+                              </text>
+                            </g>
+                          );
+                        }}
+                      />
+                      <YAxis
+                        stroke="#94a3b8"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        width={45}
+                        tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
+                      />
                       <Tooltip
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
+                            const d = payload[0].payload;
                             return (
                               <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                                <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
-                                <p className="text-sm text-emerald-600 font-semibold">{payload[0].value} Leads</p>
+                                <p className="text-sm font-bold text-gray-900">{d.name}</p>
+                                <p className="text-sm font-semibold mt-1" style={{ color: '#3B82F6' }}>
+                                  ₹{Number(d.revenue).toLocaleString('en-IN')}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-0.5">{d.leadCount} leads</p>
                               </div>
                             );
                           }
                           return null;
                         }}
                       />
-                    </PieChart>
+                      <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                    </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                {leadsBySource.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
-                    <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
-                    <span className="text-sm font-bold text-gray-900">{s.value}</span>
-                  </div>
-                ))}
+            </div>
+          )}
+
+          {/* Leads by Source - Pie Chart */}
+          {leadsBySource.length > 0 && (
+            <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Leads by Source</h3>
+                  <p className="text-sm text-gray-500 mt-1">Traffic and acquisition channels</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center flex-1">
+                <div className="h-[280px]">
+                  {isMounted && (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={leadsBySource} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value" nameKey="name">
+                          {leadsBySource.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={2} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                  <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
+                                  <p className="text-sm text-emerald-600 font-semibold">{payload[0].value} Leads</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                  {leadsBySource.map((s, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
+                      <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
+                      <span className="text-sm font-bold text-gray-900">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
 
         {/* Lead Status Overview & Sales vs Commission - Only for Reseller */}
