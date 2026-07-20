@@ -145,9 +145,7 @@ export default function ResellersReport() {
         <div className="w-full mx-auto">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-500 mt-1">
-                View detailed report of all resellers, their roles, and commission rates.
-              </p>
+       
             </div>
           </div>
 

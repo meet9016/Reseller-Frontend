@@ -1,1 +1,1 @@
-export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|ac\.in|org\.com)$/i;
+export const EMAIL_REGEX = /^[A-Z0-9._%+-]+@(?!.*(.)\1{3,})[A-Z0-9-]+(\.[A-Z0-9-]+)*\.[A-Z]{2,}$/i;

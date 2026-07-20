@@ -83,17 +83,19 @@ export default function LeadsKanbanView({
     const [loadingMoreMap, setLoadingMoreMap] = useState<Record<string, boolean>>({});
     const [columnCounts, setColumnCounts] = useState<Record<string, number>>({});
 
-    const [kanbanVisibleStatusNames, setKanbanVisibleStatusNames] = useState<string[]>([]);
+    const [kanbanVisibleStatusNames, setKanbanVisibleStatusNames] = useState<string[] | null>(null);
 
     useEffect(() => {
         try {
             const stored = sessionStorage.getItem('kanbanVisibleStatusNames');
             if (stored) {
                 const parsed = JSON.parse(stored);
-                setKanbanVisibleStatusNames(Array.isArray(parsed) ? parsed : []);
+                setKanbanVisibleStatusNames(Array.isArray(parsed) ? parsed : null);
+            } else {
+                setKanbanVisibleStatusNames(null);
             }
         } catch {
-            setKanbanVisibleStatusNames([]);
+            setKanbanVisibleStatusNames(null);
         }
     }, []);
 
@@ -125,6 +127,7 @@ export default function LeadsKanbanView({
                         search: filters.search || undefined,
                         staff: filters.staff || undefined,
                         date: filters.date || undefined,
+                        paymentStatus: (filters as any).paymentStatus || undefined,
                     },
                 });
 
@@ -158,7 +161,7 @@ export default function LeadsKanbanView({
     useEffect(() => {
         if (subView !== 'board') return;
         statuses.forEach((s) => {
-            const isVisible = kanbanVisibleStatusNames.length === 0 || kanbanVisibleStatusNames.includes(s.name);
+            const isVisible = kanbanVisibleStatusNames === null || kanbanVisibleStatusNames.includes(s.name);
             if (isVisible) {
                 fetchStatusLeads(s._id, 1);
             }
@@ -178,13 +181,22 @@ export default function LeadsKanbanView({
         if (!draggingId || !permissions?.update) return;
 
         let sourceStatusId = '';
+        let isWonLead = false;
         const entries = Object.entries(boardLeads);
         for (let i = 0; i < entries.length; i++) {
             const [sId, leadsArr] = entries[i];
-            if (leadsArr.some(l => l._id === draggingId)) {
+            const foundLead = leadsArr.find(l => l._id === draggingId);
+            if (foundLead) {
                 sourceStatusId = sId;
+                isWonLead = foundLead.isWon || statuses.find(s => s._id === sId)?.name.toLowerCase() === 'won';
                 break;
             }
+        }
+
+        if (isWonLead) {
+            toast.error("Cannot update a lead that has been won");
+            setDraggingId(null);
+            return;
         }
 
         if (sourceStatusId === newStatusId || !sourceStatusId) {
@@ -194,6 +206,30 @@ export default function LeadsKanbanView({
 
         const targetStatus = statuses.find((s) => s._id === newStatusId);
         if (!targetStatus) return;
+
+        let lostReason = '';
+        if (targetStatus.name.toLowerCase() === 'lost') {
+            const result = await Swal.fire({
+                title: 'Lead Lost Reason',
+                input: 'textarea',
+                inputLabel: 'Why was this lead lost?',
+                inputPlaceholder: 'Enter reason here...',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Mark as Lost',
+                inputValidator: (value) => {
+                    if (!value?.trim()) {
+                        return 'You need to write a reason!';
+                    }
+                }
+            });
+            if (!result.isConfirmed || !result.value) {
+                setDraggingId(null);
+                return;
+            }
+            lostReason = result.value;
+        }
 
         const currentDropId = draggingId;
         setDraggingId(null);
@@ -216,7 +252,10 @@ export default function LeadsKanbanView({
         try {
             await axios.put(
                 `${baseUrl.updateKanbanStatus}/${currentDropId}/kanban-status`,
-                { leadStatus: newStatusId },
+                { 
+                    leadStatus: newStatusId,
+                    ...(lostReason ? { lostReason, isLost: true, lostDate: new Date().toISOString() } : {})
+                },
                 { headers: { Authorization: `Bearer ${token()}` } }
             );
             toast.success(`Lead moved to ${targetStatus.name}`);
@@ -245,13 +284,34 @@ export default function LeadsKanbanView({
             isLoading: columnLoading[s._id]
         }))
         .filter((group) => {
-            if (kanbanVisibleStatusNames.length === 0) return true;
+            if (kanbanVisibleStatusNames === null) return true;
             return kanbanVisibleStatusNames.includes(group.title);
         });
 
     const markLost = async (id: string) => {
+        const result = await Swal.fire({
+            title: 'Lead Lost Reason',
+            input: 'textarea',
+            inputLabel: 'Why was this lead lost?',
+            inputPlaceholder: 'Enter reason here...',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Mark as Lost',
+            inputValidator: (value) => {
+                if (!value?.trim()) {
+                    return 'You need to write a reason!';
+                }
+            }
+        });
+        if (!result.isConfirmed || !result.value) return;
+
         try {
-            await axios.put(`${baseUrl.updateLead}/${id}`, { isLost: true, lostDate: new Date().toISOString() }, { headers: { Authorization: `Bearer ${token()}` } });
+            await axios.put(`${baseUrl.updateLead}/${id}`, { 
+                isLost: true, 
+                lostDate: new Date().toISOString(),
+                lostReason: result.value 
+            }, { headers: { Authorization: `Bearer ${token()}` } });
             toast.success('Lead marked as lost');
             onRefresh();
         } catch { toast.error('Failed to update lead'); }

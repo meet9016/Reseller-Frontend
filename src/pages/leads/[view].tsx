@@ -25,7 +25,7 @@ import {
 // ── Hooks / Config ───────────────────────────────────────────────────────────
 import { useLeadsData } from '@/components/leads/useLeadsData';
 import FormInput from '@/components/ui/Input';
-import { FormMultiSelect } from '@/components/ui/FormSelect';
+import { FormSelect, FormMultiSelect } from '@/components/ui/FormSelect';
 import DatePicker from '@/components/ui/DatePicker';
 
 export type ViewMode = 'list' | 'kanban';
@@ -471,16 +471,17 @@ export default function LeadsPage() {
                 )}
 
                 <div className="space-y-2 w-full max-w-[250px]">
-                  <label className="block mb-1.5 text-sm font-medium text-gray-700">Payment Status</label>
-                  <select
+                  <FormSelect
+                    label="Payment Status"
                     value={paymentStatusFilter}
-                    onChange={(e) => setPaymentStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-700 outline-none transition-shadow text-sm cursor-pointer hover:border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="">All Payments</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                  </select>
+                    onChange={(val) => setPaymentStatusFilter(val)}
+                    options={[
+                      { value: "", label: "All Payments" },
+                      { value: "Paid", label: "Paid" },
+                      { value: "Unpaid", label: "Unpaid" }
+                    ]}
+                    placeholder="All Payments"
+                  />
                 </div>
 
 

@@ -119,7 +119,7 @@ export function useLeadsData(
             staff: f.staff || undefined,
             from: f.from || undefined,
             to: f.to || undefined,
-            limit: LIMIT,
+            limit: stateRef.current.limit,
           },
         });
 

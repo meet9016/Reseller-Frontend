@@ -104,6 +104,7 @@ export default function SettlementLeadsList({
   useEffect(() => {
     setPage(1);
     setHasMore(true);
+    setLeads([]);
     fetchLeads(1, search, month, year, activeTab, true);
   }, [search, month, year, activeTab]);
 
