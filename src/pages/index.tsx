@@ -1079,7 +1079,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white p-2 rounded-full border border-gray-200 shadow-sm">
+            <div className="relative flex items-center gap-3 bg-white p-2 rounded-full border border-gray-200 shadow-sm">
               {/* Quick Filter Buttons inside a capsule */}
               <div className="flex items-center gap-0.5  rounded-full p-1">
                 {[
@@ -1102,13 +1102,10 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Custom Date Pickers - Only shown when activeRange is 'custom' */}
+              {/* Custom Date Pickers - Rendered as a popover */}
               {activeRange === 'custom' && (
-                <>
-                  {/* Separator line */}
-                  <div className="h-6 w-px bg-gray-200 mx-1"></div>
-
-                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                <div className="absolute right-0 top-[110%] z-20 bg-white p-3 rounded-xl shadow-lg border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
                     <div className="w-[160px]">
                       <DatePicker
                         value={fromDate}
@@ -1119,7 +1116,7 @@ export default function Dashboard() {
                         placeholder="Start Date"
                       />
                     </div>
-                    <span className="text-gray-400 font-medium">-</span>
+                    <span className="text-gray-400 font-medium hidden sm:inline">-</span>
                     <div className="w-[160px]">
                       <DatePicker
                         value={toDate}
@@ -1132,13 +1129,13 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={() => fetchDashboardData()}
-                      className="p-1.5 ml-1 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-[#3B82F6] transition-all rounded-md shadow-sm"
+                      className="p-2 sm:p-1.5 w-full sm:w-auto bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-[#3B82F6] transition-all rounded-md shadow-sm flex items-center justify-center"
                       title="Refresh Dashboard Data"
                     >
                       <RefreshCw className="h-4 w-4" />
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -1168,7 +1165,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Total Revenue Trend - Bar/Line Composed Chart */}
           <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow relative">
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Total Revenue</h3>
                 <p className="text-lg font-medium text-gray-500 mt-1">
@@ -1177,7 +1174,7 @@ export default function Dashboard() {
               </div>
 
               {/* Year Dropdown Selector */}
-              <div className="relative z-50" ref={yearDropdownRef}>
+              <div className="relative z-10" ref={yearDropdownRef}>
                 <button
                   onClick={() => setYearDropdownOpen(!yearDropdownOpen)}
                   className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-1.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all"
@@ -1204,10 +1201,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="h-[280px]">
+            <div className="h-[280px] focus:outline-none outline-none">
               {isMounted && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart layout="vertical" data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
+                  <ComposedChart layout="vertical" data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} className="focus:outline-none outline-none">
                     <defs>
                       <linearGradient id="colorBarRevenue" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="#93C5FD" />
@@ -1252,7 +1249,7 @@ export default function Dashboard() {
                         return null;
                       }}
                     />
-                    <Bar dataKey="revenue" fill="url(#colorBarRevenue)" radius={[0, 6, 6, 0]} barSize={20} />
+                    <Bar dataKey="revenue" fill="url(#colorBarRevenue)" radius={[0, 6, 6, 0]} barSize={20} activeBar={false} />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}
@@ -1362,12 +1359,13 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="h-[420px] flex-1">
+              <div className="h-[420px] flex-1 focus:outline-none outline-none">
                 {isMounted && (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
                       <BarChart
                       data={resellerRevenue}
                       margin={{ top: 10, right: 20, left: 10, bottom: 90 }}
+                      className="focus:outline-none outline-none"
                     >
                       <defs>
                         <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1430,7 +1428,7 @@ export default function Dashboard() {
                           return null;
                         }}
                       />
-                      <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} activeBar={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -1592,10 +1590,10 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              <div className="h-[260px]">
+              <div className="h-[260px] focus:outline-none outline-none">
                 {isMounted && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
+                    <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} className="focus:outline-none outline-none">
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis

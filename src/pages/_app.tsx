@@ -86,7 +86,7 @@ export default function App({ Component, pageProps }: AppProps) {
                   {!isLoginPage ? (
                     <Header toggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
                   ) : null}
-                  <div className={isLoginPage ? "p-0" : "p-4 md:p-6"}>
+                  <div className={isLoginPage ? "p-0" : "px-4 md:px-6 py-[50px]"}>
                     <Component {...pageProps} />
                   </div>
                 </main>

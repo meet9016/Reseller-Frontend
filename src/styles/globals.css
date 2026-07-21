@@ -191,3 +191,20 @@ button {
   background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
   background-size: 200% 100%;
 }
+
+/* Recharts Outline Fix */
+.recharts-wrapper,
+.recharts-wrapper:focus,
+.recharts-surface,
+.recharts-surface:focus,
+.recharts-responsive-container,
+.recharts-responsive-container:focus {
+  outline: none !important;
+}
+
+g.recharts-layer,
+g.recharts-layer:focus,
+g.recharts-cartesian-axis,
+g.recharts-cartesian-axis:focus {
+  outline: none !important;
+}

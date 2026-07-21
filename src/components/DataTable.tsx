@@ -226,7 +226,7 @@ export default function DataTable<T extends Record<string, any>>({
   const currentData = (pagination && !serverSidePagination) ? data.slice((internalPage - 1) * internalPageSize, internalPage * internalPageSize) : data;
 
   return (
-    <div className="rounded-md bg-white border border-gray-200 transition-all duration-300 hover:shadow-2xl flex flex-col h-full">
+    <div className="rounded-md bg-white border border-gray-200 transition-all duration-300 hover:shadow-2xl flex flex-col h-[calc(100vh-240px)]">
       {/* Header - Premium Design */}
       <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-200 px-3 py-3 rounded-t-md">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
