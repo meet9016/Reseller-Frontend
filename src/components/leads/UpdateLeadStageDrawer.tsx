@@ -40,7 +40,7 @@ export default function UpdateLeadStageDrawer({ isOpen, onClose, lead, onSuccess
     }
   }, [isOpen, lead]);
 
-  const isWon = lead?.leadStatus?.name?.toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || (lead as any)?.isWon;
+  const isWon = ((typeof lead?.leadStatus === 'string' ? lead.leadStatus : lead?.leadStatus?.name) || '').toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || (lead as any)?.isWon;
 
   const fetchStatuses = async () => {
     try {

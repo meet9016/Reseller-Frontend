@@ -154,17 +154,22 @@ export default function Setup() {
     }
   };
 
-  const canViewLeadSource = useMemo(() => !!(permissions?.leadSource?.readAll || permissions?.setup?.readAll), [permissions]);
-  const canViewLeadStatus = useMemo(() => !!(permissions?.leadStatus?.readAll || permissions?.setup?.readAll), [permissions]);
+
+  // const canViewLeadSource = useMemo(() => !!(permissions?.leadSource?.readAll || permissions?.setup?.readAll), [permissions]);
+  // const canViewLeadStatus = useMemo(() => !!(permissions?.leadStatus?.readAll || permissions?.setup?.readAll), [permissions]);
   const menuItems = useMemo(() => {
     const items = [
-      { name: "Lead Sources", icon: Link2, visible: canViewLeadSource },
-      { name: "Lead Status", icon: Flag, visible: canViewLeadStatus },
+      // { name: "Lead Sources", icon: Link2, visible: canViewLeadSource },
+      // { name: "Lead Status", icon: Flag, visible: canViewLeadStatus },
+      { name: "Lead Sources", icon: Link2, visible: true },
+      { name: "Lead Status", icon: Flag, visible: true },
       { name: "Kanban Status", icon: Settings2, visible: true },
       { name: "Field Settings", icon: Settings2, visible: true },
     ];
-    return items.filter(i => i.visible);
-  }, [canViewLeadSource, canViewLeadStatus]);
+  //    return items.filter(i => i.visible);
+  // }, [canViewLeadSource, canViewLeadStatus]);
+    return items;
+  }, []);
 
   // Handle access restriction - FIXED: Check if current tab is valid
   useEffect(() => {

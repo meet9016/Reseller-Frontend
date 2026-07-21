@@ -111,7 +111,7 @@ export default function LedgerPage() {
 
   const handleExport = async () => {
     const exportData = transactions.map(tx => ({
-      date: new Date(tx.createdAt).toLocaleDateString(),
+      date: new Date(tx.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       reseller: tx.reseller?.fullName || '-',
       amount: tx.amount,
       method: tx.paymentMethod,
@@ -189,7 +189,7 @@ export default function LedgerPage() {
     {
       key: 'createdAt',
       label: 'Date',
-      render: (v) => new Date(v).toLocaleDateString()
+      render: (v) => new Date(v).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     }
   ];
 
@@ -360,6 +360,7 @@ export default function LedgerPage() {
             </div>
           }
           title="Transactions"
+          
           pagination={true}
           currentPage={currentPage}
           totalPages={totalPages}

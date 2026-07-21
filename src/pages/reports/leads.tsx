@@ -107,11 +107,11 @@ export default function LeadsReport() {
 
   const handleExport = async () => {
     const exportData = data.map(item => ({
-      date: new Date(item.createdAt).toLocaleDateString('en-IN'),
+      date: new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       customerName: item.customerName || '-',
       email: item.customerEmail || '-',
       product: item.product || '-',
-      status: item.leadStatus?.name || '-',
+      status: (typeof item.leadStatus === 'string' ? item.leadStatus : item.leadStatus?.name) || '-',
       reseller: item.assignedTo?.fullName || '-',
       amount: item.paymentAmount || 0,
       commission: item.commissionAmount || 0,
@@ -181,7 +181,7 @@ export default function LeadsReport() {
     {
       key: 'createdAt',
       label: 'DATE',
-      render: (value) => new Date(value).toLocaleDateString('en-IN'),
+      render: (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     },
   ];
 
@@ -244,19 +244,6 @@ export default function LeadsReport() {
                           </div>
                         </div>
 
-                        {/* Payment Status */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Status</label>
-                          <FormSelect
-                            value={tempPaymentStatus}
-                            onChange={setTempPaymentStatus}
-                            options={[
-                              { value: '', label: 'All Payments' },
-                              { value: 'Paid', label: 'Paid' },
-                              { value: 'Unpaid', label: 'Unpaid' },
-                            ]}
-                          />
-                        </div>
                       </div>
                       <div className="p-3 border-t border-gray-100 bg-gray-50/50 flex gap-3">
                         <button 

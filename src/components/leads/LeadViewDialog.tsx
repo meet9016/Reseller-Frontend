@@ -81,7 +81,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
   }, [authUser, authRole]);
 
   const isReseller = staffInfo?.role?.roleName?.toLowerCase() === 'reseller';
-  const isWon = lead?.leadStatus?.name?.toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || lead?.isWon;
+  const isWon = ((typeof lead?.leadStatus === 'string' ? lead.leadStatus : lead?.leadStatus?.name) || '').toLowerCase() === 'won' || (lead as any)?.status?.name?.toLowerCase() === 'won' || lead?.isWon;
 
   const handleSave = async () => {
     if (!lead) return;
@@ -503,7 +503,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
               <div className="rounded-lg bg-red-50 p-4">
                 <div className="mb-2 text-sm font-semibold text-red-600">Lost Information</div>
                 <div className="space-y-1 text-sm text-red-800">
-                  <div>Lost Date: {lead.lostDate ? new Date(lead.lostDate).toLocaleDateString() : 'N/A'}</div>
+                  <div>Lost Date: {lead.lostDate ? new Date(lead.lostDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                   <div>Reason: {lead.lostReason || 'Not specified'}</div>
                 </div>
               </div>
@@ -514,7 +514,7 @@ export default function LeadViewDialog({ lead, statuses, onClose, onRefresh }: P
               <div className="rounded-lg bg-green-50 p-4">
                 <div className="mb-2 text-sm font-semibold text-green-700">Won Information</div>
                 <div className="space-y-1 text-sm text-green-800">
-                  <div>Won Date: {lead.wonDate ? new Date(lead.wonDate).toLocaleDateString() : 'N/A'}</div>
+                  <div>Won Date: {lead.wonDate ? new Date(lead.wonDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                   <div>Amount: {lead.amount ? formatIndianCurrency(lead.amount) : 'Not specified'}</div>
                 </div>
               </div>

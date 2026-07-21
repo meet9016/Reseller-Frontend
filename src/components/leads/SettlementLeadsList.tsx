@@ -138,7 +138,7 @@ export default function SettlementLeadsList({
       key: 'select',
       label: 'Select',
       render: (val, lead) => (
-        <div className="flex justify-center">
+        <div className="flex justify-start items-center">
           <input
             type="checkbox"
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
@@ -158,7 +158,7 @@ export default function SettlementLeadsList({
         <div>
           <div className="font-semibold text-gray-900">{lead.customerName}</div>
           {lead.paymentDate && (
-            <div className="text-xs text-gray-500 mt-1 font-medium">Paid on: {new Date(lead.paymentDate).toLocaleDateString()}</div>
+            <div className="text-xs text-gray-500 mt-1 font-medium">Paid on: {new Date(lead.paymentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
           )}
         </div>
       )
@@ -192,8 +192,57 @@ export default function SettlementLeadsList({
   return (
     <div className="bg-white w-full rounded-b-lg flex flex-col h-full flex-1 min-h-0">
       <div className="p-6 pb-2">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        {/* Tabs navigation */}
+        <div className="flex border-b border-gray-200 mb-6">
+          <button
+            onClick={() => {
+              onSelectionChange([]);
+              setActiveTab('unsettled');
+            }}
+            className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
+              activeTab === 'unsettled'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Awaiting Settlement ({unsettledCount})
+          </button>
+          <button
+            onClick={() => {
+              onSelectionChange([]);
+              setActiveTab('settled');
+            }}
+            className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
+              activeTab === 'settled'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Settled Leads ({settledCount})
+          </button>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          {/* Left side: Select All on Page (only for unsettled tab) with left padding to align with table checkboxes */}
+          <div className="flex items-center gap-3 pl-6">
+            {activeTab === 'unsettled' && (
+              <>
+                <input
+                  type="checkbox"
+                  id="selectAll"
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  onChange={handleSelectAll}
+                  checked={leads.length > 0 && leads.every(lead => selectedLeads.some(l => l.id === lead.id))}
+                />
+                <label htmlFor="selectAll" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Select All on Page
+                </label>
+              </>
+            )}
+          </div>
+
+          {/* Right side: Search and Calendar filters */}
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 sm:flex-none">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -230,53 +279,6 @@ export default function SettlementLeadsList({
             </div>
           </div>
         </div>
-
-        {/* Tabs navigation */}
-        <div className="flex border-b border-gray-200 mb-6">
-          <button
-            onClick={() => {
-              onSelectionChange([]);
-              setActiveTab('unsettled');
-            }}
-            className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
-              activeTab === 'unsettled'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Awaiting Settlement ({unsettledCount})
-          </button>
-          <button
-            onClick={() => {
-              onSelectionChange([]);
-              setActiveTab('settled');
-            }}
-            className={`py-2.5 px-4 text-sm font-semibold border-b-2 transition-all duration-200 cursor-pointer ${
-              activeTab === 'settled'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Settled Leads ({settledCount})
-          </button>
-        </div>
-
-        {activeTab === 'unsettled' && (
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="selectAll"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                onChange={handleSelectAll}
-                checked={leads.length > 0 && leads.every(lead => selectedLeads.some(l => l.id === lead.id))}
-              />
-              <label htmlFor="selectAll" className="text-sm font-medium text-gray-700 cursor-pointer">
-                Select All on Page
-              </label>
-            </div>
-          </div>
-        )}
 
         {selectedLeads.filter(l => leads.some(lead => lead.id === l.id)).length > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">

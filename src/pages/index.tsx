@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useSelector } from "react-redux";
 import type { ComponentType } from "react";
 import { useRouter } from "next/navigation";
@@ -38,6 +38,7 @@ import {
   Star,
   CheckCircle2,
   XCircle,
+  X,
   MoreVertical,
   Eye,
   PhoneCall,
@@ -100,7 +101,10 @@ export default function Dashboard() {
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [tempFromDate, setTempFromDate] = useState("");
+  const [tempToDate, setTempToDate] = useState("");
   const [activeRange, setActiveRange] = useState<string>("year");
+  const [showCustomPopover, setShowCustomPopover] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
@@ -109,6 +113,7 @@ export default function Dashboard() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
   const yearDropdownRef = useRef<HTMLDivElement>(null);
+  const customPopoverRef = useRef<HTMLDivElement>(null);
   const [statusChartMode, setStatusChartMode] = useState<"pie" | "graph">("pie")
 
   // Sync selectedYear with date filters
@@ -123,11 +128,17 @@ export default function Dashboard() {
     }
   }, [fromDate]);
 
-  // Click outside to close year dropdown
+  // Click outside to close year dropdown and custom popover
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (yearDropdownRef.current && !yearDropdownRef.current.contains(e.target as Node)) {
         setYearDropdownOpen(false);
+      }
+      if (customPopoverRef.current && !customPopoverRef.current.contains(e.target as Node)) {
+        const isDatePickerClick = (e.target as HTMLElement).closest('[data-datepicker-popup="true"]');
+        if (!isDatePickerClick) {
+          setShowCustomPopover(false);
+        }
       }
     };
     document.addEventListener("mousedown", handler);
@@ -144,9 +155,7 @@ export default function Dashboard() {
   const [leadsBySource, setLeadsBySource] = useState<
     { name: string; value: number; fill: string }[]
   >([]);
-  const [staffPerformance, setStaffPerformance] = useState<
-    { name: string; converted: number; pending: number; lost: number }[]
-  >([]);
+  const [salesCommissionChart, setSalesCommissionChart] = useState<any[]>([]);
   const [resellerRevenue, setResellerRevenue] = useState<
     { name: string; revenue: number; leadCount: number }[]
   >([]);
@@ -177,35 +186,34 @@ export default function Dashboard() {
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
 
-  const [permissions, setPermissions] = useState<{ readAll: boolean; readOwn: boolean }>({ readAll: false, readOwn: false });
-  const [user, setUser] = useState<any>(null);
   const [greeting, setGreeting] = useState("");
-
 
   const token =
     typeof window !== "undefined" ? getAuthToken() : null;
 
-  const isReseller = (!permissions.readAll && permissions.readOwn) || user?.role?.roleName?.toLowerCase() === 'reseller';
-
   const { user: authUser, permissions: rawPerms, role: userRole } = useSelector((state: any) => state.auth);
 
-  // Fetch user info and permissions
+  const user = authUser;
+
+  const permissions = useMemo(() => {
+    const lp = rawPerms?.lead || {};
+    return {
+      readAll: !!lp.readAll,
+      readOwn: !!lp.readOwn,
+    };
+  }, [rawPerms]);
+
+  const isReseller = (!permissions.readAll && permissions.readOwn) || user?.role?.roleName?.toLowerCase() === 'reseller';
+
+  // Set greeting based on time
   useEffect(() => {
     if (!token) return;
 
-    setUser(authUser);
-    const lp = rawPerms?.lead || {};
-    setPermissions({
-      readAll: !!lp.readAll,
-      readOwn: !!lp.readOwn,
-    });
-
-    // Set greeting based on time
     const hour = new Date().getHours();
     if (hour < 12) setGreeting("Good Morning");
     else if (hour < 17) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
-  }, [token, authUser, rawPerms]);
+  }, [token]);
 
   // Redirect if no token
   useEffect(() => {
@@ -250,11 +258,14 @@ export default function Dashboard() {
     "#DBEAFE", // blue-100
   ];
 
-  const statusWiseData = (summary?.statusWiseCounts || []).map((s, idx) => ({
-    name: s.statusName,
-    value: s.count,
-    fill: statusColorPalette[idx % statusColorPalette.length],
-  }));
+  const hasStatusData = summary?.statusWiseCounts && summary.statusWiseCounts.some(s => s.count > 0);
+  const statusWiseData = hasStatusData
+    ? (summary.statusWiseCounts).map((s, idx) => ({
+      name: s.statusName,
+      value: s.count,
+      fill: statusColorPalette[idx % statusColorPalette.length],
+    }))
+    : [{ name: "No data", value: 1, fill: "#EFF6FF" }];
 
   const colorPalette = [
     "#3B82F6", // blue-500
@@ -269,6 +280,15 @@ export default function Dashboard() {
     "#6366F1", // indigo-500
   ];
 
+  const leadsBySourceColorPalette = [
+    "#1E40AF", // blue-800
+    "#2563EB", // blue-600
+    "#3B82F6", // blue-500
+    "#60A5FA", // blue-400
+    "#93C5FD", // blue-300
+    "#BFDBFE", // blue-200
+  ];
+
   const fetchDashboardData = async () => {
     if (!token) return;
     try {
@@ -277,7 +297,7 @@ export default function Dashboard() {
         params: {
           from: fromDate || undefined,
           to: toDate || undefined,
-          filter: activeRange === 'yearly' ? 'year' : activeRange === 'weekly' ? 'week' : 'month',
+          filter: activeRange === 'year' ? 'year' : (activeRange === 'today' ? 'week' : 'month'),
         }
       });
       const data = res.data;
@@ -294,38 +314,41 @@ export default function Dashboard() {
         totalCommission: data.counts?.totalCommission || 0,
         paidCommission: data.counts?.paidCommission || 0,
         pendingCommission: data.counts?.pendingCommission || 0,
-        statusWiseCounts: data.charts?.donutChart || [],
+        statusWiseCounts: data.charts?.leadByStatus || [],
       });
-      
-      // Fetch Revenue Chart Data
-      fetchRevenueChartData(selectedYear);
 
       if (permissions.readAll) {
         // Update Leads By Source
         const sourceData = (data.charts?.leadsBySource ?? []).map((item: any, idx: number) => ({
           name: item.name,
           value: item.count || 0,
-          fill: colorPalette[idx % colorPalette.length],
+          fill: leadsBySourceColorPalette[idx % leadsBySourceColorPalette.length],
         }));
         setLeadsBySource(sourceData);
 
-        // Update Staff Performance
-        setStaffPerformance(data.charts?.staffPerformance || []);
+        // Update Sales & Commission chart data for resellers
+        setSalesCommissionChart(data.charts?.salesAndCommission || []);
 
         // Update Reseller Revenue
         setResellerRevenue(data.charts?.resellerRevenue || []);
+      } else {
+        // Reseller: read their own sales & commission from dashboard
+        setSalesCommissionChart(data.charts?.salesAndCommission || []);
       }
     } catch (err) {
       console.error("Dashboard data error:", err);
     }
   };
 
-  const fetchRevenueChartData = async (year: number) => {
+  const fetchRevenueChartData = async (year: number, range: string) => {
     if (!token) return;
     try {
       const res = await axios.get(baseUrl.revenueChartData, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { year }
+        params: {
+          year,
+          range,
+        }
       });
       if (res.data?.data) {
         setRevenueChart(res.data.data);
@@ -335,12 +358,17 @@ export default function Dashboard() {
     }
   };
 
-  // When year changes, only fetch the chart
+  // When year or activeRange changes, fetch the chart
   useEffect(() => {
-    if (token) {
-      fetchRevenueChartData(selectedYear);
+    if (token && userRole) {
+      const currentYear = new Date().getFullYear();
+      const isCurrentYear = selectedYear === currentYear;
+      const queryRange = isCurrentYear
+        ? (activeRange === 'custom' ? 'year' : activeRange)
+        : 'year';
+      fetchRevenueChartData(selectedYear, queryRange);
     }
-  }, [selectedYear]);
+  }, [selectedYear, activeRange, token, userRole]);
 
   const fetchUpcomingFollowups = async (page: number) => {
     if (!token) return;
@@ -431,19 +459,22 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (token) {
+    if (token && userRole) {
       fetchDashboardData();
     }
-  }, [token, permissions, fromDate, toDate, activeRange]);
+  }, [token, permissions, fromDate, toDate, activeRange, userRole]);
 
   useEffect(() => {
-    if (token) {
-      fetchUpcomingFollowups(1);
-      fetchDueFollowups(1);
-      fetchAllFollowups(1);
+    if (token && userRole) {
+      const isAdmin = userRole?.toLowerCase() === 'admin';
+      if (!isAdmin) {
+        fetchUpcomingFollowups(1);
+        fetchDueFollowups(1);
+        fetchAllFollowups(1);
+      }
       fetchTodayTasks();
     }
-  }, [token, permissions]);
+  }, [token, permissions, userRole]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -459,8 +490,6 @@ export default function Dashboard() {
       }
     }
   }, []);
-
-
 
   const summaryCards: any[] = summary
     ? [
@@ -557,132 +586,7 @@ export default function Dashboard() {
     })
     : [];
 
-  const monthlyRevenueData = (() => {
-    // 1. Daily Hourly baseline
-    if (summary?.chartType === "daily") {
-      const slots = [
-        "12 AM - 4 AM",
-        "4 AM - 8 AM",
-        "8 AM - 12 PM",
-        "12 PM - 4 PM",
-        "4 PM - 8 PM",
-        "8 PM - 12 AM"
-      ];
-
-      const todayStr = (() => {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-      })();
-
-      const isToday = fromDate === todayStr;
-      let activeSlots = slots;
-      if (isToday) {
-        const currentHour = new Date().getHours();
-        const maxSlotIndex = Math.floor(currentHour / 4);
-        activeSlots = slots.slice(0, maxSlotIndex + 1);
-      }
-
-      const data = activeSlots.map(s => ({
-        name: s,
-        revenue: 0,
-        commission: 0
-      }));
-
-      if (summary.chartData) {
-        summary.chartData.forEach(item => {
-          const match = data.find(d => d.name === item.name);
-          if (match) {
-            match.revenue = item.revenue;
-            match.commission = item.commission || 0;
-          }
-        });
-      }
-      return data;
-    }
-
-    // 2. Weekly baseline
-    if (summary?.chartType === "weekly") {
-      let queryYear = new Date().getFullYear();
-      let queryMonth = new Date().getMonth() + 1;
-      if (fromDate) {
-        const parsedDate = new Date(fromDate);
-        if (!isNaN(parsedDate.getTime())) {
-          queryYear = parsedDate.getFullYear();
-          queryMonth = parsedDate.getMonth() + 1;
-        }
-      }
-
-      const lastDay = new Date(queryYear, queryMonth, 0).getDate();
-      const weeks = [
-        "Week 1 (1-7)",
-        "Week 2 (8-14)",
-        "Week 3 (15-21)",
-        "Week 4 (22-28)",
-        `Week 5 (29-${lastDay})`
-      ];
-
-      const now = new Date();
-      const isCurrentMonth = queryYear === now.getFullYear() && queryMonth === (now.getMonth() + 1);
-      let activeWeeks = weeks;
-      if (isCurrentMonth) {
-        const currentDay = now.getDate();
-        let maxWeekIndex = 4;
-        if (currentDay <= 7) maxWeekIndex = 0;
-        else if (currentDay <= 14) maxWeekIndex = 1;
-        else if (currentDay <= 21) maxWeekIndex = 2;
-        else if (currentDay <= 28) maxWeekIndex = 3;
-
-        activeWeeks = weeks.slice(0, maxWeekIndex + 1);
-      }
-
-      const data = activeWeeks.map(w => ({
-        name: w,
-        revenue: 0,
-        commission: 0
-      }));
-
-      if (summary.chartData) {
-        summary.chartData.forEach(item => {
-          const match = data.find(d => d.name.substring(0, 6) === item.name.substring(0, 6));
-          if (match) {
-            match.revenue = item.revenue;
-            match.commission = item.commission || 0;
-          }
-        });
-      }
-      return data;
-    }
-
-    // 3. Monthly baseline
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    ];
-    
-    // Convert revenueChart data (from API) into the monthly array
-    const data = months.map((monthName, idx) => ({
-      name: monthName,
-      revenue: 0,
-      commission: 0,
-      monthNum: idx + 1,
-      year: selectedYear
-    }));
-
-    if (revenueChart && revenueChart.length > 0) {
-      revenueChart.forEach(item => {
-        const match = data.find(d => d.monthNum === item.month);
-        if (match) {
-          match.revenue = item.revenue;
-          match.commission = item.commission || 0;
-        }
-      });
-    }
-
-    return data;
-  })();
+  const monthlyRevenueData = revenueChart || [];
 
   // Total Leads Trend data (reseller-only chart)
   // NOTE: reads `leadCount` from summary.chartData items (same period-buckets used for revenue).
@@ -824,6 +728,24 @@ export default function Dashboard() {
   })();
 
   const handleQuickFilter = (range: string) => {
+    if (range === 'custom') {
+      setShowCustomPopover(!showCustomPopover);
+      if (!showCustomPopover) {
+        setTempFromDate(fromDate);
+        setTempToDate(toDate);
+      }
+      return;
+    }
+
+    setShowCustomPopover(false);
+
+    if (activeRange === range) {
+      setFromDate("");
+      setToDate("");
+      setActiveRange("");
+      return;
+    }
+
     const now = new Date();
     let start = new Date();
     let end = new Date();
@@ -849,13 +771,10 @@ export default function Dashboard() {
         end = new Date(now.getFullYear(), 12, 0);
         setActiveRange('year');
         break;
-      case 'custom':
-        setActiveRange('custom');
-        return;
       case 'reset':
         setFromDate("");
         setToDate("");
-        setActiveRange('custom');
+        setActiveRange("");
         return;
     }
 
@@ -869,22 +788,7 @@ export default function Dashboard() {
     setToDate(format(end));
   };
 
-  const handleCardClick = (card: SummaryCard) => {
-    if (card.type === "total") {
-      router.push("/leads");
-      return;
-    }
 
-    if (card.type === "revenue") {
-      router.push("/settlements");
-      return;
-    }
-
-    if (card.type === "resellers" && !isReseller) {
-      router.push("/resellers");
-      return;
-    }
-  };
 
   const renderFollowupTable = (
     title: string,
@@ -953,10 +857,12 @@ export default function Dashboard() {
 
                         <span
                           className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${getStatusColor(
-                            lead.lead?.leadStatus?.name || lead.leadStatus?.name || "",
+                            (typeof lead.lead?.leadStatus === 'string' ? lead.lead.leadStatus : lead.lead?.leadStatus?.name) ||
+                            (typeof lead.leadStatus === 'string' ? lead.leadStatus : lead.leadStatus?.name) || ""
                           )}`}
                         >
-                          {lead.lead?.leadStatus?.name || lead.leadStatus?.name || "-"}
+                          {(typeof lead.lead?.leadStatus === 'string' ? lead.lead.leadStatus : lead.lead?.leadStatus?.name) ||
+                            typeof lead.leadStatus === 'string' ? lead.leadStatus : lead.leadStatus?.name || "-"}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-xs">
@@ -1085,7 +991,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="space-y-8 max-w-[1600px] mx-auto w-full">
+      <div className="space-y-8 mx-auto w-full">
 
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
@@ -1094,13 +1000,12 @@ export default function Dashboard() {
               {greeting}, {user?.fullName?.split(' ')[0] || 'User'}! 👋
             </h2>
             <p className="text-gray-500 mt-1 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-[#3B82F6]" />
               Here's what's happening with your projects today.
             </p>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative flex items-center gap-3 bg-white p-2 rounded-full border border-gray-200 shadow-sm">
+            <div className="relative flex items-center gap-3 bg-white p-2 rounded-full border border-gray-200 shadow-sm" ref={customPopoverRef}>
               {/* Quick Filter Buttons inside a capsule */}
               <div className="flex items-center gap-0.5  rounded-full p-1">
                 {[
@@ -1124,36 +1029,65 @@ export default function Dashboard() {
               </div>
 
               {/* Custom Date Pickers - Rendered as a popover */}
-              {activeRange === 'custom' && (
-                <div className="absolute right-0 top-[110%] z-20 bg-white p-3 rounded-xl shadow-lg border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                  <div className="flex flex-col sm:flex-row items-center gap-3">
-                    <div className="w-[160px]">
-                      <DatePicker
-                        value={fromDate}
-                        onChange={(val) => {
-                          setFromDate(val);
-                          setActiveRange('custom');
-                        }}
-                        placeholder="Start Date"
-                      />
+              {showCustomPopover && (
+                <div className="absolute right-0 top-[110%] w-[320px] z-20 bg-white rounded-xl shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                  <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <h3 className="font-semibold text-gray-800 text-sm">Filter Reports</h3>
+                    <button onClick={() => setShowCustomPopover(false)} className="text-gray-400 hover:text-gray-600">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="p-4 flex flex-col gap-6">
+                    {/* Date Range */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">Date Range</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <DatePicker
+                            value={tempFromDate}
+                            onChange={(val) => {
+                              setTempFromDate(val);
+                            }}
+                            placeholder="Start Date"
+                          />
+                        </div>
+                        <span className="text-gray-300 font-medium">-</span>
+                        <div className="flex-1">
+                          <DatePicker
+                            value={tempToDate}
+                            onChange={(val) => {
+                              setTempToDate(val);
+                            }}
+                            placeholder="End Date"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-gray-400 font-medium hidden sm:inline">-</span>
-                    <div className="w-[160px]">
-                      <DatePicker
-                        value={toDate}
-                        onChange={(val) => {
-                          setToDate(val);
-                          setActiveRange('custom');
-                        }}
-                        placeholder="End Date"
-                      />
-                    </div>
+                  </div>
+                  <div className="p-3 border-t border-gray-100 bg-gray-50/50 flex gap-3">
                     <button
-                      onClick={() => fetchDashboardData()}
-                      className="p-2 sm:p-1.5 w-full sm:w-auto bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-500 hover:text-[#3B82F6] transition-all rounded-md shadow-sm flex items-center justify-center"
-                      title="Refresh Dashboard Data"
+                      onClick={() => {
+                        setTempFromDate('');
+                        setTempToDate('');
+                        setFromDate('');
+                        setToDate('');
+                        setActiveRange('');
+                        setShowCustomPopover(false);
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
                     >
-                      <RefreshCw className="h-4 w-4" />
+                      Clear All
+                    </button>
+                    <button
+                      onClick={() => {
+                        setFromDate(tempFromDate);
+                        setToDate(tempToDate);
+                        setActiveRange('custom');
+                        setShowCustomPopover(false);
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Apply
                     </button>
                   </div>
                 </div>
@@ -1167,7 +1101,6 @@ export default function Dashboard() {
           {summaryCards.map((card) => (
             <div
               key={card.key}
-              onClick={() => handleCardClick(card)}
               className="bg-white p-4 rounded-3xl border border-gray-200/80 flex items-center gap-4 transition-all duration-300"
             >
               <div className={`p-3 rounded-xl ${card.iconBg} ${card.iconColor} transition-transform duration-300 group-hover:scale-110 flex-shrink-0`}>
@@ -1183,7 +1116,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-5 ">
           {/* Total Revenue Trend - Bar/Line Composed Chart */}
           <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow relative">
             <div className="flex items-center justify-between mb-8">
@@ -1233,11 +1166,11 @@ export default function Dashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                    <XAxis 
+                    <XAxis
                       type="number"
-                      stroke="#94a3b8" 
-                      fontSize={11} 
-                      tickLine={false} 
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
                       axisLine={false}
                       tickFormatter={(val) => {
                         if (val >= 1000) return `${Math.round(val / 1000)}K`;
@@ -1297,14 +1230,13 @@ export default function Dashboard() {
                     const paid = summary.totalPaid || 0;
                     const pending = summary.totalPending || 0;
                     const total = summary.totalRevenue || 0;
-                    const other = Math.max(0, total - paid - pending);
-                    const pieData = [
-                      { name: "Paid", value: paid, fill: "#3B82F6" },
-                      { name: "Pending", value: pending, fill: "#93C5FD" },
-                    ].filter(d => d.value > 0);
-                    if (pieData.length === 0) return (
-                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">No payment data</div>
-                    );
+                    const hasData = paid > 0 || pending > 0;
+                    const pieData = hasData
+                      ? [
+                        { name: "Paid", value: paid, fill: "#3B82F6" },
+                        { name: "Pending", value: pending, fill: "#93C5FD" },
+                      ]
+                      : [{ name: "No data", value: 1, fill: "#EFF6FF" }];
                     return (
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -1320,17 +1252,23 @@ export default function Dashboard() {
                             cy="50%"
                             innerRadius={70}
                             outerRadius={110}
-                            paddingAngle={4}
+                            paddingAngle={hasData ? 4 : 0}
                             dataKey="value"
                             nameKey="name"
                           >
                             {pieData.map((entry, index) => (
-                              <Cell key={`paid-cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={3} />
+                              <Cell
+                                key={`paid-cell-${index}`}
+                                fill={entry.fill}
+                                stroke={hasData ? "white" : "#BFDBFE"}
+                                strokeWidth={hasData ? 3 : 1.5}
+                                strokeDasharray={hasData ? "none" : "4 4"}
+                              />
                             ))}
                           </Pie>
                           <Tooltip
                             content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
+                              if (active && payload && payload.length && payload[0].name !== "No data") {
                                 return (
                                   <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
                                     <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
@@ -1354,7 +1292,7 @@ export default function Dashboard() {
                   {[
                     { label: "Paid", value: summary.totalPaid || 0, color: "#3B82F6", bg: "#EFF6FF" },
                     { label: "Pending", value: summary.totalPending || 0, color: "#93C5FD", bg: "#EFF6FF" },
-                  ].filter(d => d.value > 0).map((item, i) => {
+                  ].map((item, i) => {
                     return (
                       <div key={i} className="flex items-center gap-4 p-4 rounded-2xl" style={{ backgroundColor: item.bg }}>
                         <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
@@ -1372,9 +1310,9 @@ export default function Dashboard() {
         </div>
 
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top 10 Resellers by Revenue - Horizontal Bar Chart */}
-          {resellerRevenue && resellerRevenue.length > 0 && (
+          {permissions.readAll && (
             <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -1388,83 +1326,89 @@ export default function Dashboard() {
 
               <div className="h-[420px] flex-1 focus:outline-none outline-none">
                 {isMounted && (
-                  <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
+                  resellerRevenue && resellerRevenue.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
                       <BarChart
-                      data={resellerRevenue}
-                      margin={{ top: 10, right: 20, left: 10, bottom: 90 }}
-                      className="focus:outline-none outline-none"
-                    >
-                      <defs>
-                        <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3B82F6" />
-                          <stop offset="100%" stopColor="#93C5FD" />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis
-                        dataKey="name"
-                        stroke="#94a3b8"
-                        fontSize={11}
-                        tickLine={false}
-                        axisLine={false}
-                        interval={0}
-                        tick={(props: any) => {
-                          const { x, y, payload } = props;
-                          const name: string = payload.value || '';
-                          const maxLen = 12;
-                          const display = name.length > maxLen ? name.slice(0, maxLen) + '…' : name;
-                          return (
-                            <g transform={`translate(${x},${y})`}>
-                              <text
-                                x={0}
-                                y={0}
-                                dy={14}
-                                textAnchor="middle"
-                                fill="#374151"
-                                fontSize={11}
-                                fontWeight={500}
-                              >
-                                {display}
-                              </text>
-                            </g>
-                          );
-                        }}
-                      />
-                      <YAxis
-                        stroke="#94a3b8"
-                        fontSize={11}
-                        tickLine={false}
-                        axisLine={false}
-                        width={45}
-                        tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
-                      />
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const d = payload[0].payload;
+                        data={resellerRevenue}
+                        margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                        className="focus:outline-none outline-none"
+                      >
+                        <defs>
+                          <linearGradient id="resellerBarGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3B82F6" />
+                            <stop offset="100%" stopColor="#93C5FD" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis
+                          dataKey="name"
+                          stroke="#94a3b8"
+                          fontSize={11}
+                          tickLine={false}
+                          axisLine={false}
+                          interval={0}
+                          tick={(props: any) => {
+                            const { x, y, payload } = props;
+                            const name: string = payload.value || '';
+                            const maxLen = 12;
+                            const display = name.length > maxLen ? name.slice(0, maxLen) + '…' : name;
                             return (
-                              <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                                <p className="text-sm font-bold text-gray-900">{d.name}</p>
-                                <p className="text-sm font-semibold mt-1" style={{ color: '#3B82F6' }}>
-                                  ₹{Number(d.revenue).toLocaleString('en-IN')}
-                                </p>
-                                <p className="text-xs text-gray-400 mt-0.5">{d.leadCount} leads</p>
-                              </div>
+                              <g transform={`translate(${x},${y})`}>
+                                <text
+                                  x={0}
+                                  y={0}
+                                  dy={14}
+                                  textAnchor="middle"
+                                  fill="#374151"
+                                  fontSize={11}
+                                  fontWeight={500}
+                                >
+                                  {display}
+                                </text>
+                              </g>
                             );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} activeBar={false} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                          }}
+                        />
+                        <YAxis
+                          stroke="#94a3b8"
+                          fontSize={11}
+                          tickLine={false}
+                          axisLine={false}
+                          width={45}
+                          tickFormatter={(val) => val >= 1000 ? `${Math.round(val / 1000)}K` : String(val)}
+                        />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const d = payload[0].payload;
+                              return (
+                                <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                  <p className="text-sm font-bold text-gray-900">{d.name}</p>
+                                  <p className="text-sm font-semibold mt-1" style={{ color: '#3B82F6' }}>
+                                    ₹{Number(d.revenue).toLocaleString('en-IN')}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-0.5">{d.leadCount} leads</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="revenue" fill="url(#resellerBarGrad)" radius={[6, 6, 0, 0]} maxBarSize={40} activeBar={false} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                      No reseller revenue data available
+                    </div>
+                  )
                 )}
               </div>
             </div>
           )}
 
           {/* Leads by Source - Pie Chart */}
-          {leadsBySource.length > 0 && (
+          {permissions.readAll && (
             <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -1477,39 +1421,64 @@ export default function Dashboard() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center flex-1">
                 <div className="h-[280px]">
-                  {isMounted && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={leadsBySource} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value" nameKey="name">
-                          {leadsBySource.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={2} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              return (
-                                <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                                  <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
-                                  <p className="text-sm text-emerald-600 font-semibold">{payload[0].value} Leads</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
+                  {isMounted && (() => {
+                    const hasSourceData = leadsBySource && leadsBySource.length > 0;
+                    const sourcePieData = hasSourceData
+                      ? leadsBySource
+                      : [{ name: "No data", value: 1, fill: "#EFF6FF" }];
+                    return (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={sourcePieData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={110}
+                            paddingAngle={hasSourceData ? 8 : 0}
+                            dataKey="value"
+                            nameKey="name"
+                          >
+                            {sourcePieData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={entry.fill}
+                                stroke={hasSourceData ? "white" : "#BFDBFE"}
+                                strokeWidth={hasSourceData ? 2 : 1.5}
+                                strokeDasharray={hasSourceData ? "none" : "4 4"}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length && payload[0].name !== "No data") {
+                                return (
+                                  <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                    <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
+                                    <p className="text-sm text-emerald-600 font-semibold">{payload[0].value} Leads</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
                 </div>
                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                  {leadsBySource.map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
-                      <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
-                      <span className="text-sm font-bold text-gray-900">{s.value}</span>
-                    </div>
-                  ))}
+                  {leadsBySource && leadsBySource.length > 0 ? (
+                    leadsBySource.map((s, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-gray-50 bg-gray-50/30">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }}></div>
+                        <span className="text-sm font-medium text-gray-600 flex-1 truncate">{s.name}</span>
+                        <span className="text-sm font-bold text-gray-900">{s.value}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-400 text-center py-4">No lead sources found</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1520,79 +1489,88 @@ export default function Dashboard() {
         {/* Lead Status Overview & Sales vs Commission - Only for Reseller */}
         {isReseller && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {summary && summary.statusWiseCounts && summary.statusWiseCounts.length > 0 && (
-          <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Lead Status Overview</h3>
-                <p className="text-sm text-gray-500 mt-1">Performance by status categories</p>
-              </div>
-              <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
-                <PieChartIcon className="h-5 w-5" style={{ color: '#3B82F6' }} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              <div className="h-[280px]">
-                {isMounted && (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={statusWiseData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={110}
-                        paddingAngle={4}
-                        dataKey="value"
-                        nameKey="name"
-                      >
-                        {statusWiseData.map((entry, index) => (
-                          <Cell key={`status-cell-${index}`} fill={entry.fill} stroke="white" strokeWidth={3} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            return (
-                              <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
-                                <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
-                                <p className="text-sm font-semibold mt-1" style={{ color: (payload[0].payload as any).fill }}>
-                                  {payload[0].value} Leads
-                                </p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                {statusWiseData.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-gray-50 bg-gray-50/50 p-3 hover:bg-gray-100/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.fill }} />
-                      <span className="text-sm font-bold text-slate-600">{s.name}</span>
-                    </div>
-                    <span
-                      className="rounded-lg border px-2 py-0.5 text-sm font-bold"
-                      style={{ color: s.fill, borderColor: s.fill + "40", backgroundColor: s.fill + "10" }}
-                    >
-                      {s.value} Leads
-                    </span>
+            {summary && (
+              <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Lead Status Overview</h3>
+                    <p className="text-sm text-gray-500 mt-1">Performance by status categories</p>
                   </div>
-                ))}
+                  <div className="p-2 rounded-xl" style={{ backgroundColor: '#EFF6FF' }}>
+                    <PieChartIcon className="h-5 w-5" style={{ color: '#3B82F6' }} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <div className="h-[280px]">
+                    {isMounted && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statusWiseData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={110}
+                            paddingAngle={hasStatusData ? 4 : 0}
+                            dataKey="value"
+                            nameKey="name"
+                          >
+                            {statusWiseData.map((entry, index) => (
+                              <Cell
+                                key={`status-cell-${index}`}
+                                fill={entry.fill}
+                                stroke={hasStatusData ? "white" : "#BFDBFE"}
+                                strokeWidth={hasStatusData ? 3 : 1.5}
+                                strokeDasharray={hasStatusData ? "none" : "4 4"}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length && payload[0].name !== "No data") {
+                                return (
+                                  <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-xl">
+                                    <p className="text-sm font-bold text-gray-900">{payload[0].name}</p>
+                                    <p className="text-sm font-semibold mt-1" style={{ color: (payload[0].payload as any).fill }}>
+                                      {payload[0].value} Leads
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                    {(summary?.statusWiseCounts || []).map((s, idx) => {
+                      const fill = statusColorPalette[idx % statusColorPalette.length];
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-gray-50 bg-gray-50/50 p-3 hover:bg-gray-100/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: fill }} />
+                            <span className="text-sm font-bold text-slate-600">{s.statusName}</span>
+                          </div>
+                          <span
+                            className="rounded-lg border px-2 py-0.5 text-sm font-bold"
+                            style={{ color: fill, borderColor: fill + "40", backgroundColor: fill + "10" }}
+                          >
+                            {s.count} Leads
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
             <div className="bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-8">
@@ -1616,11 +1594,11 @@ export default function Dashboard() {
                   <span className="text-xs font-semibold text-gray-600">Commission</span>
                 </div>
               </div>
-              
+
               <div className="h-[260px] focus:outline-none outline-none">
                 {isMounted && (
                   <ResponsiveContainer width="100%" height="100%" className="focus:outline-none outline-none">
-                    <ComposedChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} className="focus:outline-none outline-none">
+                    <ComposedChart data={salesCommissionChart} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} className="focus:outline-none outline-none">
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis
@@ -1676,9 +1654,12 @@ export default function Dashboard() {
         onClose={() => setDrawerOpen(false)}
         lead={selectedLead}
         onSuccess={() => {
-          fetchUpcomingFollowups(upcomingPage);
-          fetchDueFollowups(duePage);
-          fetchAllFollowups(allPage);
+          const isAdmin = userRole?.toLowerCase() === 'admin';
+          if (!isAdmin) {
+            fetchUpcomingFollowups(upcomingPage);
+            fetchDueFollowups(duePage);
+            fetchAllFollowups(allPage);
+          }
         }}
       />
     </div>

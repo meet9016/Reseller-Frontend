@@ -39,10 +39,18 @@ export default function SettlementsReport() {
   const [isMounted, setIsMounted] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -76,7 +84,10 @@ export default function SettlementsReport() {
       const token = getAuthToken();
       if (!token) return;
 
-      const params: any = {};
+      const params: any = {
+        page: currentPage,
+        limit: rowsPerPage
+      };
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
       if (debouncedSearch) params.search = debouncedSearch;
@@ -87,13 +98,18 @@ export default function SettlementsReport() {
       });
 
       setData(res.data?.data || []);
+      const pag = res.data?.pagination;
+      if (pag) {
+        setTotalRecords(pag.totalRecords || 0);
+        setTotalPages(pag.totalPages || 1);
+      }
     } catch (error) {
       console.error('Failed to fetch settlements report:', error);
       toast.error('Failed to load report data');
     } finally {
       setIsLoading(false);
     }
-  }, [fromDate, toDate, debouncedSearch]);
+  }, [fromDate, toDate, debouncedSearch, currentPage, rowsPerPage]);
 
   useEffect(() => {
     fetchData();
@@ -435,6 +451,17 @@ export default function SettlementsReport() {
                 </div>
               </div>
             }
+            pagination={true}
+            serverSidePagination={true}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={rowsPerPage}
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(r) => {
+              setRowsPerPage(r);
+              setCurrentPage(1);
+            }}
           />
         </div>
       </div>

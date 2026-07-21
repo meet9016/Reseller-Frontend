@@ -350,7 +350,7 @@ export default function LeadsKanbanView({
         { key: 'companyName', label: 'COMPANY', render: (v) => <span className="text-sm">{v || '-'}</span> },
         { key: 'address', label: 'LOCATION', render: (v, row) => <span className="text-sm">{v || row.city || '-'}</span> },
         { key: 'contact', label: 'CONTACT', render: (v, row) => <ContactCell phone={row.customerContact || v} email={row.customerEmail || row.email} /> },
-        { key: 'lostDate', label: 'LOST DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString() : 'N/A' } },
+        { key: 'lostDate', label: 'LOST DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A' } },
         { key: 'assignedTo', label: 'ASSIGNED TO', render: (v) => v?.fullName || '-' },
         { key: 'lostReason', label: 'REASON', render: (v) => v || 'Not specified' },
     ];
@@ -360,14 +360,14 @@ export default function LeadsKanbanView({
         { key: 'companyName', label: 'COMPANY', render: (v) => <span className="text-sm">{v || '-'}</span> },
         { key: 'address', label: 'LOCATION', render: (v, row) => <span className="text-sm">{v || row.city || '-'}</span> },
         { key: 'contact', label: 'CONTACT', render: (v, row) => <ContactCell phone={row.customerContact || v} email={row.customerEmail || row.email} /> },
-        { key: 'wonDate', label: 'WON DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString() : 'N/A' } },
+        { key: 'wonDate', label: 'WON DATE', render: (v, row) => { const d = v || row.updatedAt; return d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A' } },
         { key: 'assignedTo', label: 'ASSIGNED TO', render: (v) => v?.fullName || '-' },
         { key: 'paymentAmount', label: 'AMOUNT', render: (v) => (v ? formatIndianCurrency(v) : '-') },
     ];
 
     return (
-        <div className="flex h-full flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+        <div className="flex flex-1 min-h-0 flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-1 flex-shrink-0">
                 <div className="flex items-center gap-2">
                     {(['board', 'lost', 'won'] as SubView[]).map((v) => {
                         let boardCount = 0;
@@ -475,8 +475,8 @@ export default function LeadsKanbanView({
             )}
 
             {subView === 'lost' && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm w-full">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex items-center justify-between mb-4 flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-red-200 text-red-700 flex items-center justify-center font-bold text-lg">×</div>
                             <div>
@@ -508,8 +508,8 @@ export default function LeadsKanbanView({
             )}
 
             {subView === 'won' && (
-                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 shadow-sm w-full">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4 shadow-sm w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex items-center justify-between mb-4 flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-full bg-green-200 text-green-700 flex items-center justify-center font-bold text-lg">✓</div>
                             <div>

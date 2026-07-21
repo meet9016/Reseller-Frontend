@@ -97,11 +97,11 @@ function mapLead(item: any): TableLead {
     address: item.address || '-',
     phone: item.customerContact || item.customerContact || item.contact || item.phone || '-',
     email: item.customerEmail || item.email || '-',
-    status: item.leadStatus?.name || item.status?.name || '-',
+    status: (typeof item.leadStatus === 'string' ? item.leadStatus : item.leadStatus?.name) || item.status?.name || '-',
     staff: item.assignedTo?.fullName || '-',
     priority: item.priority?.toUpperCase() || 'MEDIUM',
     lastFollowUp: item.updatedAt
-      ? new Date(item.updatedAt).toLocaleDateString()
+      ? new Date(item.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : '-',
     isActive: item.isActive,
     isWon: item.isWon,
@@ -344,7 +344,7 @@ export default function LeadsListView({
         columns={columns}
         loading={loading}
         searchable={false}
-        leftActions={headerActions}
+        headerActions={headerActions}
         pagination
         serverSidePagination={true}
         currentPage={pagination?.currentPage || 1}

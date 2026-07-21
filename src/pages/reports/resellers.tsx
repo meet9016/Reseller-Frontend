@@ -25,10 +25,18 @@ export default function ResellersReport() {
   const [isMounted, setIsMounted] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -44,17 +52,26 @@ export default function ResellersReport() {
 
       const res = await axios.get(baseUrl.getAllResellers, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 1000, search: debouncedSearch }
+        params: { 
+          page: currentPage, 
+          limit: rowsPerPage, 
+          search: debouncedSearch 
+        }
       });
 
       setData(res.data?.data || []);
+      const pag = res.data?.pagination;
+      if (pag) {
+        setTotalRecords(pag.totalRecords || 0);
+        setTotalPages(pag.totalPages || 1);
+      }
     } catch (error) {
       console.error('Failed to fetch resellers report:', error);
       toast.error('Failed to load report data');
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, currentPage, rowsPerPage]);
 
   useEffect(() => {
     if (isMounted) fetchData();
@@ -68,7 +85,7 @@ export default function ResellersReport() {
       role: item.role?.roleName || '-',
       status: item.status || '-',
       commissionRate: item.commissionRate || 0,
-      joinedDate: new Date(item.createdAt).toLocaleDateString(),
+      joinedDate: new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     }));
 
     const columns = [
@@ -193,6 +210,17 @@ export default function ResellersReport() {
                 </div>
               </div>
             }
+            pagination={true}
+            serverSidePagination={true}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={rowsPerPage}
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(r) => {
+              setRowsPerPage(r);
+              setCurrentPage(1);
+            }}
           />
       </div>
     </div>

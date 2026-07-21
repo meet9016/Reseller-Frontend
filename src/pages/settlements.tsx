@@ -5,7 +5,7 @@ import DataTable, { Column } from '@/components/DataTable';
 import axios from 'axios';
 import { baseUrl, getAuthToken } from '@/config';
 import { toast } from 'react-toastify';
-import { IndianRupee, ReceiptText, Users, Percent, Banknote } from 'lucide-react';
+import { IndianRupee, ReceiptText, Users, Percent, Banknote, Search } from 'lucide-react';
 import { useRouter } from 'next/router';
 
 interface Settlement {
@@ -54,6 +54,20 @@ export function SettlementsContent() {
   const [globalSettlementMethod, setGlobalSettlementMethod] = useState<string>('Bank Transfer');
   const [isSettlingLeads, setIsSettlingLeads] = useState(false);
   const [activeTab, setActiveTab] = useState<'unsettled' | 'settled'>('unsettled');
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Automatically default the settlement method based on the selected leads' paymentMode
   useEffect(() => {
@@ -112,12 +126,24 @@ export function SettlementsContent() {
   const fetchSettlements = useCallback(async () => {
     setIsLoading(true);
     try {
+      const params: any = {
+        page: currentPage,
+        limit: rowsPerPage,
+        search: debouncedSearch
+      };
       const res = await axios.get(baseUrl.settlements, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        params
       });
 
       const payload = res.data?.data || [];
       setSettlementsData(payload);
+
+      const pag = res.data?.pagination;
+      if (pag) {
+        setTotalRecords(pag.totalRecords || 0);
+        setTotalPages(pag.totalPages || 1);
+      }
 
       if (getUserRole() === 'reseller') {
         const leadsRes = await axios.get(`${baseUrl.resellerLeadSettlements}?limit=1000`, {
@@ -133,7 +159,7 @@ export function SettlementsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, getUserRole]);
+  }, [token, getUserRole, currentPage, rowsPerPage, debouncedSearch]);
 
   useEffect(() => {
     fetchSettlements();
@@ -372,7 +398,7 @@ export function SettlementsContent() {
     {
       key: 'paymentDate',
       label: 'DATE',
-      render: (value) => value ? new Date(value).toLocaleDateString('en-IN') : '-',
+      render: (value) => value ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-',
     },
   ];
 
@@ -381,17 +407,6 @@ export function SettlementsContent() {
   const totalCommissionAmount = settlementsData.reduce((acc, curr) => acc + curr.totalCommission, 0);
   const totalPaid = settlementsData.reduce((acc, curr) => acc + curr.paidCommission, 0);
   const totalPending = settlementsData.reduce((acc, curr) => acc + curr.pendingCommission, 0);
-
-  const filteredSettlements = settlementsData.filter(settlement => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      settlement.resellerName?.toLowerCase().includes(query) ||
-      settlement.resellerEmail?.toLowerCase().includes(query) ||
-      settlement.commissionRate?.toString().includes(query)
-    );
-  });
-
   return (
     <>
       <div className="flex flex-col h-full gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -444,12 +459,36 @@ export function SettlementsContent() {
           />
         ) : (
           <DataTable
-              data={filteredSettlements}
+              data={settlementsData}
               columns={columns}
               loading={isLoading}
-              searchable
-              searchQuery={searchQuery}
-              onSearch={(val) => setSearchQuery(val)}
+              searchable={false}
+              headerActions={
+                <div className="flex items-center gap-3">
+                  {/* Search Bar */}
+                  <div className="relative w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 pointer-events-none" />
+                    <input
+                      type="search"
+                      placeholder="Search anything..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-700 placeholder:text-gray-400 transition-all duration-200 focus:border-[#3B82F6] focus:outline-none focus:ring-1 focus:ring-[#3B82F6]/20 hover:border-gray-300"
+                    />
+                  </div>
+                </div>
+              }
+              pagination={true}
+              serverSidePagination={true}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalRecords={totalRecords}
+              pageSize={rowsPerPage}
+              onPageChange={(p) => setCurrentPage(p)}
+              onPageSizeChange={(r) => {
+                setRowsPerPage(r);
+                setCurrentPage(1);
+              }}
               onRowClick={(row) => router.push(`/settlements/${row._id}`)}
             />
         )}

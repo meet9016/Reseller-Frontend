@@ -676,7 +676,7 @@ export default function LeadsPage() {
                       ) : (
                         <div className="space-y-3">
                           {status.leads.map((lead: any) => {
-                            const isWon = status.title.toLowerCase() === 'won' || lead.isWon || lead.leadStatus?.name?.toLowerCase() === 'won';
+                            const isWon = status.title.toLowerCase() === 'won' || lead.isWon || ((typeof lead.leadStatus === 'string' ? lead.leadStatus : lead.leadStatus?.name) || '').toLowerCase() === 'won';
                             return (
                               <div
                                 key={lead._id}
@@ -702,8 +702,8 @@ export default function LeadsPage() {
                                     <button
                                       onClick={() => handleView(lead._id)}
                                       className="h-8 w-8 rounded-full bg-[#007bff] text-[#ffffff] flex items-center justify-center
-             hover:-translate-y-1 hover:shadow-md 
-             transition-transform transition-shadow duration-200 ease-out"
+                                                  hover:-translate-y-1 hover:shadow-md 
+                                                  transition-transform transition-shadow duration-200 ease-out"
                                       title="View"
                                     >
                                       <FiEye className="h-4 w-4" />
@@ -713,8 +713,8 @@ export default function LeadsPage() {
                                       <button
                                         onClick={() => handleEdit(lead._id)}
                                         className="h-8 w-8 rounded-full bg-[#008001] text-[#ffffff] flex items-center justify-center
-               hover:-translate-y-1 hover:shadow-md 
-               transition-transform transition-shadow duration-200 ease-out"
+                                                    hover:-translate-y-1 hover:shadow-md 
+                                                    ransition-transform transition-shadow duration-200 ease-out"
                                         title="Edit"
                                       >
                                         <FiEdit className="h-4 w-4" />
@@ -875,7 +875,7 @@ export default function LeadsPage() {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              {l.lostDate ? new Date(l.lostDate).toLocaleDateString() : 'N/A'}
+                              {l.lostDate ? new Date(l.lostDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                             </td>
                             <td className="px-4 py-3">{l.assignedTo?.fullName || '-'}</td>
                             <td className="px-4 py-3">{l.lostReason || 'Not specified'}</td>
@@ -997,7 +997,7 @@ export default function LeadsPage() {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              {l.wonDate ? new Date(l.wonDate).toLocaleDateString() : 'N/A'}
+                              {l.wonDate ? new Date(l.wonDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
                             </td>
                             <td className="px-4 py-3">{l.assignedTo?.fullName || '-'}</td>
                             <td className="px-4 py-3">
@@ -1251,11 +1251,11 @@ export default function LeadsPage() {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Source</div>
-                  <div>{viewLead.leadSource?.name || "-"}</div>
+                  <div>{(typeof viewLead.leadSource === 'string' ? viewLead.leadSource : viewLead.leadSource?.name) || "-"}</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
                   <div className="text-sm text-gray-600">Status</div>
-                  <div className="font-medium text-gray-900 mt-1">{viewLead.leadStatus?.name || "-"}</div>
+                  <div className="font-medium text-gray-900 mt-1">{(typeof viewLead.leadStatus === 'string' ? viewLead.leadStatus : viewLead.leadStatus?.name) || "-"}</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-600">Product</div>
@@ -1297,7 +1297,7 @@ export default function LeadsPage() {
                 <div className="bg-red-50 p-4 rounded-lg">
                   <div className="text-sm text-red-600 font-medium">Lost Information</div>
                   <div className="mt-2 text-sm">
-                    <div>Lost Date: {viewLead.lostDate ? new Date(viewLead.lostDate).toLocaleDateString() : 'N/A'}</div>
+                    <div>Lost Date: {viewLead.lostDate ? new Date(viewLead.lostDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                     <div>Reason: {viewLead.lostReason || 'Not specified'}</div>
                   </div>
                 </div>
@@ -1306,7 +1306,7 @@ export default function LeadsPage() {
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="text-sm text-green-600 font-medium">Won Information</div>
                   <div className="mt-2 text-sm">
-                    <div>Won Date: {viewLead.wonDate ? new Date(viewLead.wonDate).toLocaleDateString() : 'N/A'}</div>
+                    <div>Won Date: {viewLead.wonDate ? new Date(viewLead.wonDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
                     <div>Amount: {viewLead.amount ? `₹${viewLead.amount.toLocaleString()}` : 'Not specified'}</div>
                   </div>
                 </div>
