@@ -66,7 +66,6 @@ interface StatusCount {
 
 interface LeadSummary {
   totalLeads: number;
-  currentMonthLeads: number;
   totalRevenue: number;
   totalPaid?: number;
   totalPending?: number;
@@ -317,7 +316,6 @@ export default function Dashboard() {
       // Update Summary
       setSummary({
         totalLeads: data.counts?.total || 0,
-        currentMonthLeads: data.counts?.currentMonthLeads || 0,
         totalRevenue: data.counts?.totalRevenue || 0,
         totalPaid: data.counts?.totalPaid || 0,
         totalPending: data.counts?.totalPending || 0,
@@ -1494,17 +1492,17 @@ export default function Dashboard() {
                   <p className="text-sm text-gray-400">No recent paid activity found</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50/80 border-b border-gray-100">
-                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reseller</th>
-                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead</th>
-                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Amount</th>
-                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Commission</th>
-                        <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rate</th>
-                        <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment Mode</th>
-                        <th className="text-right px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid Date</th>
+                <div className="overflow-x-auto max-h-[385px] overflow-y-auto custom-scrollbar">
+                  <table className="w-full text-sm relative border-collapse">
+                    <thead className="sticky top-0 z-10 bg-gray-50 shadow-[0_1px_0_0_rgba(229,231,235,1)]">
+                      <tr>
+                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Reseller</th>
+                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Lead</th>
+                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Total Amount</th>
+                        <th className="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Commission</th>
+                        <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Rate</th>
+                        <th className="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Payment Mode</th>
+                        <th className="text-right px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-50">Paid Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">

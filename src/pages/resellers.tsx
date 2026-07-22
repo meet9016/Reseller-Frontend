@@ -158,20 +158,20 @@ export function ResellersContent() {
       key: 'image',
       label: 'IMAGE',
       render: (value, row) => (
-        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-sky-900">
-          {value ? (
+        <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-sky-900 bg-gray-50">
+          {/* Initials fallback underneath */}
+          <span className="text-xs font-bold text-gray-500">
+            {row.fullName?.charAt(0)?.toUpperCase() || '?'}
+          </span>
+          {value && (
             <img
               src={value?.includes('http') ? value : `${baseUrl.getImageUrl}/images/ResellerProfileImages/${value}`}
               alt={row.fullName}
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-          ) : (
-            <span className="text-xs font-bold text-gray-500">
-              {row.fullName?.charAt(0) || '?'}
-            </span>
           )}
         </div>
       ),
