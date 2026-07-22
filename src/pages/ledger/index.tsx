@@ -365,7 +365,7 @@ export default function LedgerPage() {
               </div>
             </div>
           }
-          title="Transactions"
+          // title="Transactions"
           
           pagination={true}
           currentPage={currentPage}
